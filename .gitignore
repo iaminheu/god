@@ -1,1 +1,23 @@
+# Ignore all
+*
+
+# Unignore all with extensions
+!*.*
+!**/Dockerfile
+
+# Unignore all dirs
+!*/
+!api
+
 .idea
+tools/god/god
+**/.DS_Store
+**/logs
+!Makefile
+
+# gitlab ci
+.cache
+
+# vim auto backup file
+*~
+!OWNERS
