@@ -34,7 +34,7 @@ func NewSharedCalls() SharedCalls {
 	}
 }
 
-// Get 获取指定 key 的调用、是否命中及错误信息，如未命中则重新调用并共享。
+// Do 获取指定 key 的调用、是否命中及错误信息，如未命中则重新调用并共享。
 func (g *sharedCalls) Do(key string, callFn func() (interface{}, error)) (result interface{}, hit bool, err error) {
 	c, hit := g.get(key)
 

@@ -10,6 +10,7 @@
 !api
 
 .idea
+.idea/*.*
 tools/god/god
 **/.DS_Store
 **/logs

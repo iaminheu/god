@@ -16,7 +16,7 @@ type (
 	State      = int32                     // 断路器状态
 	Request    func() error                // 待执行的请求
 	Acceptable func(reqError error) bool   // 判断错误是否可接受的函数
-	Fallback   func(acceptErr error) error // 应急备用函数
+	Fallback   func(acceptErr error) error // 备用函数
 	Option     func(b *breaker)            // 断路器可选项应用函数
 
 	Breaker interface {
@@ -28,27 +28,16 @@ type (
 		// 若不允许，则返回 ErrServiceUnavaliable。
 		Allow() (Promise, error)
 
-		// Do 运行指定请求，如果断路器允许的话。
-		// Do 直接返回错误，如果断路器拒绝的话。
-		// 如果处理中出现错误，断路器则抛出错误。
+		// Do 若断路器允许则执行请求，否则返回错误。
 		Do(req Request) error
 
-		// DoWithAcceptable 运行指定请求，如果断路器允许的话。
-		// DoWithAcceptable 直接返回错误，如果断路器拒绝的话。
-		// 如果处理中出现错误，断路器则抛出错误。
-		// acceptable 自定义检查是否可调用，即使 err 不是 nil。
-		DoWithAcceptable(req Request, acceptable Acceptable) error
-
-		// DoWithFailback 运行指定请求，如果断路器允许的话。
-		// DoWithFailback 直接返回错误，如果断路器拒绝的话。
-		// 如果处理中出现错误，断路器则抛出错误。
-		// fallback 根据 err 提供备用应急计划。
+		// DoWithFailback 若断路器允许则执行请求，反之则调用备用函数，再之返回错误。
 		DoWithFailback(req Request, fallback Fallback) error
 
-		// DoWithFailbackAcceptable 如果断路器允许的话，运行指定请求。
-		// 如果断路器拒绝的话，调用 DoWithFailback 运行应急备用的计划。
-		// 如果处理中出现错误，断路器则抛出错误。
-		// acceptable 自定义检查是否可调用，即使 err 不是 nil。
+		// DoWithAcceptable 若断路器允许则执行请求，反之则返回错误，并判断错误可否标记为成功请求。
+		DoWithAcceptable(req Request, acceptable Acceptable) error
+
+		// DoWithFailbackAcceptable 若断路器允许则执行请求，反之则调用备用函数，再之返回错误并判断错误可否标记为成功请求。
 		DoWithFailbackAcceptable(req Request, fallback Fallback, acceptable Acceptable) error
 	}
 
@@ -98,12 +87,11 @@ func (b breaker) Do(req Request) error {
 	return b.throttle.doReq(req, nil, defaultAcceptable)
 }
 
-func (b breaker) DoWithAcceptable(req Request, acceptable Acceptable) error {
-	return b.throttle.doReq(req, nil, acceptable)
-}
-
 func (b breaker) DoWithFailback(req Request, fallback Fallback) error {
 	return b.throttle.doReq(req, fallback, defaultAcceptable)
+}
+func (b breaker) DoWithAcceptable(req Request, acceptable Acceptable) error {
+	return b.throttle.doReq(req, nil, acceptable)
 }
 
 func (b breaker) DoWithFailbackAcceptable(req Request, fallback Fallback, acceptable Acceptable) error {
