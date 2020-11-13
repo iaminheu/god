@@ -13,7 +13,7 @@ func genInsert(table Table, withCache bool) (string, error) {
 
 	for _, field := range table.Fields {
 		camelField := field.Name.ToCamel()
-		if camelField == "CreatedAt" || camelField == "UpdatedAt" {
+		if camelField == "CreatedAt" || camelField == "UpdatedAt" || camelField == "CreateTime" || camelField == "UpdateTime" {
 			continue
 		}
 		if field.IsPrimaryKey && table.PrimaryKey.AutoIncrement {

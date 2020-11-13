@@ -11,13 +11,11 @@ func genTypes(table Table, withCache bool) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	output, err := util.With("types").
-		Parse(tpl.Types).
-		Execute(map[string]interface{}{
-			"withCache": withCache,
-			"table":     table.Name.ToCamel(),
-			"fields":    fieldsString,
-		})
+	output, err := util.With("types").Parse(tpl.Types).Execute(map[string]interface{}{
+		"withCache": withCache,
+		"table":     table.Name.ToCamel(),
+		"fields":    fieldsString,
+	})
 	if err != nil {
 		return "", err
 	}

@@ -11,7 +11,7 @@ func genUpdate(table Table, withCache bool) (string, error) {
 	values := make([]string, 0)
 	for _, field := range table.Fields {
 		upperField := field.Name.ToCamel()
-		if upperField == "CreatedAt" || upperField == "UpdatedAt" || field.IsPrimaryKey {
+		if field.IsPrimaryKey || upperField == "CreatedAt" || upperField == "UpdatedAt" || upperField == "CreateTime" || upperField == "UpdateTime" {
 			continue
 		}
 		values = append(values, "data."+upperField)

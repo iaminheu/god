@@ -39,7 +39,7 @@ func (s String) Title() string {
 
 // snake->camel(upper start)
 func (s String) ToCamel() string {
-	list := s.splitBy(func(r rune) bool {
+	list := s.Split(func(r rune) bool {
 		return r == '_'
 	}, true)
 	var target []string
@@ -51,7 +51,7 @@ func (s String) ToCamel() string {
 
 // camel->snake
 func (s String) ToSnake() string {
-	list := s.splitBy(func(r rune) bool {
+	list := s.Split(func(r rune) bool {
 		return unicode.IsUpper(r)
 	}, false)
 	var target []string
@@ -75,7 +75,7 @@ func (s String) UnTitle() string {
 }
 
 // it will not ignore spaces
-func (s String) splitBy(fn func(r rune) bool, remove bool) []string {
+func (s String) Split(fn func(r rune) bool, remove bool) []string {
 	if s.IsEmptyOrSpace() {
 		return nil
 	}

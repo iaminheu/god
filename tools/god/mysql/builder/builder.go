@@ -46,7 +46,8 @@ func ToMap(in interface{}) map[string]interface{} {
 	return out
 }
 
-func FieldNames(table interface{}) []string {
+// FieldList 返回表的字段列表
+func FieldList(table interface{}) []string {
 	out := make([]string, 0)
 	v := reflect.ValueOf(table)
 	if v.Kind() == reflect.Ptr {
@@ -68,7 +69,8 @@ func FieldNames(table interface{}) []string {
 	}
 	return out
 }
-func FieldNamesAlias(in interface{}, alias string) []string {
+
+func FieldListAlias(in interface{}, alias string) []string {
 	out := make([]string, 0)
 	v := reflect.ValueOf(in)
 	if v.Kind() == reflect.Ptr {

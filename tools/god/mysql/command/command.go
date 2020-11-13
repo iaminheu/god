@@ -1,6 +1,7 @@
 package command
 
 import (
+	"errors"
 	"git.zc0901.com/go/god/lib/collection"
 	"git.zc0901.com/go/god/lib/logx"
 	"git.zc0901.com/go/god/lib/store/sqlx"
@@ -24,12 +25,15 @@ func GenCodeFromDSN(ctx *cli.Context) error {
 	cache := ctx.Bool(flagCache)
 	table := strings.TrimSpace(ctx.String(flagTable))
 
+	logx.Disable()
+	log := util.NewConsole(true)
+
 	if len(dsn) == 0 {
-		logx.Error("MySQL连接地址未提供")
+		log.Error("MySQL连接地址未提供")
 		return nil
 	}
 	if len(table) == 0 {
-		logx.Error("表名未提供")
+		log.Error("表名未提供")
 		return nil
 	}
 
@@ -41,19 +45,27 @@ func GenCodeFromDSN(ctx *cli.Context) error {
 		}
 		tables.AddStr(table)
 	}
-	logx.Disable()
+
 	conn := sqlx.NewMySQL(dsn)
 	m := model.NewModel(conn)
 	ddlList, err := m.ShowDDL(tables.KeysStr()...)
 	if err != nil {
-		logx.Error(err)
+		log.Error("", err)
 		return nil
 	}
 
+	// 获取数据库名称
+	path := strings.Split(dsn, "?")[0]
+	parts := strings.Split(path, "/")
+	database := strings.TrimSpace(parts[len(parts)-1])
+	if !strings.Contains(path, "/") || database == "" {
+		log.Error("数据库连接字符串：未提供数据库名称")
+		return errors.New("数据库连接字符串：未提供数据库名称")
+	}
+
 	//fmt.Println(strings.Join(ddlList, "\n"), dir, cache)
-	log := util.NewConsole(true)
 	generator := gen.NewModelGenerator(ddlList, dir, gen.WithConsoleOption(log))
-	err = generator.Start(cache)
+	err = generator.Start(database, cache)
 	if err != nil {
 		log.Error("", err)
 	}
