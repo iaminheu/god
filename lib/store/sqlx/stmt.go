@@ -2,7 +2,7 @@ package sqlx
 
 import (
 	"database/sql"
-	"god/lib/logx"
+	"git.zc0901.com/go/god/lib/logx"
 	"time"
 )
 

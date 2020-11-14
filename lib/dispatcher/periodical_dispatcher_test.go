@@ -1,8 +1,8 @@
 package dispatcher
 
 import (
+	"git.zc0901.com/go/god/lib/timex"
 	"github.com/stretchr/testify/assert"
-	"god/lib/timex"
 	"runtime"
 	"sync"
 	"sync/atomic"

@@ -3,9 +3,9 @@ package breaker
 import (
 	"errors"
 	"fmt"
+	"git.zc0901.com/go/god/lib/collection"
+	"git.zc0901.com/go/god/lib/mathx"
 	"github.com/stretchr/testify/assert"
-	"god/lib/collection"
-	"god/lib/mathx"
 	"math"
 	"math/rand"
 	"testing"

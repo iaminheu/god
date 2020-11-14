@@ -7,10 +7,10 @@ var (
 	"strings"
 	{{if .time}}"time"{{end}}
 
-	"god/lib/store/cache"
-	"god/lib/store/sqlx"
-	"god/lib/stringx"
-	"god/tools/god/mysql/builder"
+	"git.zc0901.com/go/god/lib/store/cache"
+	"git.zc0901.com/go/god/lib/store/sqlx"
+	"git.zc0901.com/go/god/lib/stringx"
+	"git.zc0901.com/go/god/tools/god/mysql/builder"
 )
 `
 
@@ -20,8 +20,8 @@ var (
 	"strings"
 	{{if .time}}"time"{{end}}
 
-	"god/lib/store/sqlx"
-	"god/lib/stringx"
-	"god/tools/god/mysql/builder"
+	"git.zc0901.com/go/god/lib/store/sqlx"
+	"git.zc0901.com/go/god/lib/stringx"
+	"git.zc0901.com/go/god/tools/god/mysql/builder"
 )`
 )

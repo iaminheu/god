@@ -3,8 +3,8 @@ package sqlx
 import (
 	"database/sql"
 	"fmt"
-	"god/lib/logx"
-	"god/lib/mapping"
+	"git.zc0901.com/go/god/lib/logx"
+	"git.zc0901.com/go/god/lib/mapping"
 	"reflect"
 	"strings"
 )

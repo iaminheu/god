@@ -1,8 +1,8 @@
 package dispatcher
 
 import (
-	"god/lib/syncx"
-	"god/lib/timex"
+	"git.zc0901.com/go/god/lib/syncx"
+	"git.zc0901.com/go/god/lib/timex"
 	"time"
 )
 

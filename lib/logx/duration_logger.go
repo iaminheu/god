@@ -2,7 +2,7 @@ package logx
 
 import (
 	"fmt"
-	"god/lib/timex"
+	"git.zc0901.com/go/god/lib/timex"
 	"io"
 	"time"
 )

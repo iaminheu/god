@@ -2,7 +2,7 @@ package breaker
 
 import (
 	"errors"
-	"god/lib/stringx"
+	"git.zc0901.com/go/god/lib/stringx"
 )
 
 const (

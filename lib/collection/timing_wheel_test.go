@@ -2,11 +2,11 @@ package collection
 
 import (
 	"fmt"
+	"git.zc0901.com/go/god/lib/lang"
+	"git.zc0901.com/go/god/lib/stringx"
+	"git.zc0901.com/go/god/lib/syncx"
+	"git.zc0901.com/go/god/lib/timex"
 	"github.com/stretchr/testify/assert"
-	"god/lib/lang"
-	"god/lib/stringx"
-	"god/lib/syncx"
-	"god/lib/timex"
 	"sort"
 	"sync"
 	"sync/atomic"

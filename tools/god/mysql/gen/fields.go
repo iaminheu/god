@@ -1,9 +1,9 @@
 package gen
 
 import (
-	"god/tools/god/mysql/parser"
-	"god/tools/god/mysql/tpl"
-	"god/tools/god/util"
+	"git.zc0901.com/go/god/tools/god/mysql/parser"
+	"git.zc0901.com/go/god/tools/god/mysql/tpl"
+	"git.zc0901.com/go/god/tools/god/util"
 	"strings"
 )
 

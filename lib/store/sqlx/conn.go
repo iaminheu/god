@@ -3,7 +3,7 @@ package sqlx
 import (
 	"database/sql"
 	"errors"
-	"god/lib/breaker"
+	"git.zc0901.com/go/god/lib/breaker"
 	"time"
 )
 

@@ -7,7 +7,7 @@ import (
 	"os"
 	"text/template"
 
-	"god/lib/fs"
+	"git.zc0901.com/go/god/lib/fs"
 )
 
 type TemplateX struct {

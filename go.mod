@@ -1,4 +1,4 @@
-module god
+module git.zc0901.com/go/god
 
 go 1.15
 

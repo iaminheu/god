@@ -1,11 +1,11 @@
 package dispatcher
 
 import (
-	"god/lib/lang"
-	"god/lib/proc"
-	"god/lib/syncx"
-	"god/lib/threading"
-	"god/lib/timex"
+	"git.zc0901.com/go/god/lib/lang"
+	"git.zc0901.com/go/god/lib/proc"
+	"git.zc0901.com/go/god/lib/syncx"
+	"git.zc0901.com/go/god/lib/threading"
+	"git.zc0901.com/go/god/lib/timex"
 	"reflect"
 	"sync"
 	"time"

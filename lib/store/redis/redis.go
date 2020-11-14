@@ -1,8 +1,8 @@
 package redis
 
 import (
+	"git.zc0901.com/go/god/lib/breaker"
 	"github.com/go-redis/redis"
-	"god/lib/breaker"
 	"time"
 )
 

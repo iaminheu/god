@@ -1,7 +1,7 @@
 package syncx
 
 import (
-	"god/lib/lang"
+	"git.zc0901.com/go/god/lib/lang"
 	"sync"
 )
 

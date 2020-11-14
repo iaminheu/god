@@ -3,9 +3,9 @@ package collection
 import (
 	"container/list"
 	"fmt"
-	"god/lib/lang"
-	"god/lib/threading"
-	"god/lib/timex"
+	"git.zc0901.com/go/god/lib/lang"
+	"git.zc0901.com/go/god/lib/threading"
+	"git.zc0901.com/go/god/lib/timex"
 	"time"
 )
 

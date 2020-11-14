@@ -3,10 +3,10 @@ package mr
 import (
 	"errors"
 	"fmt"
-	"god/lib/errorx"
-	"god/lib/lang"
-	"god/lib/syncx"
-	"god/lib/threading"
+	"git.zc0901.com/go/god/lib/errorx"
+	"git.zc0901.com/go/god/lib/lang"
+	"git.zc0901.com/go/god/lib/syncx"
+	"git.zc0901.com/go/god/lib/threading"
 	"sync"
 )
 

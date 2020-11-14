@@ -2,7 +2,7 @@ package threading
 
 import (
 	"bytes"
-	"god/lib/rescue"
+	"git.zc0901.com/go/god/lib/rescue"
 	"runtime"
 	"strconv"
 )

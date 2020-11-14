@@ -2,9 +2,9 @@ package breaker
 
 import (
 	"fmt"
-	"god/lib/collection"
-	"god/lib/proc"
-	"god/lib/stat"
+	"git.zc0901.com/go/god/lib/collection"
+	"git.zc0901.com/go/god/lib/proc"
+	"git.zc0901.com/go/god/lib/stat"
 )
 
 type (

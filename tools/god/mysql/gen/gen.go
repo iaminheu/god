@@ -2,11 +2,11 @@ package gen
 
 import (
 	"fmt"
-	"god/lib/fs"
-	"god/lib/stringx"
-	"god/tools/god/mysql/parser"
-	"god/tools/god/mysql/tpl"
-	"god/tools/god/util"
+	"git.zc0901.com/go/god/lib/fs"
+	"git.zc0901.com/go/god/lib/stringx"
+	"git.zc0901.com/go/god/tools/god/mysql/parser"
+	"git.zc0901.com/go/god/tools/god/mysql/tpl"
+	"git.zc0901.com/go/god/tools/god/util"
 	"io/ioutil"
 	"os"
 	"path/filepath"

@@ -1,9 +1,9 @@
 package breaker
 
 import (
-	"god/lib/collection"
-	"god/lib/logx"
-	"god/lib/mathx"
+	"git.zc0901.com/go/god/lib/collection"
+	"git.zc0901.com/go/god/lib/logx"
+	"git.zc0901.com/go/god/lib/mathx"
 	"math"
 	"sync/atomic"
 	"time"

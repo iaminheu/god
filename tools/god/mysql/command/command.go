@@ -2,13 +2,13 @@ package command
 
 import (
 	"errors"
+	"git.zc0901.com/go/god/lib/collection"
+	"git.zc0901.com/go/god/lib/logx"
+	"git.zc0901.com/go/god/lib/store/sqlx"
+	"git.zc0901.com/go/god/tools/god/mysql/gen"
+	"git.zc0901.com/go/god/tools/god/mysql/model"
+	"git.zc0901.com/go/god/tools/god/util"
 	"github.com/urfave/cli"
-	"god/lib/collection"
-	"god/lib/logx"
-	"god/lib/store/sqlx"
-	"god/tools/god/mysql/gen"
-	"god/tools/god/mysql/model"
-	"god/tools/god/util"
 	"strings"
 )
 

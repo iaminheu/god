@@ -3,8 +3,8 @@ package redis
 import (
 	"errors"
 	"fmt"
+	"git.zc0901.com/go/god/lib/mapping"
 	"github.com/go-redis/redis"
-	"god/lib/mapping"
 	"strconv"
 	"time"
 )

@@ -2,7 +2,7 @@ package sqlx
 
 import (
 	"database/sql"
-	"god/lib/syncx"
+	"git.zc0901.com/go/god/lib/syncx"
 	"io"
 	"sync"
 	"time"

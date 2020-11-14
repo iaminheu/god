@@ -1,9 +1,9 @@
 package sqlx
 
 import (
+	"git.zc0901.com/go/god/lib/breaker"
 	"github.com/go-sql-driver/mysql"
 	"github.com/stretchr/testify/assert"
-	"god/lib/breaker"
 	"testing"
 )
 

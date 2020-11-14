@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
+	"git.zc0901.com/go/god/tools/god/mysql/command"
 	"github.com/urfave/cli"
-	"god/tools/god/mysql/command"
 	"os"
 )
 

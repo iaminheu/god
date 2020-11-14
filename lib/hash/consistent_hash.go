@@ -2,8 +2,8 @@ package hash
 
 import (
 	"fmt"
-	"god/lib/lang"
-	"god/lib/mapping"
+	"git.zc0901.com/go/god/lib/lang"
+	"git.zc0901.com/go/god/lib/mapping"
 	"sort"
 	"strconv"
 	"sync"

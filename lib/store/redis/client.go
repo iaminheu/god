@@ -2,11 +2,11 @@ package redis
 
 import (
 	"fmt"
+	"git.zc0901.com/go/god/lib/logx"
+	"git.zc0901.com/go/god/lib/mapping"
+	"git.zc0901.com/go/god/lib/syncx"
+	"git.zc0901.com/go/god/lib/timex"
 	"github.com/go-redis/redis"
-	"god/lib/logx"
-	"god/lib/mapping"
-	"god/lib/syncx"
-	"god/lib/timex"
 	"io"
 	"strings"
 )

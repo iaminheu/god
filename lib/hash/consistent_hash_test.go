@@ -2,8 +2,8 @@ package hash
 
 import (
 	"fmt"
+	"git.zc0901.com/go/god/lib/mathx"
 	"github.com/stretchr/testify/assert"
-	"god/lib/mathx"
 	"strconv"
 	"testing"
 )

@@ -1,7 +1,7 @@
 package cache
 
 import (
-	"god/lib/logx"
+	"git.zc0901.com/go/god/lib/logx"
 	"sync/atomic"
 	"time"
 )

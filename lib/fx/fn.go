@@ -1,8 +1,8 @@
 package fx
 
 import (
-	"god/lib/lang"
-	"god/lib/threading"
+	"git.zc0901.com/go/god/lib/lang"
+	"git.zc0901.com/go/god/lib/threading"
 	"sort"
 	"sync"
 )

@@ -1,8 +1,8 @@
 package threading
 
 import (
-	"god/lib/lang"
-	"god/lib/rescue"
+	"git.zc0901.com/go/god/lib/lang"
+	"git.zc0901.com/go/god/lib/rescue"
 )
 
 type TaskRunner struct {

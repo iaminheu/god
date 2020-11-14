@@ -1,7 +1,7 @@
 package sqlx
 
 import (
-	"god/lib/logx"
+	"git.zc0901.com/go/god/lib/logx"
 	"testing"
 )
 

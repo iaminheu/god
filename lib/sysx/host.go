@@ -1,7 +1,7 @@
 package sysx
 
 import (
-	"god/lib/stringx"
+	"git.zc0901.com/go/god/lib/stringx"
 	"os"
 )
 

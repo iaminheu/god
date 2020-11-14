@@ -3,9 +3,9 @@ package parser
 import (
 	"errors"
 	"fmt"
+	"git.zc0901.com/go/god/lib/stringx"
+	"git.zc0901.com/go/god/tools/god/mysql/converter"
 	"github.com/xwb1989/sqlparser"
-	"god/lib/stringx"
-	"god/tools/god/mysql/converter"
 )
 
 const (

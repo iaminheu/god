@@ -2,8 +2,8 @@ package gen
 
 import (
 	"fmt"
-	"god/lib/stringx"
-	"god/tools/god/mysql/parser"
+	"git.zc0901.com/go/god/lib/stringx"
+	"git.zc0901.com/go/god/tools/god/mysql/parser"
 )
 
 type Key struct {
