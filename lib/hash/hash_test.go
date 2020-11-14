@@ -12,7 +12,7 @@ const (
 )
 
 func TestMD5(t *testing.T) {
-	actual := fmt.Sprintf("%x", Md5([]byte(text)))
+	actual := fmt.Sprintf("%x", MD5([]byte(text)))
 	assert.Equal(t, md5Digest, actual)
 }
 

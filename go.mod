@@ -18,4 +18,5 @@ require (
 	github.com/urfave/cli v1.22.5
 	github.com/xwb1989/sqlparser v0.0.0-20180606152119-120387863bf2
 	github.com/yuin/gopher-lua v0.0.0-20200816102855-ee81675732da // indirect
+	gopkg.in/yaml.v2 v2.3.0
 )

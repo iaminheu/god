@@ -17,12 +17,6 @@ func MD5(data []byte) []byte {
 	return digest.Sum(nil)
 }
 
-func Md5(data []byte) []byte {
-	digest := md5.New()
-	digest.Write(data)
-	return digest.Sum(nil)
-}
-
 func MD5Hex(data []byte) string {
 	return fmt.Sprintf("%x", MD5(data))
 }
