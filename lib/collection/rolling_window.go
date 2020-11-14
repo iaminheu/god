@@ -2,7 +2,7 @@ package collection
 
 import (
 	"fmt"
-	"git.zc0901.com/go/god/lib/timex"
+	"god/lib/timex"
 	"sync"
 	"time"
 )

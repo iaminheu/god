@@ -2,8 +2,8 @@ package collection
 
 import (
 	"fmt"
-	"git.zc0901.com/go/god/lib/mathx"
-	"git.zc0901.com/go/god/lib/timex"
+	"god/lib/mathx"
+	"god/lib/timex"
 	"strings"
 	"sync"
 )

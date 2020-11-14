@@ -1,7 +1,7 @@
 package syncx
 
 import (
-	"git.zc0901.com/go/god/lib/errorx"
+	"god/lib/errorx"
 	"io"
 	"sync"
 )

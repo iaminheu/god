@@ -2,9 +2,9 @@ package logx
 
 import (
 	"errors"
-	"git.zc0901.com/go/god/lib/fs"
-	"git.zc0901.com/go/god/lib/lang"
-	"git.zc0901.com/go/god/lib/timex"
+	"god/lib/fs"
+	"god/lib/lang"
+	"god/lib/timex"
 	"log"
 	"os"
 	"path"

@@ -2,9 +2,9 @@ package breaker
 
 import (
 	"fmt"
-	"git.zc0901.com/go/god/lib/collection"
-	"git.zc0901.com/go/god/lib/proc"
-	"git.zc0901.com/go/god/lib/stat"
+	"god/lib/collection"
+	"god/lib/proc"
+	"god/lib/stat"
 )
 
 type (
@@ -58,7 +58,7 @@ func (t loggedThrottle) doReq(req Request, fallback Fallback, acceptable Accepta
 }
 
 func (t loggedThrottle) logError(err error) error {
-	if err == ErrServiceUnavaliable {
+	if err == ErrServiceUnavailable {
 		stat.Report(fmt.Sprintf(
 			"进程(%s/%d), 调用者名称: %s, 断路器已打开，请求被丢弃\n最新错误：\n%s",
 			proc.ProcessName(), proc.Pid(), t.name, t.errWin))

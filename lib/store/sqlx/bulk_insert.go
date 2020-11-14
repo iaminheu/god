@@ -3,9 +3,9 @@ package sqlx
 import (
 	"database/sql"
 	"fmt"
-	"git.zc0901.com/go/god/lib/dispatcher"
-	"git.zc0901.com/go/god/lib/logx"
-	"git.zc0901.com/go/god/lib/stringx"
+	"god/lib/dispatcher"
+	"god/lib/logx"
+	"god/lib/stringx"
 	"strings"
 	"time"
 )

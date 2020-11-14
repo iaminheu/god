@@ -2,10 +2,10 @@ package cache
 
 import (
 	"fmt"
-	"git.zc0901.com/go/god/lib/errorx"
-	"git.zc0901.com/go/god/lib/hash"
-	"git.zc0901.com/go/god/lib/logx"
-	"git.zc0901.com/go/god/lib/syncx"
+	"god/lib/errorx"
+	"god/lib/hash"
+	"god/lib/logx"
+	"god/lib/syncx"
 	"time"
 )
 

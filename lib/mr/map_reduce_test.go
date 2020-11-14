@@ -3,9 +3,9 @@ package mr
 import (
 	"errors"
 	"fmt"
-	"git.zc0901.com/go/god/lib/stringx"
-	"git.zc0901.com/go/god/lib/syncx"
 	"github.com/stretchr/testify/assert"
+	"god/lib/stringx"
+	"god/lib/syncx"
 	"runtime"
 	"sync/atomic"
 	"testing"

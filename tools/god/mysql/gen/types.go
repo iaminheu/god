@@ -1,8 +1,8 @@
 package gen
 
 import (
-	"git.zc0901.com/go/god/tools/god/mysql/tpl"
-	"git.zc0901.com/go/god/tools/god/util"
+	"god/tools/god/mysql/tpl"
+	"god/tools/god/util"
 )
 
 func genTypes(table Table, withCache bool) (string, error) {

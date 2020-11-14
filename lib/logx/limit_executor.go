@@ -1,8 +1,8 @@
 package logx
 
 import (
-	"git.zc0901.com/go/god/lib/syncx"
-	"git.zc0901.com/go/god/lib/timex"
+	"god/lib/syncx"
+	"god/lib/timex"
 	"sync/atomic"
 	"time"
 )

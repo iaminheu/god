@@ -1,8 +1,8 @@
 package redis
 
 import (
-	"git.zc0901.com/go/god/lib/stringx"
 	"github.com/stretchr/testify/assert"
+	"god/lib/stringx"
 	"testing"
 )
 

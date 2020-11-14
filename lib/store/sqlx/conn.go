@@ -3,8 +3,7 @@ package sqlx
 import (
 	"database/sql"
 	"errors"
-	"fmt"
-	"git.zc0901.com/go/god/lib/breaker"
+	"god/lib/breaker"
 	"time"
 )
 
@@ -98,8 +97,8 @@ func (c *conn) Query(dest interface{}, query string, args ...interface{}) error 
 
 func (c *conn) Exec(query string, args ...interface{}) (result sql.Result, err error) {
 	err = c.brk.DoWithAcceptable(func() error {
-		fmt.Println("获取连接并做数据库执行")
-		fmt.Println()
+		//fmt.Println("获取连接并做数据库执行")
+		//fmt.Println()
 
 		// 获取数据库连接
 		db, err := getConn(c.driverName, c.dataSourceName)
@@ -117,8 +116,8 @@ func (c *conn) Exec(query string, args ...interface{}) (result sql.Result, err e
 
 func (c *conn) Transact(fn TransactFn) error {
 	return c.brk.DoWithAcceptable(func() error {
-		fmt.Println("获取连接并做数据库事务")
-		fmt.Println()
+		//fmt.Println("获取连接并做数据库事务")
+		//fmt.Println()
 		return doTx(c, c.beginTx, fn)
 	}, c.acceptable)
 }

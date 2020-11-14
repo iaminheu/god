@@ -2,7 +2,7 @@ package breaker
 
 import (
 	"errors"
-	"git.zc0901.com/go/god/lib/stringx"
+	"god/lib/stringx"
 )
 
 const (
@@ -10,7 +10,7 @@ const (
 	StateOpen                // 断路器打开 1
 )
 
-var ErrServiceUnavaliable = errors.New("断路器已打开，服务不可用")
+var ErrServiceUnavailable = errors.New("断路器已打开，服务不可用")
 
 type (
 	State      = int32                     // 断路器状态
@@ -25,7 +25,7 @@ type (
 
 		// Allow 检查请求是否被允许。
 		// 若允许，则返回 Promise，调用者需在成功时调用 promise.Resolve()，失败时调用 promise.Reject()。
-		// 若不允许，则返回 ErrServiceUnavaliable。
+		// 若不允许，则返回 ErrServiceUnavailable。
 		Allow() (Promise, error)
 
 		// Do 若断路器允许则执行请求，否则返回错误。

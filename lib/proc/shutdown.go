@@ -1,7 +1,7 @@
 package proc
 
 import (
-	"git.zc0901.com/go/god/lib/logx"
+	"god/lib/logx"
 	"os"
 	"os/signal"
 	"syscall"

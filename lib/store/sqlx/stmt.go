@@ -2,7 +2,7 @@ package sqlx
 
 import (
 	"database/sql"
-	"git.zc0901.com/go/god/lib/logx"
+	"god/lib/logx"
 	"time"
 )
 
@@ -28,6 +28,8 @@ func doQuery(db session, scanner func(*sql.Rows) error, query string, args ...in
 		logSqlError(stmt, err)
 		return err
 	}
+
+	// 关闭数据库连接，释放资源
 	defer func() {
 		_ = rows.Close()
 	}()

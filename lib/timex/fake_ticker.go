@@ -2,7 +2,7 @@ package timex
 
 import (
 	"errors"
-	"git.zc0901.com/go/god/lib/lang"
+	"god/lib/lang"
 	"time"
 )
 

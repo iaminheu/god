@@ -1,6 +1,6 @@
 package cache
 
-import "git.zc0901.com/go/god/lib/store/redis"
+import "god/lib/store/redis"
 
 type (
 	// 节点配置

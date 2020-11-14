@@ -2,9 +2,9 @@ package gen
 
 import (
 	"fmt"
-	"git.zc0901.com/go/god/lib/stringx"
-	"git.zc0901.com/go/god/tools/god/mysql/tpl"
-	"git.zc0901.com/go/god/tools/god/util"
+	"god/lib/stringx"
+	"god/tools/god/mysql/tpl"
+	"god/tools/god/util"
 	"strings"
 )
 

@@ -2,8 +2,8 @@ package stringx
 
 import (
 	"fmt"
-	"git.zc0901.com/go/god/tools/god/mysql/builder"
 	"github.com/stretchr/testify/assert"
+	"god/tools/god/mysql/builder"
 	"strings"
 	"testing"
 	"time"

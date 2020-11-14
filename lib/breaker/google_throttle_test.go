@@ -3,9 +3,9 @@ package breaker
 import (
 	"errors"
 	"fmt"
-	"git.zc0901.com/go/god/lib/collection"
-	"git.zc0901.com/go/god/lib/mathx"
 	"github.com/stretchr/testify/assert"
+	"god/lib/collection"
+	"god/lib/mathx"
 	"math"
 	"math/rand"
 	"testing"
@@ -75,8 +75,8 @@ func TestGoogleBreakerReject(t *testing.T) {
 	time.Sleep(testInterval)
 
 	// 判断返回类型
-	assert.Equal(t, ErrServiceUnavaliable, b.doReq(func() error {
-		return ErrServiceUnavaliable
+	assert.Equal(t, ErrServiceUnavailable, b.doReq(func() error {
+		return ErrServiceUnavailable
 	}, nil, defaultAcceptable))
 
 	win := b.stat.Win()

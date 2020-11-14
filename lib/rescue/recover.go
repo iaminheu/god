@@ -1,7 +1,7 @@
 // 营救——恢复弥补包
 package rescue
 
-import "git.zc0901.com/go/god/lib/logx"
+import "god/lib/logx"
 
 // Recover 恢复弥补函数：执行一组清理函数并尝试输出错误堆栈
 func Recover(cleanUps ...func()) {

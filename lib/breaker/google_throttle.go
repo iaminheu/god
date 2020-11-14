@@ -1,9 +1,9 @@
 package breaker
 
 import (
-	"git.zc0901.com/go/god/lib/collection"
-	"git.zc0901.com/go/god/lib/logx"
-	"git.zc0901.com/go/god/lib/mathx"
+	"god/lib/collection"
+	"god/lib/logx"
+	"god/lib/mathx"
 	"math"
 	"sync/atomic"
 	"time"
@@ -114,7 +114,7 @@ func (t *googleThrottle) accept() error {
 	// 并非每次阻断，而是随机拦截，以此给后端重生的机会
 	if t.prob.TrueOnProb(dropRatio) {
 		logx.Error("打开断路器并返回错误")
-		return ErrServiceUnavaliable
+		return ErrServiceUnavailable
 	}
 
 	return nil

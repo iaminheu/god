@@ -1,9 +1,8 @@
 package fx
 
 import (
-	"fmt"
-	"git.zc0901.com/go/god/lib/lang"
-	"git.zc0901.com/go/god/lib/threading"
+	"god/lib/lang"
+	"god/lib/threading"
 	"sort"
 	"sync"
 )
@@ -74,7 +73,6 @@ func (s Stream) Buffer(n int) Stream {
 	source := make(chan interface{}, n)
 	go func() {
 		for item := range s.source {
-			fmt.Println("buffer: source <- ", item)
 			source <- item
 		}
 		close(source)

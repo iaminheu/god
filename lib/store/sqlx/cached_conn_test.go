@@ -2,10 +2,10 @@ package sqlx
 
 import (
 	"fmt"
-	"git.zc0901.com/go/god/lib/logx"
-	"git.zc0901.com/go/god/lib/store/cache"
-	"git.zc0901.com/go/god/lib/store/redis"
 	"github.com/stretchr/testify/assert"
+	"god/lib/logx"
+	"god/lib/store/cache"
+	"god/lib/store/redis"
 	"sync/atomic"
 	"testing"
 	"time"

@@ -2,9 +2,9 @@ package sqlx
 
 import (
 	"database/sql"
-	"git.zc0901.com/go/god/lib/store/cache"
-	"git.zc0901.com/go/god/lib/store/redis"
-	"git.zc0901.com/go/god/lib/syncx"
+	"god/lib/store/cache"
+	"god/lib/store/redis"
+	"god/lib/syncx"
 	"time"
 )
 

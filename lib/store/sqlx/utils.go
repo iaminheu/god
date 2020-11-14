@@ -3,8 +3,8 @@ package sqlx
 import (
 	"database/sql"
 	"fmt"
-	"git.zc0901.com/go/god/lib/logx"
-	"git.zc0901.com/go/god/lib/mapping"
+	"god/lib/logx"
+	"god/lib/mapping"
 	"reflect"
 	"strings"
 )
@@ -122,9 +122,9 @@ func desensitize(dsn string) string {
 	return dsn
 }
 
+// scan 将数据库结果转换为Golang的数据类型
 func scan(rows *sql.Rows, dest interface{}) error {
 	// 验证接收目标必须为有效非空指针
-	// TODO 为什么不直接验证 dest，而是反射的值？
 	dv := reflect.ValueOf(dest)
 	if err := mapping.ValidatePtr(&dv); err != nil {
 		return err
