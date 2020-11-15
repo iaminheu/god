@@ -72,7 +72,7 @@ func (cc CachedConn) Exec(exec ExecFn, keys ...string) (sql.Result, error) {
 
 // ExecNoCache 无缓存执行增、删、改
 func (cc CachedConn) ExecNoCache(query string, args ...interface{}) (sql.Result, error) {
-	return cc.conn.Exec(query, args)
+	return cc.conn.Exec(query, args...)
 }
 
 // Query 先按 key 从缓存拿，拿不到则查库、写缓存并返回新值
