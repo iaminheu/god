@@ -1,42 +1,39 @@
 package breaker
 
-const noOpBreakerName = "noOpBreaker"
+const noOpBreakerName = "nopBreaker"
 
-type noOpBreaker struct{}
-type noOpPromise struct{}
+// 无操作熔断器
+type nopBreaker struct{}
+type nopPromise struct{}
 
-func newNoOpBreaker() Breaker {
-	return noOpBreaker{}
+func newNopBreaker() Breaker {
+	return nopBreaker{}
 }
 
-func (b noOpBreaker) Name() string {
+func (b nopBreaker) Name() string {
 	return noOpBreakerName
 }
 
-func (b noOpBreaker) Allow() (Promise, error) {
-	return noOpPromise{}, nil
+func (b nopBreaker) Allow() (Promise, error) {
+	return nopPromise{}, nil
 }
 
-func (b noOpBreaker) Do(req Request) error {
+func (b nopBreaker) Do(req Request) error {
 	return req()
 }
 
-func (b noOpBreaker) DoWithFailback(req Request, fallback Fallback) error {
-	panic("implement me")
+func (b nopBreaker) DoWithFallback(req Request, fallback Fallback) error {
+	return req()
 }
 
-func (b noOpBreaker) DoWithAcceptable(req Request, acceptable Acceptable) error {
-	panic("implement me")
+func (b nopBreaker) DoWithAcceptable(req Request, acceptable Acceptable) error {
+	return req()
 }
 
-func (b noOpBreaker) DoWithFailbackAcceptable(req Request, fallback Fallback, acceptable Acceptable) error {
-	panic("implement me")
+func (b nopBreaker) DoWithFallbackAcceptable(req Request, fallback Fallback, acceptable Acceptable) error {
+	return req()
 }
 
-func (p noOpPromise) Accept() {
-	panic("implement me")
-}
+func (p nopPromise) Accept() {}
 
-func (p noOpPromise) Reject(reason string) {
-	panic("implement me")
-}
+func (p nopPromise) Reject(reason string) {}

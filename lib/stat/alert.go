@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"git.zc0901.com/go/god/lib/dispatcher"
+	"git.zc0901.com/go/god/lib/logx"
 	"git.zc0901.com/go/god/lib/proc"
 	"git.zc0901.com/go/god/lib/sysx"
 	"git.zc0901.com/go/god/lib/timex"
@@ -22,11 +23,11 @@ const (
 )
 
 var (
-	lock              sync.RWMutex
-	reporter          func(string)
-	throttleDispather = dispatcher.NewThrottleDispatcher(5 * time.Minute)
-	clusterName       = proc.Env(clusterNameKey)
-	dropped           int32
+	lock                sync.RWMutex
+	reporter            = logx.Alert
+	shortTimeDispatcher = dispatcher.NewShortTimeDispatcher(5 * time.Minute)
+	clusterName         = proc.Env(clusterNameKey)
+	dropped             int32
 )
 
 func init() {
@@ -41,7 +42,7 @@ func Report(msg string) {
 	lock.RUnlock()
 
 	if fn != nil {
-		reported := throttleDispather.DoOrDiscard(func() {
+		reported := shortTimeDispatcher.DoOrDiscard(func() {
 			var b strings.Builder
 			fmt.Fprintf(&b, "%s\n", timex.Time().Format(timeFormat))
 			if len(clusterName) > 0 {

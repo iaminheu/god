@@ -6,6 +6,6 @@ import (
 )
 
 func TestProb_TrueOnProb(t *testing.T) {
-	prob := NewProb()
-	fmt.Println(prob.TrueOnProb(0.3))
+	prob := NewProba()
+	fmt.Println(prob.TrueOnProba(0.3))
 }

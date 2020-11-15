@@ -46,8 +46,8 @@ const (
 	statFilename   = "stat.log"
 
 	// 日志模式
-	consoleMode = "console"
-	volumeMode  = "volume"
+	consoleMode = "console" // 命令行模式
+	volumeMode  = "volume"  // k8s 模式
 
 	timeFormat          = "2006-01-02T15:04:05.000Z07" // 日期格式
 	callerInnerDepth    = 5                            // 堆栈调用深度
@@ -277,7 +277,7 @@ func setupWithConsole(c LogConf) {
 		errorLogger = newLogWriter(log.New(os.Stderr, "", flags))
 		fatalLogger = newLogWriter(log.New(os.Stderr, "", flags))
 		slowLogger = newLogWriter(log.New(os.Stderr, "", flags))
-		stackLogger = NewLessWriter(errorLogger, options.logStackCooldownMills)
+		stackLogger = NewShortTimeWriter(errorLogger, options.logStackCooldownMills)
 		statLogger = infoLogger
 	})
 }
@@ -325,7 +325,7 @@ func setupWithFiles(c LogConf) error {
 			return
 		}
 
-		stackLogger = NewLessWriter(errorLogger, options.logStackCooldownMills)
+		stackLogger = NewShortTimeWriter(errorLogger, options.logStackCooldownMills)
 	})
 
 	return err

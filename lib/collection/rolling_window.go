@@ -22,7 +22,7 @@ type (
 	Option func(w *RollingWindow)
 )
 
-// NewRollingWindow 新建滚动窗口
+// NewRollingWindow 新建滚窗计数器
 //
 // size 桶个数
 //
@@ -159,13 +159,13 @@ func (w *window) reduceBuckets(start, n int, fn func(b *Bucket)) {
 // Bucket 存储桶是滚动窗口给定时间段内的请求集合
 type Bucket struct {
 	Requests float64 // 桶内请求次数
-	Accepts  float64 // 桶内接受次数
+	Accepts  int64   // 桶内接受次数
 }
 
 // add 向当前桶增加 n 个请求计数
 func (b *Bucket) add(n float64) {
-	b.Requests++   // 不论是否接受，请求一次算一次
-	b.Accepts += n // 大于0，接受了，才累加
+	b.Requests += n // 不论是否接受，请求一次算一次
+	b.Accepts++     // 大于0，接受了，才累加
 }
 
 // reset 归零桶内的请求次数和接受次数

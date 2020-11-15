@@ -7,27 +7,27 @@ import (
 	"time"
 )
 
-type limitedExecutor struct {
-	threshold time.Duration
+type shortTimeLogger struct {
+	duration  time.Duration
 	lastTime  *syncx.AtomicDuration
 	discarded uint32
 }
 
-func newLimitedExecutor(milliseconds int) *limitedExecutor {
-	return &limitedExecutor{
-		threshold: time.Duration(milliseconds) * time.Millisecond,
-		lastTime:  syncx.NewAtomicDuration(),
+func newShortTimeLogger(milliseconds int) *shortTimeLogger {
+	return &shortTimeLogger{
+		duration: time.Duration(milliseconds) * time.Millisecond,
+		lastTime: syncx.NewAtomicDuration(),
 	}
 }
 
-func (le *limitedExecutor) logOrDiscard(execute func()) {
-	if le == nil || le.threshold <= 0 {
+func (le *shortTimeLogger) logOrDiscard(execute func()) {
+	if le == nil || le.duration <= 0 {
 		execute()
 		return
 	}
 
 	now := timex.Now()
-	if now-le.lastTime.Load() <= le.threshold {
+	if now-le.lastTime.Load() <= le.duration {
 		atomic.AddUint32(&le.discarded, 1)
 	} else {
 		le.lastTime.Set(now)

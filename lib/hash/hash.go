@@ -11,12 +11,12 @@ func Hash(data []byte) uint64 {
 	return murmur3.Sum64(data)
 }
 
-func MD5(data []byte) []byte {
+func Md5(data []byte) []byte {
 	digest := md5.New()
 	digest.Write(data)
 	return digest.Sum(nil)
 }
 
-func MD5Hex(data []byte) string {
-	return fmt.Sprintf("%x", MD5(data))
+func Md5Hex(data []byte) string {
+	return fmt.Sprintf("%x", Md5(data))
 }

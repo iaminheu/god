@@ -12,7 +12,7 @@ const (
 )
 
 func TestMD5(t *testing.T) {
-	actual := fmt.Sprintf("%x", MD5([]byte(text)))
+	actual := fmt.Sprintf("%x", Md5([]byte(text)))
 	assert.Equal(t, md5Digest, actual)
 }
 
@@ -25,7 +25,7 @@ func TestHash(t *testing.T) {
 
 func BenchmarkMD5Hex(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		MD5([]byte(text))
+		Md5([]byte(text))
 	}
 }
 

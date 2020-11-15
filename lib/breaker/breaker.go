@@ -31,14 +31,14 @@ type (
 		// Do 若断路器允许则执行请求，否则返回错误。
 		Do(req Request) error
 
-		// DoWithFailback 若断路器允许则执行请求，反之则调用备用函数，再之返回错误。
-		DoWithFailback(req Request, fallback Fallback) error
+		// DoWithFallback 若断路器允许则执行请求，反之则调用备用函数，再之返回错误。
+		DoWithFallback(req Request, fallback Fallback) error
 
 		// DoWithAcceptable 若断路器允许则执行请求，反之则返回错误，并判断错误可否标记为成功请求。
 		DoWithAcceptable(req Request, acceptable Acceptable) error
 
-		// DoWithFailbackAcceptable 若断路器允许则执行请求，反之则调用备用函数，再之返回错误并判断错误可否标记为成功请求。
-		DoWithFailbackAcceptable(req Request, fallback Fallback, acceptable Acceptable) error
+		// DoWithFallbackAcceptable 若断路器允许则执行请求，反之则调用备用函数，再之返回错误并判断错误可否标记为成功请求。
+		DoWithFallbackAcceptable(req Request, fallback Fallback, acceptable Acceptable) error
 	}
 
 	Promise interface {
@@ -87,14 +87,14 @@ func (b breaker) Do(req Request) error {
 	return b.throttle.doReq(req, nil, defaultAcceptable)
 }
 
-func (b breaker) DoWithFailback(req Request, fallback Fallback) error {
+func (b breaker) DoWithFallback(req Request, fallback Fallback) error {
 	return b.throttle.doReq(req, fallback, defaultAcceptable)
 }
 func (b breaker) DoWithAcceptable(req Request, acceptable Acceptable) error {
 	return b.throttle.doReq(req, nil, acceptable)
 }
 
-func (b breaker) DoWithFailbackAcceptable(req Request, fallback Fallback, acceptable Acceptable) error {
+func (b breaker) DoWithFallbackAcceptable(req Request, fallback Fallback, acceptable Acceptable) error {
 	return b.throttle.doReq(req, fallback, acceptable)
 }
 

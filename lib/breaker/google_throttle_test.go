@@ -234,7 +234,7 @@ func getGoogleBreaker() *googleThrottle {
 		k:     5,
 		state: StateClosed,
 		stat:  collection.NewRollingWindow(testBuckets, testInterval),
-		prob:  mathx.NewProb(),
+		proba: mathx.NewProba(),
 	}
 }
 

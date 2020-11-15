@@ -24,7 +24,7 @@ type (
 		k     float64                   // 请求接受比例
 		state int32                     // 断路器跳闸状态
 		stat  *collection.RollingWindow // 统计窗口计数器（采用滚窗算法）
-		prob  *mathx.Prob
+		proba *mathx.Proba
 	}
 
 	googlePromise struct {
@@ -39,7 +39,7 @@ func newGoogleBreaker() *googleThrottle {
 		k:     K,
 		state: StateClosed,
 		stat:  statWindow,
-		prob:  mathx.NewProb(),
+		proba: mathx.NewProba(),
 	}
 }
 
@@ -112,7 +112,7 @@ func (t *googleThrottle) accept() error {
 	}
 
 	// 并非每次阻断，而是随机拦截，以此给后端重生的机会
-	if t.prob.TrueOnProb(dropRatio) {
+	if t.proba.TrueOnProba(dropRatio) {
 		logx.Error("打开断路器并返回错误")
 		return ErrServiceUnavailable
 	}

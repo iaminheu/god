@@ -19,7 +19,7 @@ func Do(name string, req func() error) error {
 // DoWithFallback 使用指定名称的断路器，若断路器允许则执行请求，反之则根据error调用备用应急函数。
 func DoWithFallback(name string, req func() error, fallback Fallback) error {
 	return do(name, func(b Breaker) error {
-		return b.DoWithFailback(req, fallback)
+		return b.DoWithFallback(req, fallback)
 	})
 }
 
@@ -34,7 +34,7 @@ func DoWithAcceptable(name string, req func() error, acceptable Acceptable) erro
 // 若请求的执行，出现错误，则判断可否标记为请求成功。。
 func DoWithFallbackAcceptable(name string, req func() error, fallback Fallback, acceptable Acceptable) error {
 	return do(name, func(b Breaker) error {
-		return b.DoWithFailbackAcceptable(req, fallback, acceptable)
+		return b.DoWithFallbackAcceptable(req, fallback, acceptable)
 	})
 }
 
@@ -59,7 +59,7 @@ func GetBreaker(name string) Breaker {
 
 func NoBreakFor(name string) {
 	lock.Lock()
-	breakers[name] = newNoOpBreaker()
+	breakers[name] = newNopBreaker()
 	lock.Unlock()
 }
 

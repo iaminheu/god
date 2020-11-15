@@ -40,7 +40,7 @@ func TestLoadJsonConfig(t *testing.T) {
 }
 
 func createTempFile(ext, text string) (string, error) {
-	tempFile, err := ioutil.TempFile(os.TempDir(), hash.MD5Hex([]byte(text))+"*"+ext)
+	tempFile, err := ioutil.TempFile(os.TempDir(), hash.Md5Hex([]byte(text))+"*"+ext)
 	if err != nil {
 		return "", err
 	}
