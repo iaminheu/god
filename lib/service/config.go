@@ -1,6 +1,7 @@
 package service
 
 import (
+	"git.zc0901.com/go/god/lib/load"
 	"git.zc0901.com/go/god/lib/logx"
 	"git.zc0901.com/go/god/lib/prometheus"
 	"git.zc0901.com/go/god/lib/stat"
@@ -14,7 +15,7 @@ const (
 	ProMode  = "pro"  // 生产模式
 )
 
-type ServiceConf struct {
+type Config struct {
 	Name       string
 	LogConf    logx.LogConf
 	Mode       string              `json:",default=pro,options=dev|test|pre|pro"`
@@ -22,13 +23,13 @@ type ServiceConf struct {
 	PromConf   prometheus.PromConf `json:",optional"`
 }
 
-func (sc ServiceConf) MustSetup() {
+func (sc Config) MustSetup() {
 	if err := sc.Setup(); err != nil {
 		log.Fatal(err)
 	}
 }
 
-func (sc ServiceConf) Setup() error {
+func (sc Config) Setup() error {
 	if len(sc.LogConf.ServiceName) == 0 {
 		sc.LogConf.ServiceName = sc.Name
 	}
@@ -36,16 +37,24 @@ func (sc ServiceConf) Setup() error {
 		return err
 	}
 
+	// 非生产模式禁用负载均衡和日志汇报
 	sc.initMode()
+
+	// 启动普罗米修斯http服务端口
 	prometheus.StartAgent(sc.PromConf)
+
+	// 设置统计报告书写器（写入普罗米修斯）
 	if len(sc.MetricsUrl) > 0 {
-		// TODO
+		stat.SetReportWriter(stat.NewRemoteWriter(sc.MetricsUrl))
 	}
+
+	return nil
 }
 
-func (sc ServiceConf) initMode() {
+func (sc Config) initMode() {
 	switch sc.Mode {
 	case DevMode, TestMode, PreMode:
+		// 开发、测试、预发布模式，不启用负载均衡和统计上报
 		load.Disable()
 		stat.SetReporter(nil)
 	}

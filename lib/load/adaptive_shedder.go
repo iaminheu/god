@@ -30,7 +30,7 @@ const (
 var (
 	ErrServiceOverloaded = errors.New("service overloaded - 服务超载")
 
-	// 默认启用
+	// 是否启用自适应负载卸流器，默认启用
 	enabled = syncx.ForAtomicBool(true)
 
 	// 系统超载检测函数（判断CPU用量是否超过预置的阈值）
