@@ -175,5 +175,5 @@ func (b *Bucket) reset() {
 }
 
 func (b *Bucket) String() string {
-	return fmt.Sprintf("Requests: %.0f, Accepts: %.0f\n", b.Requests, b.Accepts)
+	return fmt.Sprintf("Requests: %.0f, Accepts: %.0d\n", b.Requests, b.Accepts)
 }

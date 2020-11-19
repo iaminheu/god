@@ -63,7 +63,7 @@ func NewTimingWheel(interval time.Duration, numSlots int, execute Execute) (*Tim
 
 // 真正做初始化
 func newTimingWheelWithClock(interval time.Duration, numSlots int, execute Execute, ticker timex.Ticker) (*TimingWheel, error) {
-	w := &TimingWheel{
+	tw := &TimingWheel{
 		interval:      interval,                                // 单个时间间隔
 		ticker:        ticker,                                  // 定时器，做时间推动，以 interval 为单位推进
 		slots:         make([]*list.List, numSlots),            // 时间槽，双向链表实现
@@ -78,42 +78,42 @@ func newTimingWheelWithClock(interval time.Duration, numSlots int, execute Execu
 		stopChannel:   make(chan lang.PlaceholderType),         // 停止任务通道
 	}
 
-	w.initSlots()
-	go w.run()
+	tw.initSlots()
+	go tw.run()
 
-	return w, nil
+	return tw, nil
 }
 
 // Drain 排水：向排水通道发送排水函数
-func (w *TimingWheel) Drain(fn func(key, value interface{})) {
-	w.drainChannel <- fn
+func (tw *TimingWheel) Drain(fn func(key, value interface{})) {
+	tw.drainChannel <- fn
 }
 
-func (w *TimingWheel) MoveTimer(key interface{}, delay time.Duration) {
+func (tw *TimingWheel) MoveTimer(key interface{}, delay time.Duration) {
 	if delay <= 0 || key == nil {
 		return
 	}
 
-	w.moveChannel <- baseEntry{
+	tw.moveChannel <- baseEntry{
 		delay: delay,
 		key:   key,
 	}
 }
 
-func (w *TimingWheel) RemoveTimer(key interface{}) {
+func (tw *TimingWheel) RemoveTimer(key interface{}) {
 	if key == nil {
 		return
 	}
 
-	w.removeChannel <- key
+	tw.removeChannel <- key
 }
 
-func (w *TimingWheel) SetTimer(key, value interface{}, delay time.Duration) {
+func (tw *TimingWheel) SetTimer(key, value interface{}, delay time.Duration) {
 	if delay <= 0 || key == nil {
 		return
 	}
 
-	w.setChannel <- timingEntry{
+	tw.setChannel <- timingEntry{
 		baseEntry: baseEntry{
 			delay: delay,
 			key:   key,
@@ -122,47 +122,50 @@ func (w *TimingWheel) SetTimer(key, value interface{}, delay time.Duration) {
 	}
 }
 
-func (w *TimingWheel) Stop() {
-	close(w.stopChannel)
+func (tw *TimingWheel) Stop() {
+	close(tw.stopChannel)
 }
 
-func (w *TimingWheel) initSlots() {
-	for i := 0; i < w.numSlots; i++ {
-		w.slots[i] = list.New()
+func (tw *TimingWheel) initSlots() {
+	for i := 0; i < tw.numSlots; i++ {
+		tw.slots[i] = list.New()
 	}
 }
 
 // 运行定时器，推动时间轮运转
-func (w *TimingWheel) run() {
+func (tw *TimingWheel) run() {
 	for {
 		select {
 		// 定时器推动时间
-		case <-w.ticker.Chan():
-			w.onTick()
+		case <-tw.ticker.Chan():
+			tw.onTick()
 		//	收到新任务
-		case task := <-w.setChannel:
-			w.setTask(&task)
+		case task := <-tw.setChannel:
+			tw.setTask(&task)
 		//	移除任务
-		case key := <-w.removeChannel:
-			w.removeTask(key)
+		case key := <-tw.removeChannel:
+			tw.removeTask(key)
+		// 移动任务
+		case task := <-tw.moveChannel:
+			tw.moveTask(task)
 		//	清洗任务
-		case fn := <-w.drainChannel:
-			w.drainAll(fn)
+		case fn := <-tw.drainChannel:
+			tw.drainAll(fn)
 		// 停止定时器
-		case <-w.stopChannel:
-			w.ticker.Stop()
+		case <-tw.stopChannel:
+			tw.ticker.Stop()
 			return
 		}
 	}
 }
 
-func (w *TimingWheel) onTick() {
-	w.tickedPos = (w.tickedPos + 1) % w.numSlots
-	l := w.slots[w.tickedPos]
-	w.scanAndRunTasks(l)
+func (tw *TimingWheel) onTick() {
+	tw.tickedPos = (tw.tickedPos + 1) % tw.numSlots
+	l := tw.slots[tw.tickedPos]
+	tw.scanAndRunTasks(l)
 }
 
-func (w *TimingWheel) scanAndRunTasks(l *list.List) {
+func (tw *TimingWheel) scanAndRunTasks(l *list.List) {
 	var tasks []timingTask
 
 	for e := l.Front(); e != nil; {
@@ -170,7 +173,6 @@ func (w *TimingWheel) scanAndRunTasks(l *list.List) {
 		if task.removed {
 			next := e.Next()
 			l.Remove(e)
-			w.timers.Del(task.key)
 			e = next
 			continue
 		} else if task.circle > 0 {
@@ -180,9 +182,9 @@ func (w *TimingWheel) scanAndRunTasks(l *list.List) {
 		} else if task.diff > 0 {
 			next := e.Next()
 			l.Remove(e)
-			pos := (w.tickedPos + task.diff) % w.numSlots
-			w.slots[pos].PushBack(task)
-			w.setTimerPosition(pos, task)
+			pos := (tw.tickedPos + task.diff) % tw.numSlots
+			tw.slots[pos].PushBack(task)
+			tw.setTimerPosition(pos, task)
 			task.diff = 0
 			e = next
 			continue
@@ -194,26 +196,27 @@ func (w *TimingWheel) scanAndRunTasks(l *list.List) {
 		})
 		next := e.Next()
 		l.Remove(e)
-		w.timers.Del(task.key)
+		tw.timers.Del(task.key)
 		e = next
 	}
 
-	w.runTasks(tasks)
+	tw.runTasks(tasks)
 }
 
-func (w *TimingWheel) setTimerPosition(pos int, task *timingEntry) {
-	if val, ok := w.timers.Get(task.key); ok {
+func (tw *TimingWheel) setTimerPosition(pos int, task *timingEntry) {
+	if val, ok := tw.timers.Get(task.key); ok {
 		timer := val.(*positionEntry)
+		timer.item = task
 		timer.pos = pos
 	} else {
-		w.timers.Set(task.key, &positionEntry{
+		tw.timers.Set(task.key, &positionEntry{
 			pos:  pos,
 			item: task,
 		})
 	}
 }
 
-func (w *TimingWheel) runTasks(tasks []timingTask) {
+func (tw *TimingWheel) runTasks(tasks []timingTask) {
 	if len(tasks) == 0 {
 		return
 	}
@@ -221,46 +224,46 @@ func (w *TimingWheel) runTasks(tasks []timingTask) {
 	go func() {
 		for i := range tasks {
 			threading.RunSafe(func() {
-				w.execute(tasks[i].key, tasks[i].value)
+				tw.execute(tasks[i].key, tasks[i].value)
 			})
 		}
 	}()
 }
 
-func (w *TimingWheel) setTask(task *timingEntry) {
-	if task.delay < w.interval {
-		task.delay = w.interval
+func (tw *TimingWheel) setTask(task *timingEntry) {
+	if task.delay < tw.interval {
+		task.delay = tw.interval
 	}
 
-	if val, ok := w.timers.Get(task.key); ok {
+	if val, ok := tw.timers.Get(task.key); ok {
 		entry := val.(*positionEntry)
 		entry.item.value = task.value
-		w.moveTask(task.baseEntry)
+		tw.moveTask(task.baseEntry)
 	} else {
-		pos, circle := w.getPositionAndCircle(task.delay)
+		pos, circle := tw.getPositionAndCircle(task.delay)
 		task.circle = circle
-		w.slots[pos].PushBack(task)
-		w.setTimerPosition(pos, task)
+		tw.slots[pos].PushBack(task)
+		tw.setTimerPosition(pos, task)
 	}
 }
 
-func (w *TimingWheel) moveTask(task baseEntry) {
+func (tw *TimingWheel) moveTask(task baseEntry) {
 	// 通过任务 key 名，获取 positionEntry 位置实体信息（位置信息、任务信息）
-	val, ok := w.timers.Get(task.key)
+	val, ok := tw.timers.Get(task.key)
 	if !ok {
 		return
 	}
 
 	timer := val.(*positionEntry)
 	// 任务的延迟时间比时间格间隔还要小，说明应该立即执行
-	if task.delay < w.interval {
+	if task.delay < tw.interval {
 		threading.RunSafe(func() {
-			w.execute(timer.item.key, timer.item.value)
+			tw.execute(timer.item.key, timer.item.value)
 		})
 		return
 	}
 
-	pos, circle := w.getPositionAndCircle(task.delay)
+	pos, circle := tw.getPositionAndCircle(task.delay)
 	// 如果比时间格间隔大，则通过延迟时间算出时间轮中的新位置pos和circle
 	if pos >= timer.pos {
 		timer.item.circle = circle
@@ -271,7 +274,7 @@ func (w *TimingWheel) moveTask(task baseEntry) {
 		circle--
 		timer.item.circle = circle
 		// 因为是一个数组，要加上 numSlots（相当于要走到下一层？）
-		timer.item.diff = w.numSlots + pos - timer.pos
+		timer.item.diff = tw.numSlots + pos - timer.pos
 	} else {
 		// 如果 offset 提前了，此时 task 也还在第一层
 		// 标记删除老的 task，并重新入队，等待被执行
@@ -280,32 +283,33 @@ func (w *TimingWheel) moveTask(task baseEntry) {
 			baseEntry: task,
 			value:     timer.item.value,
 		}
-		w.slots[pos].PushBack(newTask)
-		w.setTimerPosition(pos, newTask)
+		tw.slots[pos].PushBack(newTask)
+		tw.setTimerPosition(pos, newTask)
 	}
 }
 
-func (w *TimingWheel) getPositionAndCircle(delay time.Duration) (pos int, circle int) {
-	steps := int(delay / w.interval)
-	pos = (w.tickedPos + steps) % w.numSlots
-	circle = (steps - 1) / w.numSlots
+func (tw *TimingWheel) getPositionAndCircle(delay time.Duration) (pos int, circle int) {
+	steps := int(delay / tw.interval)
+	pos = (tw.tickedPos + steps) % tw.numSlots
+	circle = (steps - 1) / tw.numSlots
 
 	return
 }
 
-func (w *TimingWheel) removeTask(key interface{}) {
-	val, ok := w.timers.Get(key)
+func (tw *TimingWheel) removeTask(key interface{}) {
+	val, ok := tw.timers.Get(key)
 	if !ok {
 		return
 	}
 
 	timer := val.(*positionEntry)
 	timer.item.removed = true
+	tw.timers.Del(key)
 }
 
-func (w *TimingWheel) drainAll(fn func(key interface{}, value interface{})) {
+func (tw *TimingWheel) drainAll(fn func(key interface{}, value interface{})) {
 	runner := threading.NewTaskRunner(drainWorkers)
-	for _, slot := range w.slots {
+	for _, slot := range tw.slots {
 		for e := slot.Front(); e != nil; {
 			task := e.Value.(*timingEntry)
 			next := e.Next()
