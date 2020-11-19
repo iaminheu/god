@@ -15,7 +15,7 @@ const (
 	ProMode  = "pro"  // 生产模式
 )
 
-type Config struct {
+type ServiceConf struct {
 	Name       string
 	LogConf    logx.LogConf
 	Mode       string              `json:",default=pro,options=dev|test|pre|pro"`
@@ -23,13 +23,13 @@ type Config struct {
 	PromConf   prometheus.PromConf `json:",optional"`
 }
 
-func (sc Config) MustSetup() {
+func (sc ServiceConf) MustSetup() {
 	if err := sc.Setup(); err != nil {
 		log.Fatal(err)
 	}
 }
 
-func (sc Config) Setup() error {
+func (sc ServiceConf) Setup() error {
 	if len(sc.LogConf.ServiceName) == 0 {
 		sc.LogConf.ServiceName = sc.Name
 	}
@@ -51,7 +51,7 @@ func (sc Config) Setup() error {
 	return nil
 }
 
-func (sc Config) initMode() {
+func (sc ServiceConf) initMode() {
 	switch sc.Mode {
 	case DevMode, TestMode, PreMode:
 		// 开发、测试、预发布模式，不启用负载均衡和统计上报

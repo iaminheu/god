@@ -42,7 +42,7 @@ var (
 type (
 	Promise interface {
 		Pass()
-		Drop()
+		Fail()
 	}
 
 	promise struct {
@@ -250,6 +250,6 @@ func (p *promise) Pass() {
 	p.shedder.passCounter.Add(1)
 }
 
-func (p *promise) Drop() {
+func (p *promise) Fail() {
 	p.shedder.addFlying(-1)
 }

@@ -6,12 +6,14 @@ import (
 	"time"
 )
 
+// Unstable 值会在[0, 1]之间上下浮动的偏差结构体
 type Unstable struct {
 	deviation float64
 	r         *rand.Rand
 	lock      *sync.Mutex
 }
 
+// NewUnstable 新建一个值会浮动的偏差结构体
 func NewUnstable(deviation float64) Unstable {
 	if deviation < 0 {
 		deviation = 0

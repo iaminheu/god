@@ -40,7 +40,7 @@ func TestNewAdaptiveShedder(t *testing.T) {
 					count := rand.Intn(5)
 					time.Sleep(time.Millisecond * time.Duration(count))
 					if proba.TrueOnProba(0.01) {
-						promise.Drop()
+						promise.Fail()
 					} else {
 						promise.Pass()
 					}
@@ -197,7 +197,7 @@ func BenchmarkAdaptiveShedder_Allow(b *testing.B) {
 			if err == nil {
 				time.Sleep(time.Millisecond)
 				if proba.TrueOnProba(0.01) {
-					p.Drop()
+					p.Fail()
 				} else {
 					p.Pass()
 				}

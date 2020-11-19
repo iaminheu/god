@@ -16,4 +16,4 @@ func (s nopShedder) Allow() (Promise, error) {
 
 func (p nopPromise) Pass() {}
 
-func (p nopPromise) Drop() {}
+func (p nopPromise) Fail() {}

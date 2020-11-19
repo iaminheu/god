@@ -34,7 +34,7 @@ type (
 		taskChan    TaskChan            // 任务任务通道
 		confirmChan ConfirmChan         // 任务确认通道
 		wg          sync.WaitGroup      // 同步等待组
-		wgBarrier   syncx.Barrier       // 同步等待组的屏障器
+		wgLocker    syncx.Locker        // 同步等待组的加锁器
 		guarded     bool                // 是否守卫
 		ticker      func() timex.Ticker // 任务断续器
 		lock        sync.Mutex
@@ -89,7 +89,7 @@ func (pd *PeriodicalDispatcher) Sync(fn func()) {
 // Wait 加锁保护等待操作
 func (pd *PeriodicalDispatcher) Wait() {
 	pd.Flush()
-	pd.wgBarrier.Guard(func() {
+	pd.wgLocker.Guard(func() {
 		pd.wg.Wait()
 	})
 }
@@ -155,7 +155,7 @@ func (pd *PeriodicalDispatcher) backgroundFlush() {
 
 // enter 执行者进入，等待组加锁
 func (pd *PeriodicalDispatcher) enter() {
-	pd.wgBarrier.Guard(func() {
+	pd.wgLocker.Guard(func() {
 		pd.wg.Add(1)
 	})
 }

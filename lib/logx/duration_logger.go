@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+const durationCallerDepth = 3
+
 type durationLogger logEntry
 
 func WithDuration(d time.Duration) Logger {
@@ -29,13 +31,13 @@ func (l *durationLogger) Infof(format string, v ...interface{}) {
 
 func (l *durationLogger) Error(v ...interface{}) {
 	if shouldLog(ErrorLevel) {
-		l.write(errorLogger, errorLevel, fmt.Sprint(v...))
+		l.write(errorLogger, errorLevel, formatWithCaller(fmt.Sprint(v...), durationCallerDepth))
 	}
 }
 
 func (l *durationLogger) Errorf(format string, v ...interface{}) {
 	if shouldLog(ErrorLevel) {
-		l.write(errorLogger, errorLevel, fmt.Sprintf(format, v...))
+		l.write(errorLogger, errorLevel, formatWithCaller(fmt.Sprintf(format, v...), durationCallerDepth))
 	}
 }
 

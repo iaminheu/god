@@ -436,8 +436,8 @@ func output(writer io.Writer, level, msg string) {
 	})
 }
 
-func outputJson(writer io.Writer, entry logEntry) {
-	if content, err := json.Marshal(entry); err != nil {
+func outputJson(writer io.Writer, info interface{}) {
+	if content, err := json.Marshal(info); err != nil {
 		log.Println(err.Error())
 	} else if atomic.LoadUint32(&initialized) == 0 || writer == nil {
 		log.Println(string(content))

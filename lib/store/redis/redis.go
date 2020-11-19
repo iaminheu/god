@@ -28,6 +28,12 @@ type (
 		redis.Cmdable
 	}
 
+	// GeoLocation is used with GeoAdd to add geospatial location.
+	GeoLocation = redis.GeoLocation
+	// GeoRadiusQuery is used with GeoRadius to query geospatial index.
+	GeoRadiusQuery = redis.GeoRadiusQuery
+	GeoPos         = redis.GeoPos
+
 	Pipeliner = redis.Pipeliner
 
 	Pair struct {
