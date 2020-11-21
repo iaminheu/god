@@ -38,6 +38,7 @@ type (
 	CacheOption func(cache *Cache)
 )
 
+// NewCache 新建一个进程内缓存
 func NewCache(expire time.Duration, opts ...CacheOption) (*Cache, error) {
 	cache := &Cache{
 		data:           make(map[string]interface{}),

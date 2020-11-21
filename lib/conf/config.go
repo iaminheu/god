@@ -34,6 +34,6 @@ func LoadConfig(filename string, v interface{}) error {
 
 func MustLoad(path string, v interface{}) {
 	if err := LoadConfig(path, v); err != nil {
-		log.Fatalf("error: config file %s, %s", path, err.Error())
+		log.Fatalf("错误：配置文件 - %s, %s", path, err.Error())
 	}
 }

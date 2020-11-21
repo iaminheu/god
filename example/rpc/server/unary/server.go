@@ -1,0 +1,59 @@
+package main
+
+import (
+	"context"
+	"flag"
+	"fmt"
+	"git.zc0901.com/go/god/example/rpc/pb/unary"
+	"git.zc0901.com/go/god/lib/conf"
+	"git.zc0901.com/go/god/rpc"
+	"google.golang.org/grpc"
+	"log"
+	"os"
+	"sync"
+	"time"
+)
+
+var configFile = flag.String("f", "etc/config.json", "配置文件")
+
+type GreetServer struct {
+	lock     sync.Mutex
+	alive    bool
+	downTime time.Time
+}
+
+func (gs *GreetServer) Greet(ctx context.Context, req *unary.Request) (*unary.Response, error) {
+	fmt.Println("=>", req)
+
+	hostname, err := os.Hostname()
+	if err != nil {
+		return nil, err
+	}
+
+	return &unary.Response{Greet: hostname + "发来了问候"}, nil
+}
+
+func NewGreetServer() *GreetServer {
+	return &GreetServer{alive: true}
+}
+
+func main() {
+	// 加载配置
+	flag.Parse()
+	var c rpc.ServerConf
+	conf.MustLoad(*configFile, &c)
+
+	// 新建rpc服务器
+	server := rpc.MustNewServer(c, func(server *grpc.Server) {
+		unary.RegisterGreeterServer(server, NewGreetServer())
+	})
+
+	// 添加自定义拦截器
+	server.AddUnaryInterceptors(func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
+		startTime := time.Now()
+		resp, err = handler(ctx, req)
+		log.Printf("方法：%s 耗时：%v\n", info.FullMethod, time.Since(startTime))
+		return resp, err
+	})
+	server.Start()
+}

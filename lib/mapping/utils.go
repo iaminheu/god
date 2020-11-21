@@ -24,7 +24,7 @@ const (
 
 var (
 	errUnsupportedType  = errors.New("unsupported type on setting field value")
-	errNumberRange      = errors.New("wrong number range setting")
+	errNumberRange      = errors.New("错误的数值区间配置")
 	optionsCache        = make(map[string]optionsCacheValue)
 	cacheLock           sync.RWMutex
 	structRequiredCache = make(map[reflect.Type]requiredCacheValue)

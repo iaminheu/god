@@ -47,7 +47,7 @@ func init() {
 func printUsage() {
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
-	logx.Stat("CPU: %dm, 内存: 分配=%.1fMi, 累计分配=%.1fMi, 系统=%.1fMi, GC次数=%d",
+	logx.Statf("CPU: %dm, 内存: 分配=%.1fMi, 累计分配=%.1fMi, 系统=%.1fMi, GC次数=%d",
 		CpuUsage(), bToMb(m.Alloc), bToMb(m.TotalAlloc), bToMb(m.Sys), m.NumGC)
 }
 

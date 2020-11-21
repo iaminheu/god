@@ -18,7 +18,7 @@ type (
 
 		// 不允许永久挂起，不要设置超时时间为0，如设为0，底层将自动重置为2秒。
 		Timeout      int64 `json:",default=2000"`
-		CpuThreshold int64 `json:",default=900,range=[0,1000]"`
+		CpuThreshold int64 `json:",default=900,range=[0:1000]"`
 	}
 
 	// ServerConf Rpc客户端配置
