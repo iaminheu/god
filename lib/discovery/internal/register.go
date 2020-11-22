@@ -149,7 +149,7 @@ func (c *cluster) load(cli EtcdClient, key string) {
 		ctx, cancel := context.WithTimeout(c.context(cli), RequestTimeout)
 		resp, err = cli.Get(ctx, makeKeyPrefix(key), clientv3.WithPrefix())
 		cancel()
-		if err != nil {
+		if err == nil {
 			break
 		}
 

@@ -1,7 +1,10 @@
 {
-  "Endpoints": [
-    "localhost:3456"
-  ],
+  "Etcd": {
+    "Hosts": [
+      "localhost:2379"
+    ],
+    "Key": "greeter.rpc"
+  },
   "App": "adhoc",
   "Token": "E0459CF7-EA85-4E0C-BB48-C81448811511"
 }

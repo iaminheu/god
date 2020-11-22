@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	dialTimeout = time.Second * 3
+	dialTimeout = time.Second * 2
 	separator   = '/'
 )
 
@@ -44,7 +44,7 @@ func (c *client) dial(server string, opts ...ClientOption) error {
 				service = server[pos+1:]
 			}
 		}
-		return fmt.Errorf("rpc dial: %s, 错误：%s, 请确保rpc服务 %s 是否已启动",
+		return fmt.Errorf("rpc dial: %s, 错误：%s, 请确保rpc服务 %s 是否已启动，如使用etcd也需确保已启动",
 			server, err.Error(), service)
 	}
 
