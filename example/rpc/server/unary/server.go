@@ -10,17 +10,12 @@ import (
 	"google.golang.org/grpc"
 	"log"
 	"os"
-	"sync"
 	"time"
 )
 
 var configFile = flag.String("f", "etc/config.json", "配置文件")
 
-type GreetServer struct {
-	lock     sync.Mutex
-	alive    bool
-	downTime time.Time
-}
+type GreetServer struct{}
 
 func (gs *GreetServer) Greet(ctx context.Context, req *unary.Request) (*unary.Response, error) {
 	fmt.Println("=>", req)
@@ -34,7 +29,7 @@ func (gs *GreetServer) Greet(ctx context.Context, req *unary.Request) (*unary.Re
 }
 
 func NewGreetServer() *GreetServer {
-	return &GreetServer{alive: true}
+	return &GreetServer{}
 }
 
 func main() {

@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"fmt"
 	"git.zc0901.com/go/god/lib/collection"
 	"git.zc0901.com/go/god/lib/store/redis"
 	"google.golang.org/grpc/codes"
@@ -13,10 +14,10 @@ import (
 const defaultExpiration = time.Minute * 5
 
 type Authenticator struct {
-	store  *redis.Redis
-	key    string
-	cache  *collection.Cache
-	strict bool // 严格模式将返回框架内部错误信息
+	store  *redis.Redis      // redis存储（二级缓存）
+	key    string            // redis 存储鉴权信息的hash key
+	cache  *collection.Cache // 进程内缓存（一级缓存）
+	strict bool              // 严格模式将返回框架内部错误信息
 }
 
 func NewAuthenticator(store *redis.Redis, key string, strict bool) (*Authenticator, error) {
@@ -67,7 +68,7 @@ func (a *Authenticator) validate(app string, token string) error {
 	})
 	if err != nil {
 		if a.strict {
-			return status.Error(codes.Internal, err.Error())
+			return status.Error(codes.Internal, fmt.Sprintf("[RPC鉴权] %s", err.Error()))
 		} else {
 			return nil
 		}

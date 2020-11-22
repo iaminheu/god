@@ -202,8 +202,8 @@ func (as *adaptiveShedder) maxPass() int64 {
 	var result float64 = 1
 
 	as.passCounter.Reduce(func(b *collection.Bucket) {
-		if b.Requests > result {
-			result = b.Requests
+		if b.Accepts > result {
+			result = b.Accepts
 		}
 	})
 
@@ -215,11 +215,11 @@ func (as *adaptiveShedder) minRt() float64 {
 	var result = defaultMinRt
 
 	as.rtCounter.Reduce(func(b *collection.Bucket) {
-		if b.Accepts <= 0 {
+		if b.Requests <= 0 {
 			return
 		}
 
-		avg := math.Round(b.Requests / float64(b.Accepts))
+		avg := math.Round(b.Accepts / float64(b.Requests))
 		if avg < result {
 			result = avg
 		}

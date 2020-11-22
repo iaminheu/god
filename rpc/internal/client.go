@@ -62,11 +62,11 @@ func (c *client) buildDialOptions(opts ...ClientOption) []grpc.DialOption {
 		grpc.WithInsecure(),
 		grpc.WithBlock(),
 		WithUnaryClientInterceptors(
-			client_interceptors.TraceInterceptor,
-			client_interceptors.DurationInterceptor,
-			client_interceptors.BreakerInterceptor,
-			client_interceptors.PrometheusInterceptor,
-			client_interceptors.TimeoutInterceptor(cliOpts.Timeout),
+			client_interceptors.TraceInterceptor,                    // 线路跟踪
+			client_interceptors.DurationInterceptor,                 // 慢查询日志
+			client_interceptors.BreakerInterceptor,                  // 自动熔断
+			client_interceptors.PrometheusInterceptor,               // 监控报警
+			client_interceptors.TimeoutInterceptor(cliOpts.Timeout), // 超时控制
 		),
 	}
 

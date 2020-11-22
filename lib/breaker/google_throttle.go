@@ -2,7 +2,6 @@ package breaker
 
 import (
 	"git.zc0901.com/go/god/lib/collection"
-	"git.zc0901.com/go/god/lib/logx"
 	"git.zc0901.com/go/god/lib/mathx"
 	"math"
 	"sync/atomic"
@@ -113,7 +112,6 @@ func (t *googleThrottle) accept() error {
 
 	// 并非每次阻断，而是随机拦截，以此给后端重生的机会
 	if t.proba.TrueOnProba(dropRatio) {
-		logx.Error("打开断路器并返回错误")
 		return ErrServiceUnavailable
 	}
 
@@ -123,7 +121,7 @@ func (t *googleThrottle) accept() error {
 // 历史总数（请求多少次，同意多少次）
 func (t *googleThrottle) history() (requests int64, accepts int64) {
 	t.stat.Reduce(func(b *collection.Bucket) {
-		requests += int64(b.Requests)
+		requests += b.Requests
 		accepts += int64(b.Accepts)
 	})
 	return

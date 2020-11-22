@@ -95,19 +95,19 @@ func (rs *RpcServer) Stop() {
 }
 
 func setupInterceptors(server internal.Server, sc ServerConf, metrics *stat.Metrics) error {
-	// 负载卸流拦截器
+	// 自动降载（负载卸流拦截器）
 	if sc.CpuThreshold > 0 {
 		shedder := load.NewAdaptiveShedder(load.WithCpuThreshold(sc.CpuThreshold))
 		server.AddUnaryInterceptors(server_interceptors.UnaryShedderInterceptor(shedder, metrics))
 	}
 
-	// 超时拦截器
+	// 超时控制（超时拦截器）
 	if sc.Timeout > 0 {
 		server.AddUnaryInterceptors(server_interceptors.UnaryTimeoutInterceptor(
 			time.Duration(sc.Timeout) * time.Millisecond))
 	}
 
-	// 鉴权拦截器
+	// 调用鉴权（鉴权拦截器）
 	if sc.Auth {
 		authenticator, err := auth.NewAuthenticator(sc.Redis.NewRedis(), sc.Redis.Key, sc.StrictControl)
 		if err != nil {
