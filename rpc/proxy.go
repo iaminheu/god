@@ -10,7 +10,7 @@ import (
 )
 
 type RpcProxy struct {
-	backend     string
+	backend     string // 代理对应的后端服务器地址
 	clients     map[string]Client
 	options     []internal.ClientOption
 	sharedCalls syncx.SharedCalls

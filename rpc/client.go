@@ -31,6 +31,7 @@ func (rc *RpcClient) Conn() *grpc.ClientConn {
 	return rc.client.Conn()
 }
 
+// MustNewClient 根据配置文件新建rpc客户端，出错直接退出。
 func MustNewClient(conf ClientConf, options ...ClientOption) Client {
 	cli, err := NewClient(conf, options...)
 	if err != nil {
@@ -40,6 +41,7 @@ func MustNewClient(conf ClientConf, options ...ClientOption) Client {
 	return cli
 }
 
+// MustNewClient 根据配置文件新建rpc客户端，出错直接退出。
 func NewClient(c ClientConf, options ...ClientOption) (Client, error) {
 	var opts []ClientOption
 	if c.HasCredential() {
@@ -67,6 +69,7 @@ func NewClient(c ClientConf, options ...ClientOption) (Client, error) {
 	return &RpcClient{client: client}, nil
 }
 
+// NewClientNoAuth 新建无需鉴权的、基于etcd的rpc客户端
 func NewClientNoAuth(c discovery.EtcdConf, opts ...ClientOption) (Client, error) {
 	client, err := internal.NewClient(internal.BuildDiscoveryTarget(c.Hosts, c.Key), opts...)
 	if err != nil {
@@ -76,6 +79,7 @@ func NewClientNoAuth(c discovery.EtcdConf, opts ...ClientOption) (Client, error)
 	return &RpcClient{client: client}, nil
 }
 
+// NewClientWithTarget 新建指向目标地址的代理客户端
 func NewClientWithTarget(target string, opts ...ClientOption) (Client, error) {
 	return internal.NewClient(target, opts...)
 }

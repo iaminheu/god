@@ -30,7 +30,7 @@ func main() {
 			conn := client.Conn()
 			greeterClient := unary.NewGreeterClient(conn)
 			resp, err := greeterClient.Greet(context.Background(), &unary.Request{
-				Name: "kevin",
+				Name: "richard",
 			})
 			if err != nil {
 				fmt.Println("错误：", err.Error())

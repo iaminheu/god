@@ -15,6 +15,7 @@ type (
 		Password string `json:",optional"`
 	}
 
+	// KeyConf 带有指定key的redis配置，一般用于rpc调用鉴权
 	KeyConf struct {
 		Conf
 		Key string `json:",optional"`
