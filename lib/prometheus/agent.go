@@ -12,15 +12,15 @@ import (
 var once sync.Once
 
 // StartAgent 启动普罗米修斯Http代理服务
-func StartAgent(pc PromConf) {
+func StartAgent(c PromConf) {
 	once.Do(func() {
-		if len(pc.Host) == 0 {
+		if len(c.Host) == 0 {
 			return
 		}
 
 		threading.GoSafe(func() {
-			http.Handle(pc.Path, promhttp.Handler())
-			addr := fmt.Sprintf("%s:%s", pc.Host, pc.Port)
+			http.Handle(c.Path, promhttp.Handler())
+			addr := fmt.Sprintf("%s:%s", c.Host, c.Port)
 			logx.Infof("启动普罗米修斯代理，端口：%s", addr)
 			if err := http.ListenAndServe(addr, nil); err != nil {
 				logx.Error(err)

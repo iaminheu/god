@@ -33,7 +33,7 @@ func main() {
 	flag.Parse()
 
 	// 新建代理客户端
-	proxy := rpc.MustNewServer(rpc.ServerConf{
+	proxy := rpc.MustNewServer(rpc.ServerConfig{
 		ServiceConf: service.ServiceConf{
 			LogConf: logx.LogConf{Mode: "console"},
 		},

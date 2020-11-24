@@ -50,7 +50,7 @@ type (
 		shedder *adaptiveShedder
 	}
 
-	// Shedder 甩负荷——卸流器
+	// Shedder 负载卸流器
 	Shedder interface {
 		Allow() (Promise, error)
 	}

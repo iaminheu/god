@@ -5,11 +5,14 @@ go 1.15
 require (
 	github.com/alicebob/miniredis/v2 v2.14.1
 	github.com/beanstalkd/go-beanstalk v0.1.0
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/go-xorm/builder v0.3.4
 	github.com/golang/mock v1.4.4
 	github.com/golang/protobuf v1.4.3
+	github.com/google/uuid v1.0.0
+	github.com/justinas/alice v1.2.0 // indirect
 	github.com/logrusorgru/aurora v2.0.3+incompatible
 	github.com/onsi/ginkgo v1.14.2 // indirect
 	github.com/onsi/gomega v1.10.3 // indirect
