@@ -5,12 +5,7 @@ import (
 	"git.zc0901.com/go/god/lib/stringx"
 )
 
-const (
-	StateClosed State = iota // 断路器关闭 0
-	StateOpen                // 断路器打开 1
-)
-
-var ErrServiceUnavailable = errors.New("断路器已打开，服务不可用")
+var ErrServiceUnavailable = errors.New("断路器打开")
 
 type (
 	State      = int32                     // 断路器状态
@@ -75,26 +70,26 @@ func WithName(name string) Option {
 	}
 }
 
-func (b breaker) Name() string {
+func (b *breaker) Name() string {
 	return b.name
 }
 
-func (b breaker) Allow() (Promise, error) {
+func (b *breaker) Allow() (Promise, error) {
 	return b.throttle.allow()
 }
 
-func (b breaker) Do(req Request) error {
+func (b *breaker) Do(req Request) error {
 	return b.throttle.doReq(req, nil, defaultAcceptable)
 }
 
-func (b breaker) DoWithFallback(req Request, fallback Fallback) error {
+func (b *breaker) DoWithFallback(req Request, fallback Fallback) error {
 	return b.throttle.doReq(req, fallback, defaultAcceptable)
 }
-func (b breaker) DoWithAcceptable(req Request, acceptable Acceptable) error {
+func (b *breaker) DoWithAcceptable(req Request, acceptable Acceptable) error {
 	return b.throttle.doReq(req, nil, acceptable)
 }
 
-func (b breaker) DoWithFallbackAcceptable(req Request, fallback Fallback, acceptable Acceptable) error {
+func (b *breaker) DoWithFallbackAcceptable(req Request, fallback Fallback, acceptable Acceptable) error {
 	return b.throttle.doReq(req, fallback, acceptable)
 }
 
