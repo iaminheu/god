@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-var configFile = flag.String("f", "etc/config.json", "配置文件")
+var configFile = flag.String("f", "etc/config.yaml", "配置文件")
 
 type GreetServer struct{}
 

@@ -11,7 +11,7 @@ import (
 	"sync"
 )
 
-var configFile = flag.String("f", "config.json", "配置文件")
+var configFile = flag.String("f", "config.yaml", "配置文件")
 
 func main() {
 	// 加载配置

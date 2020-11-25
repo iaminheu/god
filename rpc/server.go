@@ -34,37 +34,37 @@ func MustNewServer(sc ServerConfig, register internal.RegisterFn) *RpcServer {
 	return server
 }
 
-func NewServer(sc ServerConfig, register internal.RegisterFn) (*RpcServer, error) {
+func NewServer(c ServerConfig, register internal.RegisterFn) (*RpcServer, error) {
 	var err error
 
 	// 验证服务端配置
-	if err := sc.Validate(); err != nil {
+	if err := c.Validate(); err != nil {
 		return nil, err
 	}
 
 	// 新建监控指标，以监听端口作为监听名称
-	metrics := stat.NewMetrics(sc.ListenOn)
+	metrics := stat.NewMetrics(c.ListenOn)
 
 	// 新建内部RPC服务器
 	var server internal.Server
-	if sc.HasEtcd() {
-		listenOn := figureOutListenOn(sc.ListenOn)
-		server, err = internal.NewPubServer(sc.Etcd.Hosts, sc.Etcd.Key, listenOn, internal.WithMetrics(metrics))
+	if c.HasEtcd() {
+		listenOn := figureOutListenOn(c.ListenOn)
+		server, err = internal.NewPubServer(c.Etcd.Hosts, c.Etcd.Key, listenOn, internal.WithMetrics(metrics))
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		server = internal.NewRpcServer(sc.ListenOn, internal.WithMetrics(metrics))
+		server = internal.NewRpcServer(c.ListenOn, internal.WithMetrics(metrics))
 	}
 
-	server.SetName(sc.Name)
-	if err = setupInterceptors(server, sc, metrics); err != nil {
+	server.SetName(c.Name)
+	if err = setupInterceptors(server, c, metrics); err != nil {
 		return nil, err
 	}
 
 	// 新建对外RPC服务器
 	rpcServer := &RpcServer{server: server, register: register}
-	if err = sc.Setup(); err != nil {
+	if err = c.Setup(); err != nil {
 		return nil, err
 	}
 

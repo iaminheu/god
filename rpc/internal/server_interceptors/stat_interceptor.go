@@ -24,7 +24,7 @@ func UnaryStatInterceptor(metrics *stat.Metrics) grpc.UnaryServerInterceptor {
 		startTime := timex.Now()
 		defer func() {
 			duration := timex.Since(startTime)
-			metrics.Add(stat.Task{Duration: duration})
+			metrics.Add(stat.Task{Duration: duration}) // 通过拦截器添加监控指标
 			logDuration(ctx, info.FullMethod, req, duration)
 		}()
 

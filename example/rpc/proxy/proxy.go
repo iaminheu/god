@@ -35,7 +35,7 @@ func main() {
 	// 新建代理客户端
 	proxy := rpc.MustNewServer(rpc.ServerConfig{
 		ServiceConf: service.ServiceConf{
-			LogConf: logx.LogConf{Mode: "console"},
+			Log: logx.LogConf{Mode: "console"},
 		},
 		ListenOn: *listen,
 	}, func(grpcServer *grpc.Server) {

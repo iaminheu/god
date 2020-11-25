@@ -16,7 +16,7 @@ var (
 		Namespace: serverNamespace,
 		Subsystem: "requests",
 		Name:      "duration_ms",
-		Help:      "http server requests duration(ms).",
+		Help:      "API服务器请求耗时（毫秒）。",
 		Labels:    []string{"path"},
 		Buckets:   []float64{5, 10, 25, 50, 100, 250, 500, 1000},
 	})
@@ -25,7 +25,7 @@ var (
 		Namespace: serverNamespace,
 		Subsystem: "requests",
 		Name:      "code_total",
-		Help:      "http server requests error count.",
+		Help:      "API服务器请求响应码计数器。",
 		Labels:    []string{"path", "code"},
 	})
 )
@@ -37,7 +37,7 @@ func PrometheusHandler(path string) func(http.Handler) http.Handler {
 			startTime := timex.Now()
 			cw := &security.WithCodeResponseWriter{Writer: w}
 			defer func() {
-				metricServerReqDur.Observe(int64(timex.Since(startTime) / time.Millisecond))
+				metricServerReqDur.Observe(int64(timex.Since(startTime)/time.Millisecond), path)
 				metricServerReqCodeTotal.Inc(path, strconv.Itoa(cw.Code))
 			}()
 

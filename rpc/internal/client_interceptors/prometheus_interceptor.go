@@ -17,7 +17,7 @@ var (
 		Namespace: clientNamespace,
 		Subsystem: "requests",
 		Name:      "duration_ms",
-		Help:      "rpc client requests duration(ms).",
+		Help:      "RPC客户端请求耗时（毫秒）。",
 		Labels:    []string{"method"},
 		Buckets:   []float64{5, 10, 25, 50, 100, 250, 500, 1000},
 	})
@@ -26,7 +26,7 @@ var (
 		Namespace: clientNamespace,
 		Subsystem: "requests",
 		Name:      "code_total",
-		Help:      "rpc client requests code count.",
+		Help:      "RPC客户端请求响应码计数器。",
 		Labels:    []string{"method", "code"},
 	})
 )

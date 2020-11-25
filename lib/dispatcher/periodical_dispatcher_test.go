@@ -61,7 +61,7 @@ func TestPeriodicalDispatcher_Sync(t *testing.T) {
 func TestPeriodicalDispatcher_QuitGoroutine(t *testing.T) {
 	ticker := timex.NewFakeTicker()
 	dispatcher := NewPeriodicalDispatcher(time.Millisecond, newContainer(time.Millisecond, nil))
-	dispatcher.ticker = func() timex.Ticker {
+	dispatcher.newTicker = func() timex.Ticker {
 		return ticker
 	}
 
@@ -91,7 +91,7 @@ func TestPeriodicalDispatcher_Bulk(t *testing.T) {
 	}))
 
 	ticker := timex.NewFakeTicker()
-	dispatcher.ticker = func() timex.Ticker {
+	dispatcher.newTicker = func() timex.Ticker {
 		return ticker
 	}
 

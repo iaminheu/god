@@ -16,7 +16,7 @@ type (
 	}
 
 	HistogramVec interface {
-		Observe(v int64, lables ...string)
+		Observe(v int64, labels ...string)
 		close() bool
 	}
 

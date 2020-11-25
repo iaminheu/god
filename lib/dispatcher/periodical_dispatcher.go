@@ -29,14 +29,14 @@ type (
 
 	// 定时调度器
 	PeriodicalDispatcher struct {
-		interval    time.Duration       // 任务调度间隔
-		taskManager TaskManager         // 任务管理者
-		taskChan    TaskChan            // 任务任务通道
-		confirmChan ConfirmChan         // 任务确认通道
-		wg          sync.WaitGroup      // 同步等待组
-		wgLocker    syncx.Locker        // 同步等待组的加锁器
-		guarded     bool                // 是否守卫
-		ticker      func() timex.Ticker // 任务断续器
+		interval    time.Duration                             // 任务调度间隔
+		taskManager TaskManager                               // 任务管理者
+		taskChan    TaskChan                                  // 任务任务通道
+		confirmChan ConfirmChan                               // 任务确认通道
+		wg          sync.WaitGroup                            // 同步等待组
+		wgLocker    syncx.Locker                              // 同步等待组的加锁器
+		guarded     bool                                      // 是否守卫
+		newTicker   func(duration time.Duration) timex.Ticker // 任务断续器
 		lock        sync.Mutex
 	}
 )
@@ -48,7 +48,7 @@ func NewPeriodicalDispatcher(interval time.Duration, taskManager TaskManager) *P
 		taskManager: taskManager,
 		taskChan:    make(chan interface{}, 1),
 		confirmChan: make(chan lang.PlaceholderType),
-		ticker: func() timex.Ticker {
+		newTicker: func(duration time.Duration) timex.Ticker {
 			return timex.NewTicker(interval)
 		},
 	}
@@ -117,10 +117,10 @@ func (pd *PeriodicalDispatcher) setAndGet(task interface{}) (interface{}, bool) 
 	return nil, false
 }
 
-// 后台任务清洗
+// 后台任务清洗 - 起一个协程来处理任务
 func (pd *PeriodicalDispatcher) backgroundFlush() {
 	threading.GoSafe(func() {
-		ticker := pd.ticker()
+		ticker := pd.newTicker(pd.interval)
 		defer ticker.Stop()
 
 		// 任务通道调度定时执行器
@@ -128,13 +128,13 @@ func (pd *PeriodicalDispatcher) backgroundFlush() {
 		lastTime := timex.Now()
 		for {
 			select {
-			case tasks := <-pd.taskChan:
+			case tasks := <-pd.taskChan: // 主动触发上报
 				executed = true
 				pd.enter()
 				pd.confirmChan <- lang.Placeholder
 				pd.execute(tasks)
 				lastTime = timex.Now()
-			case <-ticker.Chan():
+			case <-ticker.Chan(): // 定时上报
 				if executed {
 					executed = false
 				} else if pd.Flush() {

@@ -55,6 +55,7 @@ type (
 
 func SetReportWriter(writer Writer) {
 	writerLock.Lock()
+	// 指定writer，通过writer将数据推送给 Prometheus Server
 	reportWriter = writer
 	writerLock.Unlock()
 }
