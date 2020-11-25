@@ -8,7 +8,7 @@ const (
 	PriorityLow    = 3 // 低优先级
 
 	defaultTimeToRun = 5 * time.Second // 剩余运行时间 TTR
-	reverseTimeout   = 5 * time.Second // 反向取值时间
+	reserveTimeout   = 5 * time.Second // 反向取值时间
 
 	idSep   = "," // 编号分隔符
 	timeSep = '/' // 时间分隔符

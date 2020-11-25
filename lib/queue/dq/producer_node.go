@@ -9,14 +9,24 @@ import (
 	"time"
 )
 
+var ErrTimeBeforeNow = errors.New("不能把任务安排到过去的时间")
+
 type producerNode struct {
 	endpoint string
 	tube     string
 	conn     *connection
 }
 
-var ErrTimeBeforeNow = errors.New("不能把任务安排到过去的时间")
+// 新建生产者节点
+func NewProducerNode(endpoint, tube string) Producer {
+	return &producerNode{
+		endpoint: endpoint,
+		tube:     tube,
+		conn:     newConnection(endpoint, tube),
+	}
+}
 
+// 定时执行
 func (p producerNode) At(body []byte, at time.Time) (string, error) {
 	now := time.Now()
 	if at.Before(now) {
@@ -27,6 +37,7 @@ func (p producerNode) At(body []byte, at time.Time) (string, error) {
 	return p.Delay(body, delay)
 }
 
+// 延迟执行
 func (p producerNode) Delay(body []byte, delay time.Duration) (string, error) {
 	conn, err := p.conn.get()
 	if err != nil {
@@ -58,12 +69,12 @@ func (p producerNode) Delay(body []byte, delay time.Duration) (string, error) {
 	return "", err
 }
 
-// Revoke 撤回一批任务
+//  撤回一批任务
 //
 // ids: endpoint/tube/id,endpoint/tube/id,endpoint/tube/id
-func (p producerNode) Revoke(ids string) error {
-	idList := strings.Split(ids, idSep)
-	for _, id := range idList {
+func (p producerNode) Revoke(jointId string) error {
+	ids := strings.Split(jointId, idSep)
+	for _, id := range ids {
 		fields := strings.Split(id, "/")
 		if len(fields) < 3 {
 			continue
@@ -84,17 +95,12 @@ func (p producerNode) Revoke(ids string) error {
 
 		return conn.Delete(n)
 	}
+
+	// 如果任务不再该连接中，则忽略。
 	return nil
 }
 
+// 关闭该集群节点
 func (p producerNode) Close() error {
 	return p.conn.Close()
-}
-
-func NewProducerNode(endpoint, tube string) Producer {
-	return &producerNode{
-		endpoint: endpoint,
-		tube:     tube,
-		conn:     newConnection(endpoint, tube),
-	}
 }
