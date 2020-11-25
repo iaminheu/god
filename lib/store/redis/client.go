@@ -12,8 +12,8 @@ import (
 )
 
 var (
-	clusterClientManager   = syncx.NewResourceManager()
-	standalonClientManager = syncx.NewResourceManager()
+	clusterClientManager    = syncx.NewResourceManager()
+	standaloneClientManager = syncx.NewResourceManager()
 )
 
 func getClient(r *Redis) (Client, error) {
@@ -46,7 +46,7 @@ func getClusterClient(addr, password string) (Client, error) {
 }
 
 func getStandaloneClient(addr, password string) (Client, error) {
-	client, err := standalonClientManager.Get(addr, func() (io.Closer, error) {
+	client, err := standaloneClientManager.Get(addr, func() (io.Closer, error) {
 		client := redis.NewClient(&redis.Options{
 			Addr:         addr,
 			Password:     password,
@@ -66,14 +66,14 @@ func getStandaloneClient(addr, password string) (Client, error) {
 
 // 包装redis执行命令，采集慢查询日志
 func process(proc func(redis.Cmder) error) func(redis.Cmder) error {
-	return func(cmder redis.Cmder) error {
+	return func(cmd redis.Cmder) error {
 		start := timex.Now()
 
 		defer func() {
 			duration := timex.Since(start)
 			if duration > slowThreshold {
 				var b strings.Builder
-				for i, arg := range cmder.Args() {
+				for i, arg := range cmd.Args() {
 					if i > 0 {
 						b.WriteByte(' ')
 					}
@@ -83,6 +83,6 @@ func process(proc func(redis.Cmder) error) func(redis.Cmder) error {
 			}
 		}()
 
-		return proc(cmder)
+		return proc(cmd)
 	}
 }

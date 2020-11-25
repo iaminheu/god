@@ -37,7 +37,7 @@ func (g *Group) Add(service Service) {
 	g.services = append(g.services, service)
 }
 
-// 调用该方法后不应有任何逻辑代码，因为该方法是阻塞的
+// 调用该方法后不应有任何逻辑代码，因为该方法是阻塞的，
 // 同时，退出该方法后将关闭 logx 输出。
 func (g *Group) Start() {
 	proc.AddShutdownListener(func() {

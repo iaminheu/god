@@ -1,4 +1,4 @@
-package collection
+package breaker
 
 import (
 	"fmt"
@@ -6,11 +6,11 @@ import (
 )
 
 func TestNewErrorWindow(t *testing.T) {
-	errWin := NewErrorWindow()
+	errWin := new(errorWindow)
 
-	errWin.Add("因为1....")
-	errWin.Add("因为2....")
-	errWin.Add("因为3....")
+	errWin.add("因为1....")
+	errWin.add("因为2....")
+	errWin.add("因为3....")
 
 	fmt.Println(errWin.count)
 

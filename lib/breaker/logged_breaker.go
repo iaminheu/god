@@ -2,7 +2,6 @@ package breaker
 
 import (
 	"fmt"
-	"git.zc0901.com/go/god/lib/collection"
 	"git.zc0901.com/go/god/lib/proc"
 	"git.zc0901.com/go/god/lib/stat"
 )
@@ -21,13 +20,13 @@ type (
 
 	promiseWithReason struct {
 		promise internalPromise
-		errWin  *collection.ErrorWindow
+		errWin  *errorWindow
 	}
 
 	loggedThrottle struct {
 		name string
 		internalThrottle
-		errWin *collection.ErrorWindow
+		errWin *errorWindow
 	}
 )
 
@@ -35,7 +34,7 @@ func newLoggedThrottle(name string, t internalThrottle) loggedThrottle {
 	return loggedThrottle{
 		name:             name,
 		internalThrottle: t,
-		errWin:           collection.NewErrorWindow(),
+		errWin:           new(errorWindow),
 	}
 }
 
@@ -51,7 +50,7 @@ func (t loggedThrottle) doReq(req Request, fallback Fallback, acceptable Accepta
 	return t.logError(t.internalThrottle.doReq(req, fallback, func(err error) bool {
 		accept := acceptable(err)
 		if !accept {
-			t.errWin.Add(err.Error())
+			t.errWin.add(err.Error())
 		}
 		return accept
 	}))
@@ -71,6 +70,6 @@ func (p promiseWithReason) Accept() {
 }
 
 func (p promiseWithReason) Reject(reason string) {
-	p.errWin.Add(reason)
+	p.errWin.add(reason)
 	p.promise.Reject()
 }

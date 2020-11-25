@@ -4,7 +4,6 @@ import (
 	"git.zc0901.com/go/god/lib/collection"
 	"git.zc0901.com/go/god/lib/mathx"
 	"math"
-	"sync/atomic"
 	"time"
 )
 
@@ -17,44 +16,42 @@ const (
 )
 
 type (
-	// googleThrottle 是谷歌处理 overload 过载问题的节流阀实现。
+	// googleBreaker 是谷歌处理 overload 过载问题的节流阀实现。
 	// see Client-Side Throttling section in https://landing.google.com/sre/sre-book/chapters/handling-overload/
-	googleThrottle struct {
+	googleBreaker struct {
 		k     float64                   // 请求接受比例
-		state int32                     // 断路器跳闸状态
 		stat  *collection.RollingWindow // 统计窗口计数器（采用滚窗算法）
 		proba *mathx.Proba
 	}
 
 	googlePromise struct {
-		b *googleThrottle
+		b *googleBreaker
 	}
 )
 
-func newGoogleBreaker() *googleThrottle {
+func newGoogleBreaker() *googleBreaker {
 	bucketDuration := time.Duration(int64(window) / int64(buckets)) // 单桶时长，默认250毫秒
 	statWindow := collection.NewRollingWindow(buckets, bucketDuration)
-	return &googleThrottle{
+	return &googleBreaker{
 		k:     K,
-		state: StateClosed,
 		stat:  statWindow,
 		proba: mathx.NewProba(),
 	}
 }
 
 // 先看断路器是否接受，如果接受则发返回 googlePromise 等待处理
-func (t *googleThrottle) allow() (internalPromise, error) {
-	if err := t.accept(); err != nil {
+func (b *googleBreaker) allow() (internalPromise, error) {
+	if err := b.accept(); err != nil {
 		return nil, err
 	}
 
 	// 接受成功，则返回googlePromise，由其标记结果
-	return googlePromise{b: t}, nil
+	return googlePromise{b: b}, nil
 }
 
-func (t *googleThrottle) doReq(req Request, fallback Fallback, acceptable Acceptable) error {
+func (b *googleBreaker) doReq(req Request, fallback Fallback, acceptable Acceptable) error {
 	// 首先，试探断路器是否接受请求
-	if err := t.accept(); err != nil {
+	if err := b.accept(); err != nil {
 		// 尝试采用应急方案
 		if fallback != nil {
 			return fallback(err)
@@ -66,52 +63,41 @@ func (t *googleThrottle) doReq(req Request, fallback Fallback, acceptable Accept
 	// 最后，如果有错则标记为失败，并抛出异常
 	defer func() {
 		if e := recover(); e != nil {
-			t.markFailure()
+			b.markFailure()
 			panic(e)
 		}
 	}()
 
 	// 然后，执行请求，根据返回错误的可接受度标记结果
-	reqError := req()
-	if acceptable(reqError) {
-		t.markSuccess()
+	err := req()
+	if acceptable(err) {
+		b.markSuccess()
 	} else {
-		t.markFailure()
+		b.markFailure()
 	}
 
 	// 不论错误是否可接受，都要返回
-	return reqError
+	return err
 }
 
 // accept 根据客户端请求拒绝率返回错误
-func (t *googleThrottle) accept() error {
-	requests, accepts := t.history()
+func (b *googleBreaker) accept() error {
+	requests, accepts := b.history()
 
 	// 计算客户端请求拒绝率
 	// https://landing.google.com/sre/sre-book/chapters/handling-overload/#eq2101
 	// 常量 K 为1.5意味着，请求150次只成功100次，则
-	weightedAccepts := t.k * float64(accepts)
+	weightedAccepts := b.k * float64(accepts)
 	droppedRequests := float64(requests-protection) - weightedAccepts
-	//droppedRequests := float64(requests) - weightedAccepts
 	dropRatio := math.Max(0, droppedRequests/float64(requests+1))
-
-	//logx.Infof("dropRation = max(0, ((%d-%d)-%.0f*%d)/(%d+1)) --- %f", requests, protection, t.k, accepts, requests, dropRatio)
 
 	// 无需拒绝
 	if dropRatio <= 0 {
-		if atomic.LoadInt32(&t.state) == StateOpen {
-			atomic.CompareAndSwapInt32(&t.state, StateOpen, StateClosed)
-		}
 		return nil
 	}
 
-	// 未开断路器，则需打开
-	if atomic.LoadInt32(&t.state) == StateClosed {
-		atomic.CompareAndSwapInt32(&t.state, StateClosed, StateOpen)
-	}
-
 	// 并非每次阻断，而是随机拦截，以此给后端重生的机会
-	if t.proba.TrueOnProba(dropRatio) {
+	if b.proba.TrueOnProba(dropRatio) {
 		return ErrServiceUnavailable
 	}
 
@@ -119,20 +105,20 @@ func (t *googleThrottle) accept() error {
 }
 
 // 历史总数（请求多少次，同意多少次）
-func (t *googleThrottle) history() (requests int64, accepts int64) {
-	t.stat.Reduce(func(b *collection.Bucket) {
+func (b *googleBreaker) history() (requests int64, accepts int64) {
+	b.stat.Reduce(func(b *collection.Bucket) {
 		requests += b.Requests
 		accepts += int64(b.Accepts)
 	})
 	return
 }
 
-func (t *googleThrottle) markSuccess() {
-	t.stat.Add(1)
+func (b *googleBreaker) markSuccess() {
+	b.stat.Add(1)
 }
 
-func (t *googleThrottle) markFailure() {
-	t.stat.Add(0)
+func (b *googleBreaker) markFailure() {
+	b.stat.Add(0)
 }
 
 func (p googlePromise) Accept() {

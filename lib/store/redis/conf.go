@@ -22,6 +22,7 @@ type (
 	}
 )
 
+// 新建 Redis 示例
 func (c Conf) NewRedis() *Redis {
 	return NewRedis(c.Host, c.Mode, c.Password)
 }
