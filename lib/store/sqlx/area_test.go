@@ -34,3 +34,11 @@ func TestGetCityList(t *testing.T) {
 		})
 	}
 }
+
+func TestSqlIn(t *testing.T) {
+	ids := []int{2, 3}
+
+	query := fmt.Sprintf("select id from user where id in (%s)", In(len(ids)))
+	fmt.Println(query)
+
+}

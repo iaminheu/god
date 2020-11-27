@@ -208,7 +208,7 @@ syntax = "proto3";
 
 package greet;
 
-import "base/common.proto"
+import "base/common.proto";
 
 message Request {
   base.In in = 1;// 支持import

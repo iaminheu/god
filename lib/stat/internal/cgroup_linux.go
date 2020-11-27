@@ -22,7 +22,7 @@ type cgroup struct {
 
 // currentCgroup 获取当前进程的cgroup
 func currentCgroup() (*cgroup, error) {
-	cgroupFile := fmt.Sprintf("/proc/%s/cgroup", os.Getpid())
+	cgroupFile := fmt.Sprintf("/proc/%d/cgroup", os.Getpid())
 	lines, err := iox.ReadTextLines(cgroupFile, iox.WithoutBlank())
 	if err != nil {
 		return nil, err
