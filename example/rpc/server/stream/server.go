@@ -36,7 +36,7 @@ func (s StreamGreetServer) Greet(server stream.StreamGreeter_GreetServer) error 
 }
 
 func main() {
-	var c rpc.ServerConfig
+	var c rpc.ServerConf
 	conf.MustLoad("etc/config.yaml", &c)
 	server := rpc.MustNewServer(c, func(server *grpc.Server) {
 		stream.RegisterStreamGreeterServer(server, StreamGreetServer(0))

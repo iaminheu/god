@@ -25,7 +25,7 @@ type RpcServer struct {
 	register internal.RegisterFn
 }
 
-func MustNewServer(sc ServerConfig, register internal.RegisterFn) *RpcServer {
+func MustNewServer(sc ServerConf, register internal.RegisterFn) *RpcServer {
 	server, err := NewServer(sc, register)
 	if err != nil {
 		log.Fatal(err)
@@ -34,7 +34,7 @@ func MustNewServer(sc ServerConfig, register internal.RegisterFn) *RpcServer {
 	return server
 }
 
-func NewServer(c ServerConfig, register internal.RegisterFn) (*RpcServer, error) {
+func NewServer(c ServerConf, register internal.RegisterFn) (*RpcServer, error) {
 	var err error
 
 	// 验证服务端配置
@@ -94,7 +94,7 @@ func (rs *RpcServer) Stop() {
 	logx.Close()
 }
 
-func setupInterceptors(server internal.Server, sc ServerConfig, metrics *stat.Metrics) error {
+func setupInterceptors(server internal.Server, sc ServerConf, metrics *stat.Metrics) error {
 	// 自动降载（负载卸流拦截器）
 	if sc.CpuThreshold > 0 {
 		shedder := load.NewAdaptiveShedder(load.WithCpuThreshold(sc.CpuThreshold))

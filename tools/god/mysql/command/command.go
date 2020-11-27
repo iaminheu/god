@@ -20,8 +20,8 @@ const (
 )
 
 func GenCodeFromDSN(ctx *cli.Context) error {
-	dsn := ctx.String(flagDSN)
-	dir := ctx.String(flagDir)
+	dsn := strings.TrimSpace(ctx.String(flagDSN))
+	dir := strings.TrimSpace(ctx.String(flagDir))
 	cache := ctx.Bool(flagCache)
 	table := strings.TrimSpace(ctx.String(flagTable))
 
@@ -46,14 +46,6 @@ func GenCodeFromDSN(ctx *cli.Context) error {
 		tables.AddStr(table)
 	}
 
-	conn := sqlx.NewMySQL(dsn)
-	m := model.NewModel(conn)
-	ddlList, err := m.ShowDDL(tables.KeysStr()...)
-	if err != nil {
-		log.Error("", err)
-		return nil
-	}
-
 	// 获取数据库名称
 	path := strings.Split(dsn, "?")[0]
 	parts := strings.Split(path, "/")
@@ -61,6 +53,14 @@ func GenCodeFromDSN(ctx *cli.Context) error {
 	if !strings.Contains(path, "/") || database == "" {
 		log.Error("数据库连接字符串：未提供数据库名称")
 		return errors.New("数据库连接字符串：未提供数据库名称")
+	}
+
+	conn := sqlx.NewMySQL(dsn)
+	m := model.NewModel(conn)
+	ddlList, err := m.ShowDDL(tables.KeysStr()...)
+	if err != nil {
+		log.Error("", err)
+		return nil
 	}
 
 	//fmt.Println(strings.Join(ddlList, "\n"), dir, cache)

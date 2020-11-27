@@ -11,7 +11,7 @@ import (
 var loaders = map[string]func([]byte, interface{}) error{
 	".json": LoadConfigFromJsonBytes,
 	".yaml": LoadConfigFromYamlBytes,
-	".yml":  LoadConfigFromJsonBytes,
+	".yml":  LoadConfigFromYamlBytes,
 }
 
 func LoadConfigFromJsonBytes(content []byte, v interface{}) error {

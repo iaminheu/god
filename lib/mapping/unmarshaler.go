@@ -21,9 +21,9 @@ const (
 )
 
 var (
-	errTypeMismatch     = errors.New("type mismatch")
-	errValueNotSettable = errors.New("value is not settable")
-	errValueNotStruct   = errors.New("value type is not struct")
+	errTypeMismatch     = errors.New("类型不匹配")
+	errValueNotSettable = errors.New("值不可设置")
+	errValueNotStruct   = errors.New("值类型不是结构体")
 	keyUnmarshaler      = NewUnmarshaler(defaultKeyName)
 	cacheKeys           atomic.Value
 	cacheKeysLock       sync.Mutex
@@ -285,7 +285,7 @@ func (u *Unmarshaler) processFieldStruct(field reflect.StructField, value reflec
 	convertedValue, ok := mapValue.(map[string]interface{})
 	if !ok {
 		valueKind := reflect.TypeOf(mapValue).Kind()
-		return fmt.Errorf("error: field: %s, expect map[string]interface{}, actual %v", fullName, valueKind)
+		return fmt.Errorf("❌错误：字段：%s，期望 map[string]interface{}，实际 %v", fullName, valueKind)
 	}
 
 	return u.processFieldStructWithMap(field, value, MapValuer(convertedValue), fullName)

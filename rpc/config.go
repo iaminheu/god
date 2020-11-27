@@ -7,8 +7,8 @@ import (
 )
 
 type (
-	// ServerConfig Rpc服务端配置
-	ServerConfig struct {
+	// ServerConf Rpc服务端配置
+	ServerConf struct {
 		service.ServiceConf
 		ListenOn      string
 		Etcd          discovery.EtcdConf `json:",optional"`
@@ -21,7 +21,7 @@ type (
 		CpuThreshold int64 `json:",default=900,range=[0:1000]"`
 	}
 
-	// ServerConfig Rpc客户端配置
+	// ServerConf Rpc客户端配置
 	ClientConf struct {
 		Etcd      discovery.EtcdConf `json:",optional"`
 		Endpoints []string           `json:",optional=!Etcd"`
@@ -53,12 +53,12 @@ func NewEtcdClientConf(hosts []string, key, app, token string) ClientConf {
 }
 
 // HasEtcd 判断服务端配置是否传递Etcd主机和键
-func (sc ServerConfig) HasEtcd() bool {
+func (sc ServerConf) HasEtcd() bool {
 	return len(sc.Etcd.Hosts) > 0 && len(sc.Etcd.Key) > 0
 }
 
 // Validate 验证鉴权情况下redis的主机和部署模式是否已提供
-func (sc ServerConfig) Validate() error {
+func (sc ServerConf) Validate() error {
 	if sc.Auth {
 		if err := sc.Redis.Validate(); err != nil {
 			return err

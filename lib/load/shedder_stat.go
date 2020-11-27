@@ -37,10 +37,10 @@ func (s ShedderStat) run() {
 		usage := stat.CpuUsage()
 		ss := s.reset()
 		if ss.Drop == 0 {
-			logx.Statf("(%s) 负载卸流器统计 [1m], cpu: %d, total: %d, pass: %d, drop: %d",
+			logx.Statf("(%s) 负载均衡 [1m], cpu: %d, total: %d, pass: %d, drop: %d",
 				s.name, usage, ss.Total, ss.Pass, ss.Drop)
 		} else {
-			logx.Statf("(%s) 负载卸流统计 [1m], cpu: %d, total: %d, pass: %d, drop: %d",
+			logx.Statf("(%s) 负载均衡 [1m], cpu: %d, total: %d, pass: %d, drop: %d",
 				s.name, usage, ss.Total, ss.Pass, ss.Drop)
 		}
 	}

@@ -155,6 +155,7 @@ func Close() error {
 	return nil
 }
 
+// 禁用 logx 日志
 func Disable() {
 	once.Do(func() {
 		atomic.StoreUint32(&initialized, 1)

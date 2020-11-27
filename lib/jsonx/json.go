@@ -47,5 +47,5 @@ func unmarshalUseNumber(decoder *json.Decoder, v interface{}) error {
 }
 
 func formatError(v string, err error) error {
-	return fmt.Errorf("字符串: `%s`, 错误: `%s`", v, err.Error())
+	return fmt.Errorf("格式化错误 - 字符串: `%s`, 错误: `%s`", v, err.Error())
 }

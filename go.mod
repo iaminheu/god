@@ -6,12 +6,14 @@ require (
 	github.com/alicebob/miniredis/v2 v2.14.1
 	github.com/beanstalkd/go-beanstalk v0.1.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	github.com/emicklei/proto v1.9.0
 	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/go-xorm/builder v0.3.4
 	github.com/golang/mock v1.4.4
 	github.com/golang/protobuf v1.4.3
-	github.com/google/uuid v1.0.0
+	github.com/google/uuid v1.1.1
+	github.com/iancoleman/strcase v0.1.2
 	github.com/justinas/alice v1.2.0
 	github.com/logrusorgru/aurora v2.0.3+incompatible
 	github.com/onsi/ginkgo v1.14.2 // indirect
@@ -26,7 +28,7 @@ require (
 	go.etcd.io/etcd v0.0.0-20200402134248-51bdeb39e698
 	golang.org/x/net v0.0.0-20201006153459-a7d1128ccaa0
 	google.golang.org/grpc v1.29.1
-	google.golang.org/protobuf v1.25.0 // indirect
+	google.golang.org/protobuf v1.25.0
 	gopkg.in/yaml.v2 v2.3.0
 )
 

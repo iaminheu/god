@@ -35,7 +35,7 @@ func NewGreetServer() *GreetServer {
 func main() {
 	// 加载配置
 	flag.Parse()
-	var c rpc.ServerConfig
+	var c rpc.ServerConf
 	conf.MustLoad(*configFile, &c)
 
 	// 新建rpc服务器

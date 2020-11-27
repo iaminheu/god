@@ -12,6 +12,10 @@ import (
 	"syscall"
 )
 
+const (
+	NL = "\n"
+)
+
 func CloseOnExec(file *os.File) {
 	if file != nil {
 		syscall.CloseOnExec(int(file.Fd()))
@@ -61,7 +65,7 @@ func CreateIfNotExist(name string) (*os.File, error) {
 	return os.Create(name)
 }
 
-func RemoveIfExists(name string) error {
+func RemoveIfExist(name string) error {
 	if !FileExist(name) {
 		return nil
 	}
