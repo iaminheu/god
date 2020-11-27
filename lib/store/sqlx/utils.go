@@ -350,3 +350,12 @@ func getFields(dve reflect.Value) []reflect.Value {
 
 	return fields
 }
+
+// In 构建一个长度为n的占位符
+func In(n int) string {
+	ps := make([]string, n)
+	for i := 0; i < n; i++ {
+		ps[i] = "?"
+	}
+	return strings.Join(ps, ",")
+}
