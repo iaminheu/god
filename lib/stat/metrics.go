@@ -115,7 +115,7 @@ func (c *metricsManager) Execute(v interface{}) {
 	}
 
 	if size > 0 {
-		report.Average = float32(duration / time.Millisecond)
+		report.Average = float32(duration/time.Millisecond) / float32(size)
 
 		fiftyPercent := size >> 1
 		if fiftyPercent > 0 {
@@ -136,7 +136,7 @@ func (c *metricsManager) Execute(v interface{}) {
 					if pointOnePercent > 0 {
 						topPointOneTasks := topK(top1pTasks, pointOnePercent)
 						task99Point9th := topPointOneTasks[0]
-						report.Top99p9th = float32(task99Point9th.Duration)
+						report.Top99p9th = float32(task99Point9th.Duration) / float32(time.Millisecond)
 					} else {
 						report.Top99p9th = getTopDuration(top1pTasks)
 					}
