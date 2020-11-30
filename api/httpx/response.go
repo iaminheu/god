@@ -14,7 +14,7 @@ var (
 
 // 错误响应，支持自定义错误处理器
 func Error(w http.ResponseWriter, err error) {
-	lock.Lock()
+	lock.RLock()
 	handler := errorHandler
 	lock.RUnlock()
 
