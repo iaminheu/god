@@ -9,7 +9,7 @@ import (
 
 var (
 	errorHandler  func(error) (int, interface{})
-	okJsonHandler func(body interface{}) (int, interface{})
+	okJsonHandler func(w http.ResponseWriter, body interface{}) (int, interface{})
 	lock          sync.RWMutex
 )
 
@@ -49,7 +49,7 @@ func OkJson(w http.ResponseWriter, body interface{}) {
 		return
 	}
 
-	okJsonHandler(body)
+	okJsonHandler(w, body)
 }
 
 // 设置自定义错误处理器
@@ -60,7 +60,7 @@ func SetErrorHandler(handler func(error) (int, interface{})) {
 }
 
 // 设置自定义成功处理器
-func SetOkJsonHandler(handler func(body interface{}) (int, interface{})) {
+func SetOkJsonHandler(handler func(w http.ResponseWriter, body interface{}) (int, interface{})) {
 	lock.Lock()
 	defer lock.Unlock()
 	okJsonHandler = handler
