@@ -8,8 +8,9 @@ import (
 )
 
 var (
-	errorHandler func(error) (int, interface{})
-	lock         sync.RWMutex
+	errorHandler  func(error) (int, interface{})
+	okJsonHandler func(body interface{})
+	lock          sync.RWMutex
 )
 
 // 错误响应，支持自定义错误处理器
@@ -39,7 +40,16 @@ func Ok(w http.ResponseWriter) {
 
 // 正常JSON响应
 func OkJson(w http.ResponseWriter, body interface{}) {
-	WriteJson(w, http.StatusOK, body)
+	lock.RLock()
+	handler := okJsonHandler
+	lock.RUnlock()
+
+	if handler == nil {
+		WriteJson(w, http.StatusOK, body)
+		return
+	}
+
+	okJsonHandler(body)
 }
 
 // 设置自定义错误处理器

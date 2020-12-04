@@ -9,12 +9,14 @@ import (
 
 func TestParseForm(t *testing.T) {
 	var v struct {
-		Name    string  `form:"name"`
-		Age     int     `form:"age"`
-		Percent float64 `form:"percent,optional"`
+		Key      string `form:"key"`
+		Location string `form:"location"`
+		Radius   int64  `form:"radius"`
+		Offset   int64  `form:"offset"`
+		Page     int64  `form:"page"`
 	}
 
-	r, err := http.NewRequest(http.MethodGet, "http://hello.com/a?name=hello&age=18&percent=3.4", nil)
+	r, err := http.NewRequest(http.MethodGet, "http://localhost:8888/place/around?key=6e10597c6b5f745d2ff915a4a721edfb&location=116.473168,39.993015&radius=3000&extensions=base&output=json&offset=20&page=1", nil)
 	assert.Nil(t, err)
 	assert.Nil(t, Parse(r, &v))
 	fmt.Println(v)
