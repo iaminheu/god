@@ -720,11 +720,11 @@ func join(elem ...string) string {
 }
 
 func newInitError(name string) error {
-	return fmt.Errorf("❌ 错误：必填字段 %s 未设置", name)
+	return fmt.Errorf("错误：必填字段 %s 未设置", name)
 }
 
 func newTypeMismatchError(name string) error {
-	return fmt.Errorf("❌ 错误: 字段类型不匹配 - %s", name)
+	return fmt.Errorf("错误: 字段类型不匹配 - %s", name)
 }
 
 func readKeys(key string) []string {
