@@ -285,7 +285,7 @@ func (u *Unmarshaler) processFieldStruct(field reflect.StructField, value reflec
 	convertedValue, ok := mapValue.(map[string]interface{})
 	if !ok {
 		valueKind := reflect.TypeOf(mapValue).Kind()
-		return fmt.Errorf("❌错误：字段：%s，期望 map[string]interface{}，实际 %v", fullName, valueKind)
+		return fmt.Errorf("字段：%s，期望 map[string]interface{}，实际 %v", fullName, valueKind)
 	}
 
 	return u.processFieldStructWithMap(field, value, MapValuer(convertedValue), fullName)
@@ -720,11 +720,11 @@ func join(elem ...string) string {
 }
 
 func newInitError(name string) error {
-	return fmt.Errorf("错误：必填字段 %s 未设置", name)
+	return fmt.Errorf("必填字段 %s 未设置", name)
 }
 
 func newTypeMismatchError(name string) error {
-	return fmt.Errorf("错误: 字段类型不匹配 - %s", name)
+	return fmt.Errorf("字段类型不匹配 - %s", name)
 }
 
 func readKeys(key string) []string {
