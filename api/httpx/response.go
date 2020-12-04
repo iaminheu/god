@@ -9,7 +9,7 @@ import (
 
 var (
 	errorHandler  func(error) (int, interface{})
-	okJsonHandler func(body interface{})
+	okJsonHandler func(body interface{}) (int, interface{})
 	lock          sync.RWMutex
 )
 
@@ -60,7 +60,7 @@ func SetErrorHandler(handler func(error) (int, interface{})) {
 }
 
 // 设置自定义成功处理器
-func SetOkJsonHandler(handler func(body interface{})) (int, interface{}) {
+func SetOkJsonHandler(handler func(body interface{}) (int, interface{})) {
 	lock.Lock()
 	defer lock.Unlock()
 	okJsonHandler = handler
