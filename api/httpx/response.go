@@ -59,6 +59,13 @@ func SetErrorHandler(handler func(error) (int, interface{})) {
 	errorHandler = handler
 }
 
+// 设置自定义成功处理器
+func SetOkJsonHandler(handler func(body interface{})) {
+	lock.Lock()
+	defer lock.Unlock()
+	okJsonHandler = handler
+}
+
 // 写JSON响应
 func WriteJson(w http.ResponseWriter, code int, body interface{}) {
 	w.Header().Set(ContentType, ApplicationJson)
