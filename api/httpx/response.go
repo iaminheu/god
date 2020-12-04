@@ -44,7 +44,7 @@ func OkJson(w http.ResponseWriter, body interface{}) {
 	handler := okJsonHandler
 	lock.RUnlock()
 
-	if handler == nil {
+	if handler != nil {
 		body = okJsonHandler(body)
 	}
 
