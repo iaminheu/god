@@ -60,7 +60,7 @@ func SetErrorHandler(handler func(error) (int, interface{})) {
 }
 
 // 设置自定义成功处理器
-func SetOkJsonHandler(handler func(body interface{})) {
+func SetOkJsonHandler(handler func(body interface{})) (int, interface{}) {
 	lock.Lock()
 	defer lock.Unlock()
 	okJsonHandler = handler
