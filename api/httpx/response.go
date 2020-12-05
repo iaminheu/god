@@ -8,13 +8,13 @@ import (
 )
 
 var (
-	errorHandler  func(CodeError) (int, interface{})
+	errorHandler  func(error) (int, interface{})
 	okJsonHandler func(body interface{}) interface{}
 	lock          sync.RWMutex
 )
 
 // 错误响应，支持自定义错误处理器
-func Error(w http.ResponseWriter, err CodeError) {
+func Error(w http.ResponseWriter, err error) {
 	lock.RLock()
 	handler := errorHandler
 	lock.RUnlock()
@@ -53,7 +53,7 @@ func OkJson(w http.ResponseWriter, body interface{}) {
 }
 
 // 设置自定义错误处理器
-func SetErrorHandler(handler func(CodeError) (int, interface{})) {
+func SetErrorHandler(handler func(error) (int, interface{})) {
 	lock.Lock()
 	defer lock.Unlock()
 	errorHandler = handler
