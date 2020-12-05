@@ -28,6 +28,9 @@ type (
 //
 // duration 单桶耗时
 func NewRollingWindow(size int, duration time.Duration, opts ...Option) *RollingWindow {
+	if size < 1 {
+		panic("size 必须大于0")
+	}
 	w := &RollingWindow{
 		size:     size,
 		duration: duration,
@@ -72,27 +75,29 @@ func (w *RollingWindow) Reduce(fn func(b *Bucket)) {
 // 更新滚动窗口偏移量（重置过期桶计数、设置当前桶offset和最新时间）
 func (w *RollingWindow) updateOffset() {
 	span := w.span() // 获取偏移跨度
-	if span > 0 {
-		offset := w.offset
-		// 重置过期桶
-		start := offset + 1
-		steps := start + span
-		var remainder int
-		if steps > w.size {
-			remainder = steps - w.size
-			steps = w.size
-		}
-		for i := start; i < steps; i++ {
-			w.win.resetBucket(i)
-			offset = i
-		}
-		for i := 0; i < remainder; i++ {
-			w.win.resetBucket(i)
-			offset = i
-		}
-		w.offset = offset
-		w.lastTime = timex.Now()
+	if span <= 0 {
+		return
 	}
+
+	offset := w.offset
+	start := offset + 1
+	steps := start + span
+	var remainder int
+	if steps > w.size {
+		remainder = steps - w.size
+		steps = w.size
+	}
+
+	// 重置过期桶
+	for i := start; i < steps; i++ {
+		w.win.resetBucket(i)
+	}
+	for i := 0; i < remainder; i++ {
+		w.win.resetBucket(i)
+	}
+
+	w.offset = (offset + span) % w.size
+	w.lastTime = timex.Now()
 }
 
 // // 获取滚动窗口的偏移跨度（根据时间差计算）
@@ -122,9 +127,9 @@ type window struct {
 // newWindow 新建内部滚动窗口
 // size 滚动窗口被分为的存储桶个数
 func newWindow(size int) *window {
-	var buckets []*Bucket
+	buckets := make([]*Bucket, size)
 	for i := 0; i < size; i++ {
-		buckets = append(buckets, new(Bucket))
+		buckets[i] = new(Bucket)
 	}
 
 	return &window{
@@ -145,13 +150,13 @@ func (w *window) add(offset int, n float64) {
 
 // 重置滚动窗口指定桶的计数器
 func (w *window) resetBucket(offset int) {
-	w.buckets[offset].reset()
+	w.buckets[offset%w.size].reset()
 }
 
 // 对起始桶之后的 n 个桶进行指定操作
-func (w *window) reduceBuckets(start, n int, fn func(b *Bucket)) {
-	for i := 0; i < n; i++ {
-		fn(w.buckets[(start+i)%len(w.buckets)])
+func (w *window) reduceBuckets(start, count int, fn func(b *Bucket)) {
+	for i := 0; i < count; i++ {
+		fn(w.buckets[(start+i)%w.size])
 	}
 }
 

@@ -53,12 +53,12 @@ func ParseJsonBody(r *http.Request, v interface{}) error {
 
 // 解析表单请求参数（即Query参数）
 func ParseForm(r *http.Request, v interface{}) error {
-	if strings.Contains(r.Header.Get(ContentType), MultipartFormData) {
-		if err := r.ParseMultipartForm(maxMemory); err != nil {
-			return err
-		}
-	} else {
-		if err := r.ParseForm(); err != nil {
+	if err := r.ParseForm(); err != nil {
+		return err
+	}
+
+	if err := r.ParseMultipartForm(maxMemory); err != nil {
+		if err != http.ErrNotMultipart {
 			return err
 		}
 	}

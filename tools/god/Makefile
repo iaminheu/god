@@ -2,5 +2,6 @@ version := $(shell /bin/date "+%Y-%m-%d %H:%M")
 
 mac:
 	GOOS=darwin go build -ldflags="-s -w" -ldflags="-X 'main.BuildTime=$(version)'" -o god god.go
-	command -v upx &> /dev/null && upx god
+	#command -v upx &> /dev/null && upx god
+	$(if $(shell command -v upx), upx god)
 	mv god ~/go/bin/
