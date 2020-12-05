@@ -16,7 +16,7 @@ const (
 )
 
 var (
-	ErrNotFound             = errors.New("数据集无匹配的行")
+	ErrNotFound             = errors.New("没有匹配的记录")
 	ErrNotSettable          = errors.New("扫描目标不可设置")
 	ErrUnsupportedValueType = errors.New("不支持的扫描目标类型")
 	ErrNotReadableValue     = errors.New("无法读取的值，检查结构字段是否大写开头")
