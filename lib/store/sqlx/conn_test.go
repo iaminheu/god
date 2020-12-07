@@ -134,3 +134,26 @@ func TestConnBreaker(t *testing.T) {
 		_ = db.Query(&book, "select book from bookx limit ?", i)
 	}
 }
+
+func Test_Scan(t *testing.T) {
+	var sqlGetMenuByRoleId = `select m.id, m.parent_id, m.name, m.title, m.path, m.component, m.icon, m.keep_alive, hidden
+	from menu m right join role_menu rm on m.id=rm.menu_id
+	where rm.role_id=? order by m.sort`
+
+	type MenuResp struct {
+		Title    string      `db:"title"`             // 菜单名
+		Name     string      `db:"name"`              // 菜单名
+		Children []*MenuResp `db:"-" json:"children"` // （不属于sql的字段，一定要声明db:"-"，进行忽略）
+	}
+
+	var roleMenus []*MenuResp
+	dataSourceName := "root:qxqgqzx2018@tcp(106.54.101.160:3306)/nest_casbin?charset=utf8mb4&parseTime=true&loc=Asia%2FShanghai"
+	db := NewMySQL(dataSourceName)
+
+	err := db.Query(&roleMenus, sqlGetMenuByRoleId, 1)
+	if err == nil {
+		for _, menu := range roleMenus {
+			fmt.Println(menu.Title, menu.Name)
+		}
+	}
+}
