@@ -3,11 +3,15 @@ package stringx
 import (
 	"errors"
 	"git.zc0901.com/go/god/lib/lang"
+	"math"
+	"strconv"
+	"strings"
 )
 
 var (
 	ErrInvalidStartPosition = errors.New("起始位置无效")
 	ErrInvalidStopPosition  = errors.New("结束位置无效")
+	byteSizes               = []string{"Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"}
 )
 
 func Contains(list []string, str string) bool {
@@ -127,4 +131,45 @@ func Union(first, second []string) []string {
 	}
 
 	return merged
+}
+
+// ToFixed truncates float64 type to a particular precision in string.
+func ToFixed(n float64, precision int) string {
+	s := strconv.FormatFloat(n, 'f', precision, 64)
+	return strings.TrimRight(strings.TrimRight(s, "0"), ".")
+}
+
+func Round(val float64, roundOn float64, places int) (newVal float64) {
+	var round float64
+	pow := math.Pow(10, float64(places))
+	digit := pow * val
+	_, div := math.Modf(digit)
+	if div >= roundOn {
+		round = math.Ceil(digit)
+	} else {
+		round = math.Floor(digit)
+	}
+	newVal = round / pow
+	return
+}
+
+// 字节转带单位的大小
+func BytesToSize(bytes uint) (size string) {
+	if bytes == 0 {
+		return "0"
+	}
+	i := math.Floor(math.Log(float64(bytes)) / math.Log(1024))
+	total := float64(bytes) / math.Pow(1024, i)
+	precision := 0
+	if total < 10 && i > 0 {
+		precision = 1
+	}
+	return ToFixed(total, precision) + " " + byteSizes[int(i)]
+}
+
+func Bytes2Size(bytes uint64) (size string) {
+	base := math.Log(float64(bytes)) / math.Log(1024)
+	getSize := Round(math.Pow(1024, base-math.Floor(base)), .5, 2)
+	getSuffix := byteSizes[int(math.Floor(base))]
+	return strconv.FormatFloat(getSize, 'f', -1, 64) + " " + getSuffix
 }
