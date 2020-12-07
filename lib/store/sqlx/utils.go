@@ -163,7 +163,7 @@ func scan(rows *sql.Rows, dest interface{}) error {
 			return err
 		}
 
-		if values, err := mapStructFieldsToSlice(dve, colNames); err != nil {
+		if values, err := mapStructFieldsIntoSlice(dve, colNames); err != nil {
 			return err
 		} else {
 			return rows.Scan(values...)
@@ -213,7 +213,7 @@ func scan(rows *sql.Rows, dest interface{}) error {
 
 			for rows.Next() {
 				value := reflect.New(base)
-				if values, err := mapStructFieldsToSlice(value, colNames); err != nil {
+				if values, err := mapStructFieldsIntoSlice(value, colNames); err != nil {
 					return err
 				} else {
 					if err := rows.Scan(values...); err != nil {
@@ -233,7 +233,7 @@ func scan(rows *sql.Rows, dest interface{}) error {
 }
 
 // 映射目标结构体字段到查询结果列，并赋初值
-func mapStructFieldsToSlice(dve reflect.Value, columns []string) ([]interface{}, error) {
+func mapStructFieldsIntoSlice(dve reflect.Value, columns []string) ([]interface{}, error) {
 	columnValueMap, err := getColumnValueMap(dve)
 	if err != nil {
 		return nil, err
@@ -315,11 +315,11 @@ func getColumnValueMap(dve reflect.Value) (map[string]interface{}, error) {
 
 // getColumnName 解析结构体字段中的数据库字段标记
 func getColumnName(field reflect.StructField) string {
-	tagName := field.Tag.Get(tagName)
-	if len(tagName) == 0 {
+	key := field.Tag.Get(tagName)
+	if len(key) == 0 {
 		return ""
 	} else {
-		return strings.Split(tagName, ",")[0]
+		return strings.Split(key, ",")[0]
 	}
 }
 
