@@ -91,8 +91,8 @@ func (bi *BulkInserter) Insert(args ...interface{}) error {
 	return nil
 }
 
-func (bi *BulkInserter) Flush() {
-	bi.dispatcher.Flush()
+func (bi *BulkInserter) Flush() bool {
+	return bi.dispatcher.Flush()
 }
 
 // SetResultHandler 设置结果处理器
