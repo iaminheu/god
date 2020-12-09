@@ -15,13 +15,13 @@ import (
 
 const (
 	// regular expression pattern for single validation rule.
-	gSINGLE_RULE_PATTERN = `^([\w-]+):{0,1}(.*)`
+	gSingleRulePattern = `^([\w-]+):{0,1}(.*)`
 )
 
 var (
 	// regular expression object for single rule
 	// which is compiled just once and of repeatable usage.
-	ruleRegex, _ = regexp.Compile(gSINGLE_RULE_PATTERN)
+	ruleRegex, _ = regexp.Compile(gSingleRulePattern)
 
 	// mustCheckRulesEvenValueEmpty specifies some rules that must be validated
 	// even the value is empty (nil or empty).
@@ -266,7 +266,7 @@ func doCheckBuildInRules(
 	case "regex":
 		// It here should check the rule as there might be special char '|' in it.
 		for i := index + 1; i < len(ruleItems); i++ {
-			if !gregex.IsMatchString(gSINGLE_RULE_PATTERN, ruleItems[i]) {
+			if !gregex.IsMatchString(gSingleRulePattern, ruleItems[i]) {
 				rulePattern += "|" + ruleItems[i]
 				index++
 			}
