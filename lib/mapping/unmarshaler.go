@@ -67,25 +67,25 @@ func UnmarshalKey(m map[string]interface{}, v interface{}) error {
 }
 
 func (u *Unmarshaler) Unmarshal(m map[string]interface{}, v interface{}) error {
-	return u.UnmarshalValuer(MapValuer(m), v)
+	return u.UnmarshalValuer(MapStrAny(m), v)
 }
 
 func (u *Unmarshaler) UnmarshalValuer(m Valuer, v interface{}) error {
 	return u.unmarshalWithFullName(m, v, "")
 }
 
-func (u *Unmarshaler) unmarshalWithFullName(m Valuer, v interface{}, fullName string) error {
-	rv := reflect.ValueOf(v)
-	if err := ValidatePtr(&rv); err != nil {
+func (u *Unmarshaler) unmarshalWithFullName(m Valuer, pointer interface{}, fullName string) error {
+	reflectVal1 := reflect.ValueOf(pointer)
+	if err := ValidatePtr(&reflectVal1); err != nil {
 		return err
 	}
 
-	rte := reflect.TypeOf(v).Elem()
+	rte := reflect.TypeOf(pointer).Elem()
 	if rte.Kind() != reflect.Struct {
 		return errValueNotStruct
 	}
 
-	rve := rv.Elem()
+	reflectVal2 := reflectVal1.Elem()
 	numFields := rte.NumField()
 	for i := 0; i < numFields; i++ {
 		field := rte.Field(i)
@@ -93,7 +93,7 @@ func (u *Unmarshaler) unmarshalWithFullName(m Valuer, v interface{}, fullName st
 			continue
 		}
 
-		if err := u.processField(field, rve.Field(i), m, fullName); err != nil {
+		if err := u.processField(field, reflectVal2.Field(i), m, fullName); err != nil {
 			return err
 		}
 	}
@@ -288,7 +288,7 @@ func (u *Unmarshaler) processFieldStruct(field reflect.StructField, value reflec
 		return fmt.Errorf("字段：%s，期望 map[string]interface{}，实际 %v", fullName, valueKind)
 	}
 
-	return u.processFieldStructWithMap(field, value, MapValuer(convertedValue), fullName)
+	return u.processFieldStructWithMap(field, value, MapStrAny(convertedValue), fullName)
 }
 
 func (u *Unmarshaler) processFieldStructWithMap(field reflect.StructField, value reflect.Value,
@@ -676,7 +676,7 @@ func getValueWithChainedKeys(m Valuer, keys []string) (interface{}, bool) {
 	} else if len(keys) > 1 {
 		if v, ok := m.Value(keys[0]); ok {
 			if nextm, ok := v.(map[string]interface{}); ok {
-				return getValueWithChainedKeys(MapValuer(nextm), keys[1:])
+				return getValueWithChainedKeys(MapStrAny(nextm), keys[1:])
 			}
 		}
 	}

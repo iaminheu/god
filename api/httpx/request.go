@@ -2,6 +2,8 @@ package httpx
 
 import (
 	"git.zc0901.com/go/god/api/internal/context"
+	"git.zc0901.com/go/god/lib/gconv"
+	"git.zc0901.com/go/god/lib/gvalid"
 	"git.zc0901.com/go/god/lib/mapping"
 	"io"
 	"net/http"
@@ -27,20 +29,20 @@ var (
 )
 
 // 依次将请求路径、表单和JSON中的参数，解析值目标 v
-func Parse(r *http.Request, v interface{}) error {
-	if err := ParsePath(r, v); err != nil {
+func Parse(r *http.Request, pointer interface{}) error {
+	if err := ParsePath(r, pointer); err != nil {
 		return err
 	}
 
-	if err := ParseForm(r, v); err != nil {
+	if err := ParseForm(r, pointer); err != nil {
 		return err
 	}
 
-	return ParseJsonBody(r, v)
+	return ParseJsonBody(r, pointer)
 }
 
 // 解析请求体为JSON的参数
-func ParseJsonBody(r *http.Request, v interface{}) error {
+func ParseJsonBody(r *http.Request, pointer interface{}) error {
 	var reader io.Reader
 	if withJsonBody(r) {
 		reader = io.LimitReader(r.Body, maxBodyLen)
@@ -48,11 +50,11 @@ func ParseJsonBody(r *http.Request, v interface{}) error {
 		reader = strings.NewReader(emptyJson)
 	}
 
-	return mapping.UnmarshalJsonReader(reader, v)
+	return mapping.UnmarshalJsonReader(reader, pointer)
 }
 
 // 解析表单请求参数（即Query参数）
-func ParseForm(r *http.Request, v interface{}) error {
+func ParseForm(r *http.Request, pointer interface{}) error {
 	if err := r.ParseForm(); err != nil {
 		return err
 	}
@@ -71,23 +73,43 @@ func ParseForm(r *http.Request, v interface{}) error {
 		}
 	}
 
-	return formUnmarshaler.Unmarshal(params, v)
+	// 转换
+	if err := gconv.Struct(params, pointer); err != nil {
+		return err
+	}
+	// 验证
+	if err := gvalid.CheckStruct(pointer, nil); err != nil {
+		return err.Current()
+	}
+
+	return nil
+	//return formUnmarshaler.Unmarshal(params, pointer)
 }
 
 // 解析URL中的路径参数
 // 如：http://localhost/users/:name
-func ParsePath(r *http.Request, v interface{}) error {
+func ParsePath(r *http.Request, pointer interface{}) error {
 	vars := context.Vars(r)
-	m := make(map[string]interface{}, len(vars))
+	params := make(map[string]interface{}, len(vars))
 	for k, v := range vars {
-		m[k] = v
+		params[k] = v
 	}
 
-	return pathUnmarshaler.Unmarshal(m, v)
+	// 转换
+	if err := gconv.Struct(params, pointer); err != nil {
+		return err
+	}
+	// 验证
+	if err := gvalid.CheckStruct(pointer, nil); err != nil {
+		return err.Current()
+	}
+
+	return nil
+	//return pathUnmarshaler.Unmarshal(params, pointer)
 }
 
 func ParseHeader(headerValue string) map[string]string {
-	m := make(map[string]string)
+	params := make(map[string]string)
 	fields := strings.Split(headerValue, separator)
 	for _, field := range fields {
 		field = strings.TrimSpace(field)
@@ -100,10 +122,10 @@ func ParseHeader(headerValue string) map[string]string {
 			continue
 		}
 
-		m[kv[0]] = kv[1]
+		params[kv[0]] = kv[1]
 	}
 
-	return m
+	return params
 }
 
 // 判断是否带有JSON请求体

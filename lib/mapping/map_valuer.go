@@ -5,10 +5,10 @@ type (
 		Value(key string) (interface{}, bool)
 	}
 
-	MapValuer map[string]interface{}
+	MapStrAny map[string]interface{}
 )
 
-func (m MapValuer) Value(key string) (interface{}, bool) {
+func (m MapStrAny) Value(key string) (interface{}, bool) {
 	v, ok := m[key]
 	return v, ok
 }

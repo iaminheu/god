@@ -75,7 +75,7 @@ func DefaultOptions() Options {
 	}
 	return Options{
 		Path:       path,
-		Language:   "en",
+		Language:   "cn",
 		Delimiters: defaultDelimiters,
 	}
 }

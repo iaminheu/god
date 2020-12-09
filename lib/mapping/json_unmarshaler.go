@@ -1,6 +1,8 @@
 package mapping
 
 import (
+	"git.zc0901.com/go/god/lib/gconv"
+	"git.zc0901.com/go/god/lib/gvalid"
 	"git.zc0901.com/go/god/lib/jsonx"
 	"io"
 )
@@ -32,5 +34,16 @@ func unmarshalJsonReader(reader io.Reader, v interface{}, unmarshaler *Unmarshal
 		return err
 	}
 
-	return unmarshaler.Unmarshal(m, v)
+	// 转换
+	if err := gconv.Struct(m, v); err != nil {
+		return err
+	}
+	// 验证
+	if err := gvalid.CheckStruct(v, nil); err != nil {
+		return err.Current()
+	}
+
+	return nil
+
+	//return unmarshaler.Unmarshal(m, v)
 }
