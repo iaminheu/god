@@ -87,7 +87,7 @@ func (cc CachedConn) QueryNoCache(dest interface{}, query string, args ...interf
 	return cc.conn.Query(dest, query, args...)
 }
 
-func (cc CachedConn) Transact(fn func(Session) error) error {
+func (cc CachedConn) Transact(fn func(TxSession) error) error {
 	return cc.conn.Transact(fn)
 }
 
