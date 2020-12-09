@@ -51,7 +51,7 @@ type (
 
 	// 批量插入管理器
 	insertManager struct {
-		conn          Conn
+		conn          Session
 		stmt          bulkStmt
 		values        []string
 		resultHandler ResultHandler
