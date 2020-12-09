@@ -51,7 +51,7 @@ type (
 
 	// 批量插入管理器
 	insertManager struct {
-		conn          Session
+		conn          TxSession
 		stmt          bulkStmt
 		values        []string
 		resultHandler ResultHandler
@@ -62,7 +62,7 @@ type (
 )
 
 // NewBulkInserter 新建批量插入器
-func NewBulkInserter(c Session, stmt string) (*BulkInserter, error) {
+func NewBulkInserter(c TxSession, stmt string) (*BulkInserter, error) {
 	insertStmt, err := parseBulkInsertStmt(stmt)
 	if err != nil {
 		return nil, err
