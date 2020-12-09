@@ -36,7 +36,7 @@ type (
 	}
 
 	// TransactFn 事务内部执行函数，传入事务会话
-	TransactFn func(tx Session) error
+	TransactFn func(tx TxSession) error
 
 	// Conn 提供外部数据库会话和事务的接口
 	Conn interface {
