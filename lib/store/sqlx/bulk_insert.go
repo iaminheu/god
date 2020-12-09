@@ -51,7 +51,7 @@ type (
 
 	// 批量插入管理器
 	insertManager struct {
-		conn          TxSession
+		conn          Session
 		stmt          bulkStmt
 		values        []string
 		resultHandler ResultHandler
@@ -62,7 +62,26 @@ type (
 )
 
 // NewBulkInserter 新建批量插入器
-func NewBulkInserter(c TxSession, stmt string) (*BulkInserter, error) {
+func NewBulkInserter(c Conn, stmt string) (*BulkInserter, error) {
+	insertStmt, err := parseBulkInsertStmt(stmt)
+	if err != nil {
+		return nil, err
+	}
+
+	manager := &insertManager{
+		conn: c,
+		stmt: insertStmt,
+	}
+
+	return &BulkInserter{
+		stmt:       insertStmt,
+		manager:    manager,
+		dispatcher: dispatcher.NewPeriodicalDispatcher(flushInterval, manager),
+	}, nil
+}
+
+// NewBulkInserter 新建批量插入器（带有事务）
+func NewBulkInserterWithTx(c TxSession, stmt string) (*BulkInserter, error) {
 	insertStmt, err := parseBulkInsertStmt(stmt)
 	if err != nil {
 		return nil, err
