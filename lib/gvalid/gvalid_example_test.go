@@ -73,7 +73,7 @@ func TestRegisterRule(t *testing.T) {
 
 func TestRegisterRule_OverwriteRequired(t *testing.T) {
 	// 重写 required 验证规则
-	rule := "required"
+	rule := "required-strict"
 	_ = gvalid.RegisterRule(rule, func(rule string, value interface{}, message string, params map[string]interface{}) error {
 		reflectValue := reflect.ValueOf(value)
 		if reflectValue.Kind() == reflect.Ptr {
@@ -101,14 +101,14 @@ func TestRegisterRule_OverwriteRequired(t *testing.T) {
 		return nil
 	})
 
-	fmt.Println(1, gvalid.Check("", "required", "该项必填"))
-	fmt.Println(2, gvalid.Check([]string{}, "required", "该项必填"))
-	fmt.Println(3, gvalid.Check(g.SliceStr{}, "required", "该项必填"))
-	fmt.Println(4, gvalid.Check(g.MapStrInt{}, "required", "该项必填"))
+	fmt.Println(1, gvalid.Check("", "required-strict", "该项必填"))
+	fmt.Println(2, gvalid.Check([]string{}, "required-strict", "该项必填"))
+	fmt.Println(3, gvalid.Check(g.SliceStr{}, "required-strict", "该项必填"))
+	fmt.Println(4, gvalid.Check(g.MapStrInt{}, "required-strict", "该项必填"))
 	gvalid.DeleteRule(rule)
 	fmt.Println()
-	fmt.Println(1, gvalid.Check("", "required", "该项必填"))
-	fmt.Println(2, gvalid.Check([]string{}, "required", "该项必填"))
-	fmt.Println(3, gvalid.Check(g.SliceStr{}, "required", "该项必填"))
-	fmt.Println(4, gvalid.Check(g.MapStrInt{}, "required", "该项必填"))
+	fmt.Println(1, gvalid.Check("", "required-strict", "该项必填"))
+	fmt.Println(2, gvalid.Check([]string{}, "required-strict", "该项必填"))
+	fmt.Println(3, gvalid.Check(g.SliceStr{}, "required-strict", "该项必填"))
+	fmt.Println(4, gvalid.Check(g.MapStrInt{}, "required-strict", "该项必填"))
 }

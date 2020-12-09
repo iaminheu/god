@@ -11,6 +11,7 @@ import (
 //
 // All supported rules:
 // required             format: required                              brief: Required.
+// required-strict      format: required-strict                       brief: Required with strict mode.
 // required-if          format: required-if:field,value,...           brief: Required unless all given field and its value are equal.
 // required-unless      format: required-unless:field,value,...       brief: Required unless all given field and its value are not equal.
 // required-with        format: required-with:field1,field2,...       brief: Required if any of given fields are not empty.
