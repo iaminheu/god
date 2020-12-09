@@ -100,7 +100,7 @@ func (c *metricsManager) Add(v interface{}) bool {
 }
 
 // 执行并写入远程普罗米修斯
-func (c *metricsManager) Execute(v interface{}) {
+func (c *metricsManager) Execute(v interface{}) error {
 	pair := v.(tasksDurationPair)
 	tasks := pair.tasks
 	duration := pair.duration
@@ -161,6 +161,7 @@ func (c *metricsManager) Execute(v interface{}) {
 	}
 
 	log(report)
+	return nil
 }
 
 func (c *metricsManager) PopAll() interface{} {

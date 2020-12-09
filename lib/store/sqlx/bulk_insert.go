@@ -128,10 +128,10 @@ func (m *insertManager) Add(row interface{}) bool {
 	return len(m.values) >= maxBulkRows
 }
 
-func (m *insertManager) Execute(rows interface{}) {
+func (m *insertManager) Execute(rows interface{}) error {
 	values := rows.([]string)
 	if len(values) == 0 {
-		return
+		return nil
 	}
 
 	stmtWithoutValues := m.stmt.prefix
@@ -150,6 +150,7 @@ func (m *insertManager) Execute(rows interface{}) {
 	} else if err != nil {
 		logx.Errorf("[批量插入] SQL: %s, 错误: %s", stmt, err)
 	}
+	return err
 }
 
 func (m *insertManager) PopAll() interface{} {

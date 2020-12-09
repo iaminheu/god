@@ -2,6 +2,7 @@ package dispatcher
 
 import (
 	"git.zc0901.com/go/god/lib/lang"
+	"git.zc0901.com/go/god/lib/logx"
 	"git.zc0901.com/go/god/lib/proc"
 	"git.zc0901.com/go/god/lib/syncx"
 	"git.zc0901.com/go/god/lib/threading"
@@ -16,9 +17,9 @@ const idleRound = 10
 type (
 	// TaskManager 任务管理者接口：负责任务的新增、执行、移除。
 	TaskManager interface {
-		Add(task interface{}) bool // 添加任务
-		Execute(task interface{})  // 执行任务
-		PopAll() interface{}       // 删除并返回当前所有任务
+		Add(task interface{}) bool      // 添加任务
+		Execute(task interface{}) error // 执行任务
+		PopAll() interface{}            // 删除并返回当前所有任务
 	}
 
 	// TaskChan 任务通道：一个传递 interface{} 的通道
@@ -166,7 +167,11 @@ func (pd *PeriodicalDispatcher) execute(tasks interface{}) bool {
 
 	ok := pd.has(tasks)
 	if ok {
-		pd.taskManager.Execute(tasks)
+		err := pd.taskManager.Execute(tasks)
+		if err != nil {
+			logx.Error(err)
+			ok = false
+		}
 	}
 
 	return ok
