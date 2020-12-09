@@ -62,7 +62,7 @@ type (
 )
 
 // NewBulkInserter 新建批量插入器
-func NewBulkInserter(c Conn, stmt string) (*BulkInserter, error) {
+func NewBulkInserter(c Session, stmt string) (*BulkInserter, error) {
 	insertStmt, err := parseBulkInsertStmt(stmt)
 	if err != nil {
 		return nil, err
