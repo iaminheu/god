@@ -13,7 +13,7 @@ func TestTxSession_Exec(t *testing.T) {
 	_ = db.Transact(addAccountCallback)
 }
 
-func addAccountCallback(tx Session) (err error) {
+func addAccountCallback(tx TxSession) (err error) {
 	for i := 0; i < 100; i++ {
 		// 插入用户库——账号表
 		var result sql.Result
