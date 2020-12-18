@@ -16,7 +16,7 @@ require (
 	github.com/golang/mock v1.4.4
 	github.com/golang/protobuf v1.4.3
 	github.com/google/uuid v1.1.1
-	github.com/grokify/html-strip-tags-go v0.0.0-20200923094847-079d207a09f1 // indirect
+	github.com/grokify/html-strip-tags-go v0.0.0-20200923094847-079d207a09f1
 	github.com/iancoleman/strcase v0.1.2
 	github.com/json-iterator/go v1.1.10
 	github.com/justinas/alice v1.2.0

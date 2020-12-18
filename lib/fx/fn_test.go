@@ -1,8 +1,10 @@
 package fx
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/stretchr/testify/assert"
+	"os/exec"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -47,4 +49,33 @@ func TestJust(t *testing.T) {
 	fmt.Println(result)
 	fmt.Println(result2)
 	fmt.Println(err)
+}
+
+func TestConvertVideo(t *testing.T) {
+	cmd := exec.Command("ffmpeg", "-i", "/Users/zs/Desktop/video/guandian/75-如何改造我们的住宅.flv", "/Users/zs/Desktop/video/guandian/75-如何改造我们的住宅.mp4")
+
+	stdoutPipe, err := cmd.StdoutPipe()
+	if err != nil {
+		t.Fatalf("无法获得标准输出 %+v", err)
+	}
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("命令错误 %+v", err)
+	}
+
+	outputBuf := bufio.NewReader(stdoutPipe)
+	for {
+		output, _, err := outputBuf.ReadLine()
+		if err != nil {
+			if err.Error() != "EOF" {
+				fmt.Printf("错误: %s\n", err)
+			}
+			return
+		}
+		fmt.Printf("%s\n", string(output))
+
+		if err := cmd.Wait(); err != nil {
+			fmt.Print("等待：", err.Error())
+		}
+	}
 }

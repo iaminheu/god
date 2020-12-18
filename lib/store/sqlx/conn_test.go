@@ -1,6 +1,7 @@
 package sqlx
 
 import (
+	"database/sql"
 	"fmt"
 	"strconv"
 	"testing"
@@ -136,14 +137,16 @@ func TestConnBreaker(t *testing.T) {
 }
 
 func Test_Scan(t *testing.T) {
-	var sqlGetMenuByRoleId = `select m.id, m.parent_id, m.name, m.title, m.path, m.component, m.icon, m.keep_alive, hidden
-	from menu m right join role_menu rm on m.id=rm.menu_id
+	var sqlGetMenuByRoleId = `select m.id, m.parent_id, m.name, m.title, m.path, m.component, m.icon, m.keep_alive, hidden, update_time
+	from menu m
+	right join role_menu rm on m.id=rm.menu_id
 	where rm.role_id=? order by m.sort`
 
 	type MenuResp struct {
-		Title    string      `db:"title"`             // 菜单名
-		Name     string      `db:"name"`              // 菜单名
-		Children []*MenuResp `db:"-" json:"children"` // （不属于sql的字段，一定要声明db:"-"，进行忽略）
+		Title      string       `db:"title"`             // 菜单名
+		Name       string       `db:"name"`              // 菜单名
+		UpdateTime sql.NullTime `db:"update_time"`       // 更新时间
+		Children   []*MenuResp  `db:"-" json:"children"` // （不属于sql的字段，一定要声明db:"-"，进行忽略）
 	}
 
 	var roleMenus []*MenuResp
@@ -153,7 +156,7 @@ func Test_Scan(t *testing.T) {
 	err := db.Query(&roleMenus, sqlGetMenuByRoleId, 1)
 	if err == nil {
 		for _, menu := range roleMenus {
-			fmt.Println(menu.Title, menu.Name)
+			fmt.Println(menu.Title, menu.Name, menu.UpdateTime)
 		}
 	}
 }
