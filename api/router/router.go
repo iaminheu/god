@@ -46,7 +46,7 @@ func (rt *router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	allow, ok := rt.methodNotAllow(r.Method, reqPath)
+	allows, ok := rt.methodsNotAllow(r.Method, reqPath)
 	if !ok {
 		rt.handleNotFound(w, r)
 		return
@@ -55,7 +55,7 @@ func (rt *router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if rt.notAllowed != nil {
 		rt.notAllowed.ServeHTTP(w, r)
 	} else {
-		w.Header().Set(allowHeader, allow)
+		w.Header().Set(allowHeader, allows)
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
 }
@@ -90,7 +90,7 @@ func (rt *router) SetNotAllowedHandler(handler http.Handler) {
 }
 
 // 检测指定的请求路径是否可使用指定的请求方法
-func (rt *router) methodNotAllow(method, reqPath string) (string, bool) {
+func (rt *router) methodsNotAllow(method, reqPath string) (string, bool) {
 	var allows []string
 
 	for treeMethod, tree := range rt.trees {

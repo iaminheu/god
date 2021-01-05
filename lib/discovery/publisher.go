@@ -108,7 +108,7 @@ func (p *Publisher) keepAliveAsync(cli internal.EtcdClient) error {
 					return
 				}
 			case <-p.pauseChan:
-				logx.Infof("暂停etcd更新, key: %s, value: %s", p.key, p.value)
+				logx.Infof("暂停etcd续约, key: %s, value: %s", p.key, p.value)
 				p.revoke(cli)
 				select {
 				case <-p.resumeChan:
