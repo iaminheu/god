@@ -164,6 +164,12 @@ func (g *ModelGenerator) genModelCode(table parser.Table, database string, withC
 		return "", nil
 	}
 
+	// 生成一组主键查找代码段
+	findManyCode, err := genFindMany(tableDTO)
+	if err != nil {
+		return "", nil
+	}
+
 	// 生成字段查找代码段
 	findOneByFieldCode, err := genFindOneByField(tableDTO, withCache)
 	if err != nil {
@@ -172,7 +178,7 @@ func (g *ModelGenerator) genModelCode(table parser.Table, database string, withC
 
 	// 合成查找代码段
 	var findCode = make([]string, 0)
-	findCode = append(findCode, findOneCode, findOneByFieldCode)
+	findCode = append(findCode, findOneCode, findManyCode, findOneByFieldCode)
 
 	// 生成更新代码段
 	updateCode, err := genUpdate(tableDTO, withCache)

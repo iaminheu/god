@@ -28,6 +28,40 @@ func (m *{{.upperTable}}Model) FindOne({{.primaryKey}} {{.dataType}}) (*{{.upper
 }
 `
 
+// 通过ids查询
+var FindMany = `
+func (m *{{.upperTable}}Model) FindMany(ids []{{.dataType}}, workers ...int) (list []*{{.upperTable}}) {
+	var nWorkers int
+	if len(workers) > 0 {
+		nWorkers = workers[0]
+	} else {
+		nWorkers = len(ids)
+	}
+
+	channel := mr.Map(func(source chan<- interface{}) {
+		for _, id := range ids {
+			source <- id
+		}
+	}, func(item interface{}, writer mr.Writer) {
+		id := item.(int64)
+		one, err := m.FindOne(id)
+		if err == nil {
+			writer.Write(one)
+		}
+	}, mr.WithWorkers(nWorkers))
+
+	for one := range channel {
+		list = append(list, one.(*{{.upperTable}}))
+	}
+
+	sort.Slice(list, func(i, j int) bool {
+		return gutil.IndexOf(list[i].Id, ids) < gutil.IndexOf(list[j].Id, ids)
+	})
+
+	return
+}
+`
+
 // 通过指定字段查询
 var FindOneByField = `
 func (m *{{.upperTable}}Model) FindOneBy{{.upperField}}({{.in}}) (*{{.upperTable}}, error) {
