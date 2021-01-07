@@ -4,7 +4,7 @@ import (
 	"git.zc0901.com/go/god/api/metadata"
 	"git.zc0901.com/go/god/lib/netx"
 	"net/http"
-	"net/url"
+	"strings"
 )
 
 // 结合 ClientPublicIP 和 ClientIP 获取用户的真实 ip
@@ -17,11 +17,11 @@ func remoteIP(r *http.Request) string {
 }
 
 func remotePort(r *http.Request) string {
-	u, err := url.Parse(r.Host)
-	if err != nil {
-		return ""
+	part := strings.Split(r.Host, ":")
+	if len(part) == 2 {
+		return part[1]
 	}
-	return u.Port()
+	return ""
 }
 
 func ContextToMetadata(next http.HandlerFunc) http.HandlerFunc {
