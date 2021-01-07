@@ -17,7 +17,7 @@ func remoteIP(r *http.Request) string {
 }
 
 func remotePort(r *http.Request) string {
-	u, err := url.Parse(r.RequestURI)
+	u, err := url.Parse(r.Host)
 	if err != nil {
 		return ""
 	}
