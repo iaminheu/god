@@ -6,7 +6,10 @@ var Model = `package model
 {{.types}}
 {{.new}}
 {{.insert}}
+{{.txInsert}}
 {{.find}}
 {{.update}}
+{{.txUpdate}}
 {{.delete}}
+{{.txDelete}}
 `
