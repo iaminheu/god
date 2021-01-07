@@ -23,6 +23,7 @@ require (
 	github.com/logrusorgru/aurora v2.0.3+incompatible
 	github.com/onsi/ginkgo v1.14.2 // indirect
 	github.com/onsi/gomega v1.10.3 // indirect
+	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.8.0
 	github.com/prometheus/common v0.14.0
 	github.com/spaolacci/murmur3 v1.1.0
