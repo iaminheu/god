@@ -5,8 +5,8 @@ import (
 )
 
 var (
-	RemoteIP   = "remote-ip"
-	RemotePort = "remote-port"
+	RemoteIP   = "Remote-IP"
+	RemotePort = "Remote-Port"
 )
 
 // MD is a mapping from metadata keys to values. Users should use the following
