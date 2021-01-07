@@ -35,7 +35,7 @@ func (m *{{.upperTable}}Model) FindMany(ids []{{.dataType}}, workers ...int) (li
 	if len(workers) > 0 {
 		nWorkers = workers[0]
 	} else {
-		nWorkers = len(ids)
+		nWorkers = mathx.MinInt(10, len(ids))
 	}
 
 	channel := mr.Map(func(source chan<- interface{}) {

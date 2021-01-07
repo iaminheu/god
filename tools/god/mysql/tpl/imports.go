@@ -13,6 +13,7 @@ var (
 	"git.zc0901.com/go/god/lib/stringx"
 	"git.zc0901.com/go/god/tools/god/mysql/builder"
 	"git.zc0901.com/go/god/lib/gutil"
+	"git.zc0901.com/go/god/lib/mathx"
 	"git.zc0901.com/go/god/lib/mr"
 )
 `
@@ -27,6 +28,7 @@ var (
 	"git.zc0901.com/go/god/lib/stringx"
 	"git.zc0901.com/go/god/tools/god/mysql/builder"
 	"git.zc0901.com/go/god/lib/gutil"
+	"git.zc0901.com/go/god/lib/mathx"
 	"git.zc0901.com/go/god/lib/mr"
 )`
 )
