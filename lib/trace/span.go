@@ -19,13 +19,16 @@ const (
 
 var spanSep = string([]byte{spanSepRune})
 
+// 链路中的一个操作（api调用、数据库操作等），存储时间、服务名称等信息
+// 是分布式追踪的最小单元。
+// 一个 Trace 由多个 Span 组成。
 type Span struct {
-	ctx           spanContext
-	serviceName   string
-	operationName string
-	startTime     time.Time
-	flag          string
-	children      int
+	ctx           spanContext // 传递的上下文
+	serviceName   string      // 服务名
+	operationName string      // 操作
+	startTime     time.Time   // 开始时间戳
+	flag          string      // 标记 trace 是 server 还是 client
+	children      int         // 本 span fork 的子节点数
 }
 
 func (s *Span) TraceId() string {
@@ -98,6 +101,7 @@ func (s *Span) followSpanId() string {
 }
 
 func newServerSpan(payload Payload, serviceName, operationName string) Trace {
+	// 从上述的 payload「也就是header」获取traceId，spanId。
 	traceId := stringx.TakeWithPriority(func() string {
 		if payload != nil {
 			return payload.Get(traceIdKey)
@@ -105,7 +109,6 @@ func newServerSpan(payload Payload, serviceName, operationName string) Trace {
 
 		return ""
 	}, stringx.RandId)
-
 	spanId := stringx.TakeWithPriority(func() string {
 		if payload != nil {
 			return payload.Get(spanIdKey)
@@ -120,19 +123,24 @@ func newServerSpan(payload Payload, serviceName, operationName string) Trace {
 		serviceName:   serviceName,
 		operationName: operationName,
 		startTime:     timex.Time(),
-		flag:          serverFlag,
+		flag:          serverFlag, // 标记为server
 	}
 }
 
+// 开启客户端链路操作
 func StartClientSpan(ctx context.Context, serviceName, operationName string) (context.Context, Trace) {
+	// **1** 获取上游（api 或其他 rpc 调用端）带下来的 span 上下文信息
 	if span, ok := ctx.Value(TracingKey).(*Span); ok {
+		// **2** 在此客户端中分裂出子Span，（从获取的 span 中创建 子span，「继承父span的traceId」）
 		return span.Fork(ctx, serviceName, operationName)
 	}
 
 	return ctx, emptyNopSpan
 }
 
+// 开启服务端链路操作
 func StartServerSpan(ctx context.Context, payload Payload, serviceName, operationName string) (context.Context, Trace) {
 	span := newServerSpan(payload, serviceName, operationName)
+	// **4** - 看header中是否设置
 	return context.WithValue(ctx, TracingKey, span), span
 }

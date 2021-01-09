@@ -13,18 +13,18 @@ import (
 
 const (
 	jwtAudience    = "aud"
-	jwtExpire      = "exp"
+	jwtExpire      = "exp" // 过期时间
 	jwtId          = "jti"
-	jwtIssueAt     = "iat"
-	jwtIssuer      = "iss"
+	jwtIssueAt     = "iat" // 签发时间
+	jwtIssuer      = "iss" // 发行人
 	jwtNotBefore   = "nbf"
 	jwtSubject     = "sub"
 	noDetailReason = "no detail reason"
 )
 
 var (
-	errInvalidToken = errors.New("invalid auth token")
-	errNoClaims     = errors.New("no auth params")
+	errInvalidToken = errors.New("无效的鉴权令牌")
+	errNoClaims     = errors.New("鉴权参数未提供")
 )
 
 type (

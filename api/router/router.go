@@ -34,6 +34,10 @@ type router struct {
 	notAllowed http.Handler
 }
 
+func NewRouter() Router {
+	return &router{trees: make(map[string]*search.Tree)}
+}
+
 func (rt *router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	reqPath := path.Clean(r.URL.Path)
 	if tree, ok := rt.trees[r.Method]; ok {
@@ -125,8 +129,4 @@ func validMethod(method string) bool {
 		method == http.MethodPut || method == http.MethodOptions ||
 		method == http.MethodDelete || method == http.MethodPatch ||
 		method == http.MethodHead
-}
-
-func NewRouter() Router {
-	return &router{trees: make(map[string]*search.Tree)}
 }

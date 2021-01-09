@@ -8,12 +8,14 @@ const (
 )
 
 type (
+	// 链路的操作上下文：TraceID、SpanID或其他想要传递的内容
 	SpanContext interface {
 		TraceId() string
 		SpanId() string
-		Visit(fn func(key, value string) bool)
+		Visit(fn func(key, value string) bool) // 自定义操作TraceId，SpanId
 	}
 
+	// 链路接口
 	Trace interface {
 		SpanContext
 
@@ -22,26 +24,8 @@ type (
 		Follow(ctx context.Context, serviceName, operationName string) (context.Context, Trace)
 	}
 
-	spanContext struct {
-		traceId string
-		spanId  string
-	}
-
 	contextKey string
 )
-
-func (sc spanContext) TraceId() string {
-	return sc.traceId
-}
-
-func (sc spanContext) SpanId() string {
-	return sc.spanId
-}
-
-func (sc spanContext) Visit(fn func(key, val string) bool) {
-	fn(traceIdKey, sc.traceId)
-	fn(spanIdKey, sc.spanId)
-}
 
 var TracingKey = contextKey("X-Trace")
 

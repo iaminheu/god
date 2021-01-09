@@ -16,6 +16,7 @@ var (
 )
 
 type (
+	// 链路传播下游的操作：抽取、注入
 	Propagator interface {
 		Extract(payload interface{}) (Payload, error)
 		Inject(payload interface{}) (Payload, error)

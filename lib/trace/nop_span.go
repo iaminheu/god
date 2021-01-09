@@ -4,6 +4,7 @@ import "context"
 
 var emptyNopSpan = nopSpan{}
 
+// tracer 的空白实现
 type nopSpan struct{}
 
 func (s nopSpan) TraceId() string {
