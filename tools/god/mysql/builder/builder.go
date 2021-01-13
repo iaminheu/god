@@ -62,9 +62,9 @@ func FieldList(table interface{}) []string {
 		// gets us a StructField
 		fi := typ.Field(i)
 		if tagv := fi.Tag.Get(dbTag); tagv != "" {
-			out = append(out, tagv)
+			out = append(out, fmt.Sprintf("`%v`", tagv))
 		} else {
-			out = append(out, fi.Name)
+			out = append(out, fmt.Sprintf("`%v`", fi.Name))
 		}
 	}
 	return out
