@@ -240,7 +240,7 @@ func (n node) processCaches(values []string, dest []interface{}, keys ...string)
 		var v interface{}
 		err := jsoniter.UnmarshalFromString(value, &v)
 		if err == nil {
-			dest = append(dest, v)
+			dest = append(dest, &v)
 			continue
 		} else {
 			dest = append(dest, nil)
