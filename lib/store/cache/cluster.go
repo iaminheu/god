@@ -13,7 +13,7 @@ type (
 	Cache interface {
 		Del(keys ...string) error
 		Get(key string, dest interface{}) error
-		MGet(keys []string, dest interface{}) error
+		MGet(keys []string, dest []interface{}) (error, []string)
 		Set(key string, val interface{}) error
 		SetEx(key string, val interface{}, expires time.Duration) error
 		Take(dest interface{}, key string, queryFn func(interface{}) error) error
@@ -90,15 +90,15 @@ func (c cluster) Get(key string, dest interface{}) error {
 	return node.(Cache).Get(key, dest)
 }
 
-func (c cluster) MGet(keys []string, dest interface{}) error {
+func (c cluster) MGet(keys []string, dest []interface{}) (err error, missKeys []string) {
 	switch len(keys) {
 	case 0:
-		return nil
+		return
 	case 1:
 		key := keys[0]
 		node, ok := c.dispatcher.Get(key)
 		if !ok {
-			return c.errNotFound
+			return c.errNotFound, keys
 		}
 		return node.(Cache).MGet(keys, dest)
 	default:
@@ -113,13 +113,15 @@ func (c cluster) MGet(keys []string, dest interface{}) error {
 
 			nodes[node] = append(nodes[node], key)
 		}
+
 		for node, keys := range nodes {
-			if err := node.(Cache).MGet(keys, dest); err != nil {
+			err, missKeys = node.(Cache).MGet(keys, dest)
+			if err != nil {
 				es.Add(err)
 			}
 		}
 
-		return es.Error()
+		return es.Error(), missKeys
 	}
 }
 

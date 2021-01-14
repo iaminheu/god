@@ -1,15 +1,14 @@
 package cache
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
-	"git.zc0901.com/go/god/lib/gconv"
 	"git.zc0901.com/go/god/lib/logx"
 	"git.zc0901.com/go/god/lib/mathx"
 	"git.zc0901.com/go/god/lib/stat"
 	"git.zc0901.com/go/god/lib/store/redis"
 	"git.zc0901.com/go/god/lib/syncx"
+	jsoniter "github.com/json-iterator/go"
 	"math/rand"
 	"sync"
 	"time"
@@ -70,16 +69,12 @@ func (n node) Get(key string, dest interface{}) error {
 	}
 }
 
-func (n node) MGet(keys []string, dest interface{}) error {
+func (n node) MGet(keys []string, dest []interface{}) (error, []string) {
 	if len(keys) == 0 {
-		return nil
+		return nil, nil
 	}
 
-	if err := n.doMGet(keys, dest); err == errPlaceholder {
-		return n.errNotFound
-	} else {
-		return err
-	}
+	return n.doMGet(keys, dest)
 }
 
 func (n node) Set(key string, value interface{}) error {
@@ -87,7 +82,7 @@ func (n node) Set(key string, value interface{}) error {
 }
 
 func (n node) SetEx(key string, value interface{}, expires time.Duration) error {
-	data, err := json.Marshal(value)
+	data, err := jsoniter.Marshal(value)
 	if err != nil {
 		return err
 	}
@@ -146,17 +141,18 @@ func (n node) doGet(key string, dest interface{}) error {
 	return n.processCache(key, result, dest)
 }
 
-func (n node) doMGet(keys []string, dest interface{}) error {
+func (n node) doMGet(keys []string, dest []interface{}) (err error, missKeys []string) {
 	n.stat.IncrTotal()
 	values, err := n.redis.MGet(keys...)
 	if err != nil {
 		n.stat.IncrMiss()
-		return err
+		return
 	}
 
 	if len(values) == 0 {
 		n.stat.IncrMiss()
-		return n.errNotFound
+		err = n.errNotFound
+		return
 	}
 
 	n.stat.IncrHit()
@@ -197,7 +193,7 @@ func (n node) doTake(dest interface{}, key string, queryFn func(newVal interface
 			}
 		}
 
-		return json.Marshal(dest)
+		return jsoniter.Marshal(dest)
 	})
 	if err != nil {
 		return err
@@ -210,11 +206,11 @@ func (n node) doTake(dest interface{}, key string, queryFn func(newVal interface
 	n.stat.IncrTotal()
 	n.stat.IncrHit()
 
-	return json.Unmarshal(result.([]byte), dest)
+	return jsoniter.Unmarshal(result.([]byte), dest)
 }
 
 func (n node) processCache(key string, result string, dest interface{}) error {
-	err := json.Unmarshal([]byte(result), dest)
+	err := jsoniter.Unmarshal([]byte(result), dest)
 	if err == nil {
 		return nil
 	}
@@ -230,21 +226,29 @@ func (n node) processCache(key string, result string, dest interface{}) error {
 	return n.errNotFound
 }
 
-func (n node) processCaches(values []string, dest interface{}, keys ...string) error {
-	err := json.Unmarshal(gconv.Bytes(values), dest)
-	if err == nil {
-		return nil
+func (n node) processCaches(values []string, dest []interface{}, keys ...string) (error, []string) {
+	var missedKeys []string
+
+	for i, value := range values {
+		var v interface{}
+		err := jsoniter.UnmarshalFromString(value, &v)
+		if err == nil {
+			dest = append(dest, v)
+			continue
+		} else {
+			msg := fmt.Sprintf("Unmarshl缓存失败，缓存节点：%s，键：%s，值：%s，错误：%v", n.redis.Addr, keys[i], value, err)
+			logx.Error(msg)
+			stat.Report(msg)
+			if _, err = n.redis.Del(keys[i]); err != nil {
+				logx.Errorf("删除无效缓存，节点：%s，键：%s，值：%s，错误：%v", n.redis.Addr, keys[i], value, err)
+			}
+		}
+
+		missedKeys = append(missedKeys, keys[i])
 	}
 
-	msg := fmt.Sprintf("Unmarshl缓存失败，缓存节点：%s，键：%s，值：%s，错误：%v", n.redis.Addr, keys, values, err)
-	logx.Error(msg)
-	stat.Report(msg)
-	if _, err = n.redis.Del(keys...); err != nil {
-		logx.Errorf("删除无效缓存，节点：%s，键：%s，值：%s，错误：%v", n.redis.Addr, keys, values, err)
-	}
-
-	// 返回 errNotFound 以通过 queryFn 重新加载缓存值
-	return n.errNotFound
+	// 返回缓存确实的 missedKeys 以通过 queryFn 重新加载缓存值
+	return nil, missedKeys
 }
 
 // 防缓存雪崩：基于指定时间生成一个随机临近值，以防N多缓存同时过期，瞬间冲击数据库压力
