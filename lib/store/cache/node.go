@@ -69,7 +69,7 @@ func (n node) Get(key string, dest interface{}) error {
 	}
 }
 
-func (n node) MGet(keys []string, dest []*interface{}) error {
+func (n node) MGet(keys []string, dest []interface{}) error {
 	if len(keys) == 0 {
 		return nil
 	}
@@ -145,7 +145,7 @@ func (n node) doGet(key string, dest interface{}) error {
 	return n.processCache(key, result, dest)
 }
 
-func (n node) doMGet(keys []string, dest []*interface{}) error {
+func (n node) doMGet(keys []string, dest []interface{}) error {
 	n.stat.IncrTotal()
 	values, err := n.redis.MGet(keys...)
 	if err != nil {
@@ -230,7 +230,7 @@ func (n node) processCache(key string, result string, dest interface{}) error {
 	return n.errNotFound
 }
 
-func (n node) processCaches(values []string, dest []*interface{}, keys ...string) {
+func (n node) processCaches(values []string, dest []interface{}, keys ...string) {
 	for i, value := range values {
 		if value == notFoundPlaceholder || value == "" {
 			dest = append(dest, nil)
@@ -240,7 +240,7 @@ func (n node) processCaches(values []string, dest []*interface{}, keys ...string
 		var v interface{}
 		err := jsoniter.UnmarshalFromString(value, &v)
 		if err == nil {
-			dest = append(dest, &v)
+			dest = append(dest, v)
 			continue
 		} else {
 			dest = append(dest, nil)
