@@ -74,7 +74,11 @@ func (n node) MGet(keys []string, dest []interface{}) error {
 		return nil
 	}
 
-	return n.doMGet(keys, dest)
+	if err := n.doMGet(keys, dest); err == errPlaceholder {
+		return n.errNotFound
+	} else {
+		return err
+	}
 }
 
 func (n node) Set(key string, value interface{}) error {
@@ -228,6 +232,11 @@ func (n node) processCache(key string, result string, dest interface{}) error {
 
 func (n node) processCaches(values []string, dest []interface{}, keys ...string) {
 	for i, value := range values {
+		if value == notFoundPlaceholder {
+			dest = append(dest, nil)
+			continue
+		}
+
 		var v interface{}
 		err := jsoniter.UnmarshalFromString(value, &v)
 		if err == nil {
