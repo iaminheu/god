@@ -232,7 +232,7 @@ func (n node) processCache(key string, result string, dest interface{}) error {
 
 func (n node) processCaches(values []string, dest []interface{}, keys ...string) {
 	for i, value := range values {
-		if value == notFoundPlaceholder {
+		if value == notFoundPlaceholder || value == "" {
 			dest = append(dest, nil)
 			continue
 		}
