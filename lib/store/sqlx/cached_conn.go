@@ -52,7 +52,7 @@ func (cc CachedConn) GetCache(key string, dest interface{}) error {
 	return cc.cache.Get(key, dest)
 }
 
-func (cc CachedConn) MGetCache(keys []string, dest []interface{}) (error, []string) {
+func (cc CachedConn) MGetCache(keys []string, dest []interface{}) error {
 	return cc.cache.MGet(keys, dest)
 }
 

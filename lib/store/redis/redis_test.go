@@ -248,9 +248,10 @@ func TestRedis_MGet(t *testing.T) {
 		assert.Nil(t, client.Set("key1", "value1"))
 		assert.Nil(t, client.Set("key2", "value2"))
 
-		values, err := client.MGet("key1", "key2")
+		values, err := client.MGet("key1", "key2", "key3")
 		assert.Nil(t, err)
-		assert.EqualValues(t, []string{"value1", "value2"}, values)
+		fmt.Println(values)
+		assert.EqualValues(t, []string{"value1", "value2", ""}, values)
 	})
 }
 
