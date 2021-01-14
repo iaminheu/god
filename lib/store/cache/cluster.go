@@ -13,7 +13,7 @@ type (
 	Cache interface {
 		Del(keys ...string) error
 		Get(key string, dest interface{}) error
-		MGet(keys []string, dest []interface{}) error
+		MGet(keys []string, dest []*interface{}) error
 		Set(key string, val interface{}) error
 		SetEx(key string, val interface{}, expires time.Duration) error
 		Take(dest interface{}, key string, queryFn func(interface{}) error) error
@@ -90,7 +90,7 @@ func (c cluster) Get(key string, dest interface{}) error {
 	return node.(Cache).Get(key, dest)
 }
 
-func (c cluster) MGet(keys []string, dest []interface{}) error {
+func (c cluster) MGet(keys []string, dest []*interface{}) error {
 	switch len(keys) {
 	case 0:
 		return nil
