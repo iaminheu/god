@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"git.zc0901.com/go/god/lib/gconv"
 	"git.zc0901.com/go/god/lib/logx"
 	"git.zc0901.com/go/god/lib/mathx"
 	"git.zc0901.com/go/god/lib/stat"
@@ -63,6 +64,18 @@ func (n node) Del(keys ...string) error {
 
 func (n node) Get(key string, dest interface{}) error {
 	if err := n.doGet(key, dest); err == errPlaceholder {
+		return n.errNotFound
+	} else {
+		return err
+	}
+}
+
+func (n node) MGet(keys []string, dest interface{}) error {
+	if len(keys) == 0 {
+		return nil
+	}
+
+	if err := n.doMGet(keys, dest); err == errPlaceholder {
 		return n.errNotFound
 	} else {
 		return err
@@ -133,6 +146,27 @@ func (n node) doGet(key string, dest interface{}) error {
 	return n.processCache(key, result, dest)
 }
 
+func (n node) doMGet(keys []string, dest interface{}) error {
+	n.stat.IncrTotal()
+	values, err := n.redis.MGet(keys...)
+	if err != nil {
+		n.stat.IncrMiss()
+		return err
+	}
+
+	if len(values) == 0 {
+		n.stat.IncrMiss()
+		return n.errNotFound
+	}
+
+	n.stat.IncrHit()
+	//if values == notFoundPlaceholder {
+	//	return errPlaceholder
+	//}
+
+	return n.processCaches(values, dest, keys...)
+}
+
 func (n node) doTake(dest interface{}, key string, queryFn func(newVal interface{}) error, cacheValFn func(newVal interface{}) error) error {
 	// 防缓存击穿 barrier -> SharedCalls
 	result, hit, err := n.barrier.Do(key, func() (interface{}, error) {
@@ -185,11 +219,28 @@ func (n node) processCache(key string, result string, dest interface{}) error {
 		return nil
 	}
 
-	msg := fmt.Sprintf("解封缓存失败，缓存节点：%s，键：%s，值：%s，错误：%v", n.redis.Addr, key, result, err)
+	msg := fmt.Sprintf("Unmarshl缓存失败，缓存节点：%s，键：%s，值：%s，错误：%v", n.redis.Addr, key, result, err)
 	logx.Error(msg)
 	stat.Report(msg)
 	if _, err = n.redis.Del(key); err != nil {
 		logx.Errorf("删除无效缓存，节点：%s，键：%s，值：%s，错误：%v", n.redis.Addr, key, result, err)
+	}
+
+	// 返回 errNotFound 以通过 queryFn 重新加载缓存值
+	return n.errNotFound
+}
+
+func (n node) processCaches(values []string, dest interface{}, keys ...string) error {
+	err := json.Unmarshal(gconv.Bytes(values), dest)
+	if err == nil {
+		return nil
+	}
+
+	msg := fmt.Sprintf("Unmarshl缓存失败，缓存节点：%s，键：%s，值：%s，错误：%v", n.redis.Addr, keys, values, err)
+	logx.Error(msg)
+	stat.Report(msg)
+	if _, err = n.redis.Del(keys...); err != nil {
+		logx.Errorf("删除无效缓存，节点：%s，键：%s，值：%s，错误：%v", n.redis.Addr, keys, values, err)
 	}
 
 	// 返回 errNotFound 以通过 queryFn 重新加载缓存值

@@ -52,6 +52,10 @@ func (cc CachedConn) GetCache(key string, dest interface{}) error {
 	return cc.cache.Get(key, dest)
 }
 
+func (cc CachedConn) MGetCache(dest interface{}, keys ...string) error {
+	return cc.cache.MGet(dest, keys...)
+}
+
 func (cc CachedConn) SetCache(key string, value interface{}) error {
 	return cc.cache.Set(key, value)
 }

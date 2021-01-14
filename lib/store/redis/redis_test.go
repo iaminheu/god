@@ -404,7 +404,7 @@ func runOnRedis(t *testing.T, fn func(client *Redis)) {
 		}
 
 		if client != nil {
-			client.Close()
+			_ = client.Close()
 		}
 	}()
 
