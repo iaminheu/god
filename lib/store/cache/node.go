@@ -69,9 +69,9 @@ func (n node) Get(key string, dest interface{}) error {
 	}
 }
 
-func (n node) MGet(keys []string, dest []interface{}) (error, []string) {
+func (n node) MGet(keys []string, dest []interface{}) error {
 	if len(keys) == 0 {
-		return nil, nil
+		return nil
 	}
 
 	return n.doMGet(keys, dest)
@@ -141,26 +141,26 @@ func (n node) doGet(key string, dest interface{}) error {
 	return n.processCache(key, result, dest)
 }
 
-func (n node) doMGet(keys []string, dest []interface{}) (err error, missKeys []string) {
+func (n node) doMGet(keys []string, dest []interface{}) error {
 	n.stat.IncrTotal()
 	values, err := n.redis.MGet(keys...)
 	if err != nil {
 		n.stat.IncrMiss()
-		return
+		return err
 	}
 
 	if len(values) == 0 {
 		n.stat.IncrMiss()
-		err = n.errNotFound
-		return
+		return n.errNotFound
 	}
 
 	n.stat.IncrHit()
 	//if values == notFoundPlaceholder {
 	//	return errPlaceholder
 	//}
+	n.processCaches(values, dest, keys...)
 
-	return n.processCaches(values, dest, keys...)
+	return nil
 }
 
 func (n node) doTake(dest interface{}, key string, queryFn func(newVal interface{}) error, cacheValFn func(newVal interface{}) error) error {
@@ -226,9 +226,7 @@ func (n node) processCache(key string, result string, dest interface{}) error {
 	return n.errNotFound
 }
 
-func (n node) processCaches(values []string, dest []interface{}, keys ...string) (error, []string) {
-	var missedKeys []string
-
+func (n node) processCaches(values []string, dest []interface{}, keys ...string) {
 	for i, value := range values {
 		var v interface{}
 		err := jsoniter.UnmarshalFromString(value, &v)
@@ -236,6 +234,7 @@ func (n node) processCaches(values []string, dest []interface{}, keys ...string)
 			dest = append(dest, v)
 			continue
 		} else {
+			dest = append(dest, nil)
 			msg := fmt.Sprintf("Unmarshl缓存失败，缓存节点：%s，键：%s，值：%s，错误：%v", n.redis.Addr, keys[i], value, err)
 			logx.Error(msg)
 			stat.Report(msg)
@@ -243,12 +242,7 @@ func (n node) processCaches(values []string, dest []interface{}, keys ...string)
 				logx.Errorf("删除无效缓存，节点：%s，键：%s，值：%s，错误：%v", n.redis.Addr, keys[i], value, err)
 			}
 		}
-
-		missedKeys = append(missedKeys, keys[i])
 	}
-
-	// 返回缓存确实的 missedKeys 以通过 queryFn 重新加载缓存值
-	return nil, missedKeys
 }
 
 // 防缓存雪崩：基于指定时间生成一个随机临近值，以防N多缓存同时过期，瞬间冲击数据库压力
