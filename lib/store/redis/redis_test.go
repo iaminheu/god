@@ -396,6 +396,10 @@ func runOnRedis(t *testing.T, fn func(client *Redis)) {
 	assert.Nil(t, err)
 
 	defer func() {
+		//client, err := clusterClientManager.Get(s.Addr(), func() (io.Closer, error) {
+		//	return nil, nil
+		//})
+
 		client, err := standaloneClientManager.Get(s.Addr(), func() (io.Closer, error) {
 			//return nil, errors.New("可能已经存在")
 			return nil, nil

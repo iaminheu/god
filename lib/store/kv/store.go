@@ -19,6 +19,7 @@ type (
 		Expire(key string, seconds int) error
 		ExpireAt(key string, expireTime int64) error
 		Get(key string) (string, error)
+		MGet(keys ...string) ([]string, error)
 		HDel(key, field string) (bool, error)
 		HExists(key, field string) (bool, error)
 		HGet(key, field string) (string, error)
@@ -162,6 +163,53 @@ func (cs clusterStore) Get(key string) (string, error) {
 	}
 
 	return node.Get(key)
+}
+
+func (cs clusterStore) Del2(keys ...string) (int, error) {
+	var val int
+	var es errorx.Errors
+
+	for _, key := range keys {
+		node, e := cs.getRedis(key)
+		if e != nil {
+			es.Add(e)
+			continue
+		}
+
+		if v, e := node.Del(key); e != nil {
+			es.Add(e)
+		} else {
+			val += v
+		}
+	}
+
+	return val, es.Error()
+}
+
+func (cs clusterStore) MGet(keys ...string) (ret []string, err error) {
+	if len(keys) == 0 {
+		return nil, nil
+	}
+
+	var es errorx.Errors
+
+	for _, key := range keys {
+		node, err := cs.getRedis(key)
+		if err != nil {
+			es.Add(err)
+			continue
+		}
+
+		if v, err := node.Get(key); err != nil {
+			es.Add(err)
+			ret = append(ret, "")
+		} else {
+			ret = append(ret, v)
+		}
+	}
+
+	err = es.Error()
+	return
 }
 
 func (cs clusterStore) HDel(key, field string) (bool, error) {

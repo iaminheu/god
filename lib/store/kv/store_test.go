@@ -1,6 +1,7 @@
 package kv
 
 import (
+	"fmt"
 	"git.zc0901.com/go/god/lib/hash"
 	"git.zc0901.com/go/god/lib/store/cache"
 	"git.zc0901.com/go/god/lib/store/redis"
@@ -36,6 +37,23 @@ func runOnCluster(t *testing.T, fn func(cluster Store)) {
 	})
 
 	fn(store)
+}
+
+func TestRedis_MGet(t *testing.T) {
+	runOnCluster(t, func(client Store) {
+		assert.Nil(t, client.Set("a", "1"))
+		assert.Nil(t, client.Set("b", "2"))
+
+		vals, err := client.MGet("a", "b", "c")
+		assert.Nil(t, err)
+		//assert.EqualValues(t, map[string]string{
+		//	"aa": "aaa",
+		//	"bb": "bbb",
+		//}, vals)
+		fmt.Println(vals)
+		fmt.Println(client.Get("a"))
+		fmt.Println(client.Get("b"))
+	})
 }
 
 func TestRedis_Exists(t *testing.T) {
