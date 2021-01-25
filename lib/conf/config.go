@@ -5,6 +5,7 @@ import (
 	"git.zc0901.com/go/god/lib/mapping"
 	"io/ioutil"
 	"log"
+	"os"
 	"path"
 )
 
@@ -22,18 +23,30 @@ func LoadConfigFromYamlBytes(bytes []byte, v interface{}) error {
 	return mapping.UnmarshalYamlBytes(bytes, v)
 }
 
-func LoadConfig(filename string, v interface{}) error {
-	if content, err := ioutil.ReadFile(filename); err != nil {
+func LoadConfig(filename string, v interface{}, opts ...Option) error {
+	content, err := ioutil.ReadFile(filename)
+	if err != nil {
 		return err
-	} else if loader, ok := loaders[path.Ext(filename)]; ok {
-		return loader(content, v)
-	} else {
+	}
+	loader, ok := loaders[path.Ext(filename)]
+	if !ok {
 		return fmt.Errorf("不识别的配置文件类型：%s", filename)
+	}
+
+	var opt options
+	for _, o := range opts {
+		o(&opt)
+	}
+
+	if opt.env {
+		return loader([]byte(os.ExpandEnv(string(content))), v)
+	} else {
+		return loader(content, v)
 	}
 }
 
-func MustLoad(path string, v interface{}) {
-	if err := LoadConfig(path, v); err != nil {
+func MustLoad(path string, v interface{}, opts ...Option) {
+	if err := LoadConfig(path, v, opts...); err != nil {
 		log.Fatalf("错误：配置文件 - %s, %s", path, err.Error())
 	}
 }

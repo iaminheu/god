@@ -42,11 +42,11 @@ func currentCgroup() (*cgroup, error) {
 		}
 
 		// 组装每一个cpu子系统的文件路径
-		cgroups[subSys] = path.Join(cgroupDir, subSys)
-		if strings.Contains(subSys, ",") {
-			for _, k := range strings.Split(subSys, ",") {
-				cgroups[k] = path.Join(cgroupDir, k)
-			}
+		// https://man7.org/linux/man-pages/man7/cgroups.7.html
+		// comma-separated list of controllers for cgroup version 1
+		fields := strings.Split(subSys, ",")
+		for _, val := range fields {
+			cgroups[val] = path.Join(cgroupDir, val)
 		}
 	}
 

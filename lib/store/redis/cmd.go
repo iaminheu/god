@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"git.zc0901.com/go/god/lib/mapping"
-	"github.com/go-redis/redis"
+	red "github.com/go-redis/redis"
 	"strconv"
 	"time"
 )
@@ -14,6 +14,10 @@ const (
 )
 
 var ErrNilConn = errors.New("redis 连接不可为空")
+
+type (
+	ZStore = red.ZStore
+)
 
 // BLPop 阻塞式列表弹出操作
 func (r *Redis) BLPop(conn Client, key string) (string, error) {
@@ -118,7 +122,7 @@ func (r *Redis) Get(key string) (result string, err error) {
 		}
 
 		result, err = client.Get(key).Result()
-		if err != nil && err != redis.Nil {
+		if err != nil && err != red.Nil {
 			return err
 		}
 		return nil
@@ -958,7 +962,7 @@ func (r *Redis) ZAdd(key string, score int64, member string) (ok bool, err error
 			return err
 		}
 
-		if v, err := client.ZAdd(key, redis.Z{
+		if v, err := client.ZAdd(key, red.Z{
 			Score:  float64(score),
 			Member: member,
 		}).Result(); err != nil {
@@ -980,9 +984,9 @@ func (r *Redis) ZAdds(key string, pairs ...Pair) (val int64, err error) {
 			return err
 		}
 
-		var zs []redis.Z
+		var zs []red.Z
 		for _, pair := range pairs {
-			z := redis.Z{Score: float64(pair.Score), Member: pair.Key}
+			z := red.Z{Score: float64(pair.Score), Member: pair.Key}
 			zs = append(zs, z)
 		}
 
@@ -1234,7 +1238,7 @@ func (r *Redis) ZRangeByScoreWithScores(key string, start, stop int64) (pairs []
 		}
 
 		v, err := client.ZRangeByScoreWithScores(key,
-			redis.ZRangeBy{
+			red.ZRangeBy{
 				Min: strconv.FormatInt(start, 10),
 				Max: strconv.FormatInt(stop, 10),
 			}).Result()
@@ -1265,7 +1269,7 @@ func (r *Redis) ZRangeByScoreWithScoresAndLimit(key string, start, stop int64, p
 			return err
 		}
 
-		v, err := client.ZRangeByScoreWithScores(key, redis.ZRangeBy{
+		v, err := client.ZRangeByScoreWithScores(key, red.ZRangeBy{
 			Min:    strconv.FormatInt(start, 10),
 			Max:    strconv.FormatInt(stop, 10),
 			Offset: int64(page * size),
@@ -1307,7 +1311,7 @@ func (r *Redis) ZRevRangeByScoreWithScores(key string, start, stop int64) (pairs
 			return err
 		}
 
-		v, err := client.ZRevRangeByScoreWithScores(key, redis.ZRangeBy{
+		v, err := client.ZRevRangeByScoreWithScores(key, red.ZRangeBy{
 			Min: strconv.FormatInt(start, 10),
 			Max: strconv.FormatInt(stop, 10),
 		}).Result()
@@ -1339,7 +1343,7 @@ func (r *Redis) ZRevRangeByScoreWithScoresAndLimit(key string, start, stop int64
 			return err
 		}
 
-		v, err := client.ZRevRangeByScoreWithScores(key, redis.ZRangeBy{
+		v, err := client.ZRevRangeByScoreWithScores(key, red.ZRangeBy{
 			Min:    strconv.FormatInt(start, 10),
 			Max:    strconv.FormatInt(stop, 10),
 			Offset: int64(page * size),
@@ -1356,9 +1360,9 @@ func (r *Redis) ZRevRangeByScoreWithScoresAndLimit(key string, start, stop int64
 	return
 }
 
-func (s *Redis) GeoAdd(key string, geoLocation ...*GeoLocation) (val int64, err error) {
-	err = s.brk.DoWithAcceptable(func() error {
-		conn, err := getClient(s)
+func (r *Redis) GeoAdd(key string, geoLocation ...*GeoLocation) (val int64, err error) {
+	err = r.brk.DoWithAcceptable(func() error {
+		conn, err := getClient(r)
 		if err != nil {
 			return err
 		}
@@ -1373,9 +1377,37 @@ func (s *Redis) GeoAdd(key string, geoLocation ...*GeoLocation) (val int64, err 
 	return
 }
 
-func (s *Redis) GeoDist(key string, member1, member2, unit string) (val float64, err error) {
-	err = s.brk.DoWithAcceptable(func() error {
-		conn, err := getClient(s)
+func (r *Redis) ZRevRank(key string, field string) (val int64, err error) {
+	err = r.brk.DoWithAcceptable(func() error {
+		conn, err := getClient(r)
+		if err != nil {
+			return err
+		}
+
+		val, err = conn.ZRevRank(key, field).Result()
+		return err
+	}, acceptable)
+
+	return
+}
+
+func (r *Redis) ZUnionStore(dest string, store ZStore, keys ...string) (val int64, err error) {
+	err = r.brk.DoWithAcceptable(func() error {
+		conn, err := getClient(r)
+		if err != nil {
+			return err
+		}
+
+		val, err = conn.ZUnionStore(dest, store, keys...).Result()
+		return err
+	}, acceptable)
+
+	return
+}
+
+func (r *Redis) GeoDist(key string, member1, member2, unit string) (val float64, err error) {
+	err = r.brk.DoWithAcceptable(func() error {
+		conn, err := getClient(r)
 		if err != nil {
 			return err
 		}
@@ -1390,9 +1422,9 @@ func (s *Redis) GeoDist(key string, member1, member2, unit string) (val float64,
 	return
 }
 
-func (s *Redis) GeoHash(key string, members ...string) (val []string, err error) {
-	err = s.brk.DoWithAcceptable(func() error {
-		conn, err := getClient(s)
+func (r *Redis) GeoHash(key string, members ...string) (val []string, err error) {
+	err = r.brk.DoWithAcceptable(func() error {
+		conn, err := getClient(r)
 		if err != nil {
 			return err
 		}
@@ -1407,9 +1439,9 @@ func (s *Redis) GeoHash(key string, members ...string) (val []string, err error)
 	return
 }
 
-func (s *Redis) GeoRadius(key string, longitude, latitude float64, query *GeoRadiusQuery) (val []GeoLocation, err error) {
-	err = s.brk.DoWithAcceptable(func() error {
-		conn, err := getClient(s)
+func (r *Redis) GeoRadius(key string, longitude, latitude float64, query *GeoRadiusQuery) (val []GeoLocation, err error) {
+	err = r.brk.DoWithAcceptable(func() error {
+		conn, err := getClient(r)
 		if err != nil {
 			return err
 		}
@@ -1423,9 +1455,9 @@ func (s *Redis) GeoRadius(key string, longitude, latitude float64, query *GeoRad
 	}, acceptable)
 	return
 }
-func (s *Redis) GeoRadiusByMember(key, member string, query *GeoRadiusQuery) (val []GeoLocation, err error) {
-	err = s.brk.DoWithAcceptable(func() error {
-		conn, err := getClient(s)
+func (r *Redis) GeoRadiusByMember(key, member string, query *GeoRadiusQuery) (val []GeoLocation, err error) {
+	err = r.brk.DoWithAcceptable(func() error {
+		conn, err := getClient(r)
 		if err != nil {
 			return err
 		}
@@ -1440,9 +1472,9 @@ func (s *Redis) GeoRadiusByMember(key, member string, query *GeoRadiusQuery) (va
 	return
 }
 
-func (s *Redis) GeoPos(key string, members ...string) (val []*GeoPos, err error) {
-	err = s.brk.DoWithAcceptable(func() error {
-		conn, err := getClient(s)
+func (r *Redis) GeoPos(key string, members ...string) (val []*GeoPos, err error) {
+	err = r.brk.DoWithAcceptable(func() error {
+		conn, err := getClient(r)
 		if err != nil {
 			return err
 		}
@@ -1472,10 +1504,10 @@ func (r *Redis) scriptLoad(script string) (result string, err error) {
 
 // 断路器判断错误是否可接受，进而决定accepts是否+1
 func acceptable(err error) bool {
-	return err == nil || err == redis.Nil
+	return err == nil || err == red.Nil
 }
 
-func toPairs(vals []redis.Z) []Pair {
+func toPairs(vals []red.Z) []Pair {
 	pairs := make([]Pair, len(vals))
 	for i, val := range vals {
 		switch member := val.Member.(type) {

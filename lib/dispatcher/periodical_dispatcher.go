@@ -2,13 +2,13 @@ package dispatcher
 
 import (
 	"git.zc0901.com/go/god/lib/lang"
-	"git.zc0901.com/go/god/lib/logx"
 	"git.zc0901.com/go/god/lib/proc"
 	"git.zc0901.com/go/god/lib/syncx"
 	"git.zc0901.com/go/god/lib/threading"
 	"git.zc0901.com/go/god/lib/timex"
 	"reflect"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -34,8 +34,9 @@ type (
 		taskManager TaskManager                               // 任务管理者
 		taskChan    TaskChan                                  // 任务任务通道
 		confirmChan ConfirmChan                               // 任务确认通道
-		wg          sync.WaitGroup                            // 同步等待组
+		waitGroup   sync.WaitGroup                            // 同步等待组
 		wgLocker    syncx.Locker                              // 同步等待组的加锁器
+		inflight    int32                                     // 飞行中协程数
 		guarded     bool                                      // 是否守卫
 		newTicker   func(duration time.Duration) timex.Ticker // 任务断续器
 		lock        sync.Mutex
@@ -50,7 +51,7 @@ func NewPeriodicalDispatcher(interval time.Duration, taskManager TaskManager) *P
 		taskChan:    make(chan interface{}, 1),
 		confirmChan: make(chan lang.PlaceholderType),
 		newTicker: func(duration time.Duration) timex.Ticker {
-			return timex.NewTicker(interval)
+			return timex.NewTicker(duration)
 		},
 	}
 
@@ -91,7 +92,7 @@ func (pd *PeriodicalDispatcher) Sync(fn func()) {
 func (pd *PeriodicalDispatcher) Wait() {
 	pd.Flush()
 	pd.wgLocker.Guard(func() {
-		pd.wg.Wait()
+		pd.waitGroup.Wait()
 	})
 }
 
@@ -100,18 +101,16 @@ func (pd *PeriodicalDispatcher) Wait() {
 func (pd *PeriodicalDispatcher) setAndGet(task interface{}) (interface{}, bool) {
 	pd.lock.Lock()
 	defer func() {
-		var start bool
 		if !pd.guarded {
 			pd.guarded = true
-			start = true
+			// 快速解锁
+			defer pd.backgroundFlush()
 		}
 		pd.lock.Unlock()
-		if start {
-			pd.backgroundFlush()
-		}
 	}()
 
 	if pd.taskManager.Add(task) {
+		atomic.AddInt32(&pd.inflight, 1)
 		return pd.taskManager.PopAll(), true
 	}
 
@@ -121,6 +120,9 @@ func (pd *PeriodicalDispatcher) setAndGet(task interface{}) (interface{}, bool) 
 // 后台任务清洗 - 起一个协程来处理任务
 func (pd *PeriodicalDispatcher) backgroundFlush() {
 	threading.GoSafe(func() {
+		// 退出协程之前进行清理，避免丢失任务
+		defer pd.Flush()
+
 		ticker := pd.newTicker(pd.interval)
 		defer ticker.Stop()
 
@@ -131,6 +133,7 @@ func (pd *PeriodicalDispatcher) backgroundFlush() {
 			select {
 			case tasks := <-pd.taskChan: // 主动触发上报
 				executed = true
+				atomic.AddInt32(&pd.inflight, -1)
 				pd.enter()
 				pd.confirmChan <- lang.Placeholder
 				pd.execute(tasks)
@@ -140,13 +143,7 @@ func (pd *PeriodicalDispatcher) backgroundFlush() {
 					executed = false
 				} else if pd.Flush() {
 					lastTime = timex.Now()
-				} else if timex.Since(lastTime) > pd.interval*idleRound {
-					pd.lock.Lock()
-					pd.guarded = false
-					pd.lock.Unlock()
-
-					// 再次清洗以防丢任务
-					pd.Flush()
+				} else if pd.shallQuit(lastTime) {
 					return
 				}
 			}
@@ -157,7 +154,7 @@ func (pd *PeriodicalDispatcher) backgroundFlush() {
 // enter 执行者进入，等待组加锁
 func (pd *PeriodicalDispatcher) enter() {
 	pd.wgLocker.Guard(func() {
-		pd.wg.Add(1)
+		pd.waitGroup.Add(1)
 	})
 }
 
@@ -167,11 +164,7 @@ func (pd *PeriodicalDispatcher) execute(tasks interface{}) bool {
 
 	ok := pd.has(tasks)
 	if ok {
-		err := pd.taskManager.Execute(tasks)
-		if err != nil {
-			logx.Error(err)
-			ok = false
-		}
+		pd.taskManager.Execute(tasks)
 	}
 
 	return ok
@@ -179,7 +172,7 @@ func (pd *PeriodicalDispatcher) execute(tasks interface{}) bool {
 
 // done 完成分组任务
 func (pd *PeriodicalDispatcher) done() {
-	pd.wg.Done()
+	pd.waitGroup.Done()
 }
 
 // has 判断任务有无
@@ -196,4 +189,19 @@ func (pd *PeriodicalDispatcher) has(tasks interface{}) bool {
 		// 其他类型默认为有值，让调用者自行处理
 		return true
 	}
+}
+
+func (pd *PeriodicalDispatcher) shallQuit(lastTime time.Duration) (stop bool) {
+	if timex.Since(lastTime) <= pd.interval*idleRound {
+		return
+	}
+
+	pd.lock.Lock()
+	if atomic.LoadInt32(&pd.inflight) == 0 {
+		pd.guarded = false
+		stop = true
+	}
+	pd.lock.Unlock()
+
+	return
 }

@@ -43,70 +43,61 @@ func NewRollingWindow(size int, duration time.Duration, opts ...Option) *Rolling
 	return w
 }
 
-func (w *RollingWindow) Win() *window {
-	return w.win
+func (rw *RollingWindow) Win() *window {
+	return rw.win
 }
 
-func (w *RollingWindow) Add(n float64) {
-	w.lock.Lock()
-	defer w.lock.Unlock()
-	w.updateOffset()
-	w.win.add(w.offset, n)
+func (rw *RollingWindow) Add(n float64) {
+	rw.lock.Lock()
+	defer rw.lock.Unlock()
+	rw.updateOffset()
+	rw.win.add(rw.offset, n)
 }
 
 // 归并符合条件的桶内计数
-func (w *RollingWindow) Reduce(fn func(b *Bucket)) {
-	w.lock.RLock()
-	defer w.lock.RUnlock()
+func (rw *RollingWindow) Reduce(fn func(b *Bucket)) {
+	rw.lock.RLock()
+	defer rw.lock.RUnlock()
 
 	var nDiff int
-	span := w.span()
-	if span == 0 && w.ignoreCurrentBucket {
-		nDiff = w.size - 1
+	span := rw.span()
+	if span == 0 && rw.ignoreCurrentBucket {
+		nDiff = rw.size - 1
 	} else {
-		nDiff = w.size - span
+		nDiff = rw.size - span
 	}
 	if nDiff > 0 {
-		startOffset := (w.offset + span + 1) % w.size
-		w.win.reduceBuckets(startOffset, nDiff, fn)
+		startOffset := (rw.offset + span + 1) % rw.size
+		rw.win.reduceBuckets(startOffset, nDiff, fn)
 	}
 }
 
 // 更新滚动窗口偏移量（重置过期桶计数、设置当前桶offset和最新时间）
-func (w *RollingWindow) updateOffset() {
-	span := w.span() // 获取偏移跨度
+func (rw *RollingWindow) updateOffset() {
+	span := rw.span() // 获取偏移跨度
 	if span <= 0 {
 		return
 	}
 
-	offset := w.offset
-	start := offset + 1
-	steps := start + span
-	var remainder int
-	if steps > w.size {
-		remainder = steps - w.size
-		steps = w.size
-	}
+	offset := rw.offset
 
 	// 重置过期桶
-	for i := start; i < steps; i++ {
-		w.win.resetBucket(i)
-	}
-	for i := 0; i < remainder; i++ {
-		w.win.resetBucket(i)
+	for i := 0; i < span; i++ {
+		rw.win.resetBucket((offset + i + 1) % rw.size)
 	}
 
-	w.offset = (offset + span) % w.size
-	w.lastTime = timex.Now()
+	rw.offset = (offset + span) % rw.size
+	now := timex.Now()
+	rw.lastTime = now - (now-rw.lastTime)%rw.duration
 }
 
 // // 获取滚动窗口的偏移跨度（根据时间差计算）
-func (w *RollingWindow) span() int {
-	offset := int(timex.Since(w.lastTime) / w.duration)
-	if 0 <= offset && offset < w.size {
+func (rw *RollingWindow) span() int {
+	offset := int(timex.Since(rw.lastTime) / rw.duration)
+	if 0 <= offset && offset < rw.size {
 		return offset
 	} else {
-		return w.size
+		return rw.size
 	}
 }
 

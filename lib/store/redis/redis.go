@@ -2,13 +2,14 @@ package redis
 
 import (
 	"git.zc0901.com/go/god/lib/breaker"
-	"github.com/go-redis/redis"
+	red "github.com/go-redis/redis"
 	"time"
 )
 
 const (
 	ClusterMode    = "cluster"
 	StandaloneMode = "standalone"
+	Nil            = red.Nil
 
 	defaultDatabase = 0
 	maxRetries      = 3
@@ -25,16 +26,16 @@ type (
 	}
 
 	Client interface {
-		redis.Cmdable
+		red.Cmdable
 	}
 
 	// GeoLocation is used with GeoAdd to add geospatial location.
-	GeoLocation = redis.GeoLocation
+	GeoLocation = red.GeoLocation
 	// GeoRadiusQuery is used with GeoRadius to query geospatial index.
-	GeoRadiusQuery = redis.GeoRadiusQuery
-	GeoPos         = redis.GeoPos
+	GeoRadiusQuery = red.GeoRadiusQuery
+	GeoPos         = red.GeoPos
 
-	Pipeliner = redis.Pipeliner
+	Pipeliner = red.Pipeliner
 
 	Pair struct {
 		Key   string
