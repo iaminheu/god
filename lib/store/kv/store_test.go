@@ -71,3 +71,142 @@ func TestRedis_Eval(t *testing.T) {
 		assert.Equal(t, int64(1), val)
 	})
 }
+
+func TestRedis_HGetAll(t *testing.T) {
+	store := clusterStore{dispatcher: hash.NewConsistentHash()}
+	err := store.HSet("a", "aa", "aaa")
+	assert.NotNil(t, err)
+	_, err = store.HGetAll("a")
+	assert.NotNil(t, err)
+
+	runOnCluster(t, func(client Store) {
+		assert.Nil(t, client.HSet("a", "aa", "aaa"))
+		assert.Nil(t, client.HSet("a", "bb", "bbb"))
+		vals, err := client.HGetAll("a")
+		assert.Nil(t, err)
+		assert.EqualValues(t, map[string]string{
+			"aa": "aaa",
+			"bb": "bbb",
+		}, vals)
+	})
+}
+
+func TestRedis_HVals(t *testing.T) {
+	store := clusterStore{dispatcher: hash.NewConsistentHash()}
+	_, err := store.HVals("a")
+	assert.NotNil(t, err)
+
+	runOnCluster(t, func(client Store) {
+		assert.Nil(t, client.HSet("a", "aa", "aaa"))
+		assert.Nil(t, client.HSet("a", "bb", "bbb"))
+		vals, err := client.HVals("a")
+		assert.Nil(t, err)
+		assert.ElementsMatch(t, []string{"aaa", "bbb"}, vals)
+	})
+}
+
+func TestRedis_HSetNX(t *testing.T) {
+	store := clusterStore{dispatcher: hash.NewConsistentHash()}
+	_, err := store.HSetNX("a", "dd", "ddd")
+	assert.NotNil(t, err)
+
+	runOnCluster(t, func(client Store) {
+		assert.Nil(t, client.HSet("a", "aa", "aaa"))
+		assert.Nil(t, client.HSet("a", "bb", "bbb"))
+		ok, err := client.HSetNX("a", "bb", "ccc")
+		assert.Nil(t, err)
+		assert.False(t, ok)
+		ok, err = client.HSetNX("a", "dd", "ddd")
+		assert.Nil(t, err)
+		assert.True(t, ok)
+		vals, err := client.HVals("a")
+		assert.Nil(t, err)
+		assert.ElementsMatch(t, []string{"aaa", "bbb", "ddd"}, vals)
+	})
+}
+
+func TestRedis_HDelHLen(t *testing.T) {
+	store := clusterStore{dispatcher: hash.NewConsistentHash()}
+	_, err := store.HDel("a", "aa")
+	assert.NotNil(t, err)
+	_, err = store.HLen("a")
+	assert.NotNil(t, err)
+
+	runOnCluster(t, func(client Store) {
+		assert.Nil(t, client.HSet("a", "aa", "aaa"))
+		assert.Nil(t, client.HSet("a", "bb", "bbb"))
+		num, err := client.HLen("a")
+		assert.Nil(t, err)
+		assert.Equal(t, 2, num)
+		val, err := client.HDel("a", "aa")
+		assert.Nil(t, err)
+		assert.True(t, val)
+		vals, err := client.HVals("a")
+		assert.Nil(t, err)
+		assert.ElementsMatch(t, []string{"bbb"}, vals)
+	})
+}
+
+func TestRedis_HIncrBy(t *testing.T) {
+	store := clusterStore{dispatcher: hash.NewConsistentHash()}
+	_, err := store.HIncrBy("key", "field", 3)
+	assert.NotNil(t, err)
+
+	runOnCluster(t, func(client Store) {
+		val, err := client.HIncrBy("key", "field", 2)
+		assert.Nil(t, err)
+		assert.Equal(t, 2, val)
+		val, err = client.HIncrBy("key", "field", 3)
+		assert.Nil(t, err)
+		assert.Equal(t, 5, val)
+	})
+}
+
+func TestRedis_HKeys(t *testing.T) {
+	store := clusterStore{dispatcher: hash.NewConsistentHash()}
+	_, err := store.HKeys("a")
+	assert.NotNil(t, err)
+
+	runOnCluster(t, func(client Store) {
+		assert.Nil(t, client.HSet("a", "aa", "aaa"))
+		assert.Nil(t, client.HSet("a", "bb", "bbb"))
+		vals, err := client.HKeys("a")
+		assert.Nil(t, err)
+		assert.ElementsMatch(t, []string{"aa", "bb"}, vals)
+	})
+}
+
+func TestRedis_HMGet(t *testing.T) {
+	store := clusterStore{dispatcher: hash.NewConsistentHash()}
+	_, err := store.HMGet("a", "aa", "bb")
+	assert.NotNil(t, err)
+
+	runOnCluster(t, func(client Store) {
+		assert.Nil(t, client.HSet("a", "aa", "aaa"))
+		assert.Nil(t, client.HSet("a", "bb", "bbb"))
+		vals, err := client.HMGet("a", "aa", "bb")
+		assert.Nil(t, err)
+		assert.EqualValues(t, []string{"aaa", "bbb"}, vals)
+		vals, err = client.HMGet("a", "aa", "no", "bb")
+		assert.Nil(t, err)
+		assert.EqualValues(t, []string{"aaa", "", "bbb"}, vals)
+	})
+}
+
+func TestRedis_HMSet(t *testing.T) {
+	store := clusterStore{dispatcher: hash.NewConsistentHash()}
+	err := store.HMSet("a", map[string]string{
+		"aa": "aaa",
+	})
+	assert.NotNil(t, err)
+
+	runOnCluster(t, func(client Store) {
+		assert.Nil(t, client.HMSet("a", map[string]string{
+			"aa": "aaa",
+			"bb": "bbb",
+		}))
+		vals, err := client.HMGet("a", "aa", "bb")
+		assert.Nil(t, err)
+		assert.EqualValues(t, []string{"aaa", "bbb"}, vals)
+	})
+}
