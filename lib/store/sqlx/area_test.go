@@ -35,6 +35,17 @@ func TestGetCityList(t *testing.T) {
 	}
 }
 
+func TestGreatThan(t *testing.T) {
+	dataSourceName := "root:qxqgqzx2018@tcp(106.54.101.160:3306)/nest_statistics?parseTime=true"
+	db := NewMySQL(dataSourceName)
+
+	query := "update daily_account_num set total=10000 where total > 10000"
+	_, err := db.Exec(query)
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
 func TestSqlIn(t *testing.T) {
 	ids := []int{2, 3}
 

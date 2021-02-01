@@ -37,9 +37,9 @@ type (
 		KeyFile      string        `json:",optional"`
 		Verbose      bool          `json:",optional"`
 		MaxConns     int           `json:",default=10000"`
-		MaxBytes     int64         `json:",default=1048576,range=[0:8388608]"` // 最大文件上传大小（字节）默认1Mb
-		Timeout      int64         `json:",default=3000"`                      // 超时时间（毫秒）
-		CpuThreshold int64         `json:",default=900,range=[0:100]"`
+		MaxBytes     int64         `json:",default=1048576,range=[0:33554432]"` // 最大文件上传大小（字节）默认1Mb，最大32Mb
+		Timeout      int64         `json:",default=3000"`                       // 超时时间（毫秒）
+		CpuThreshold int64         `json:",default=900,range=[0:1000]"`
 		Signature    SignatureConf `json:",optional"`
 	}
 )

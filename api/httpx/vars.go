@@ -1,15 +1,14 @@
 package httpx
 
 const (
-	ApplicationJson   = "application/json"
-	ContentEncoding   = "Content-Encoding"
-	ContentSecurity   = "X-Content-Security"
-	ContentType       = "Content-Type"
-	MultipartFormData = "multipart/form-data"
-	KeyField          = "key"
-	SecretField       = "secret"
-	TypeField         = "type"
-	EncryptedType     = 1
+	ApplicationJson = "application/json"
+	ContentEncoding = "Content-Encoding"
+	ContentSecurity = "X-Content-Security"
+	ContentType     = "Content-Type"
+	KeyField        = "key"
+	SecretField     = "secret"
+	TypeField       = "type"
+	EncryptedType   = 1
 )
 
 const (

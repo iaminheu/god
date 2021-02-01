@@ -50,9 +50,9 @@ func doExec(db session, query string, args ...interface{}) (sql.Result, error) {
 	duration := time.Since(startTime)
 
 	if duration > slowThreshold {
-		logx.WithDuration(duration).Slowf("[SQL] 慢执行(%v) - %s", duration, stmt)
+		logx.WithDuration(duration).Slowf("[SQL] 慢执行(%v) - %v", duration, stmt)
 	} else {
-		logx.WithDuration(duration).Infof("[SQL] 执行: %s", stmt)
+		logx.WithDuration(duration).Infof("[SQL] 执行: %v", stmt)
 	}
 
 	if err != nil {

@@ -12,6 +12,9 @@ type TimeHolder struct {
 
 func main() {
 	th := &TimeHolder{}
-	conf.MustLoad("/Users/zs/git/god/example/config/load_from_yaml/date.yml", th)
+	err := conf.LoadConfig("./date.yml", th)
+	if err != nil {
+		logx.Error(err)
+	}
 	logx.Infof("%+v", th)
 }
