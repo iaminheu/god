@@ -114,18 +114,20 @@ func (r *Redis) ExpireAt(key string, expireTime int64) error {
 }
 
 // Get 获取 key 对应的字符串值
-func (r *Redis) Get(key string) (result string, err error) {
+func (r *Redis) Get(key string) (val string, err error) {
 	err = r.brk.DoWithAcceptable(func() error {
 		client, err := getClient(r)
 		if err != nil {
 			return err
 		}
 
-		result, err = client.Get(key).Result()
-		if err != nil && err != red.Nil {
+		if val, err = client.Get(key).Result(); err == red.Nil {
+			return nil
+		} else if err != nil {
 			return err
+		} else {
+			return nil
 		}
-		return nil
 	}, acceptable)
 
 	return

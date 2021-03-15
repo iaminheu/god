@@ -2,8 +2,22 @@ package sqlx
 
 import (
 	"fmt"
+	"git.zc0901.com/go/god/lib/store/cache"
+	"git.zc0901.com/go/god/lib/store/redis"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
+
+type Config struct {
+	DataSource string
+	Table      string
+	Cache      cache.ClusterConf
+}
+
+type Model struct {
+	c       Config
+	Profile *ProfileModel
+}
 
 type Area struct {
 	Id   int64  `conn:"id"`
@@ -52,4 +66,33 @@ func TestSqlIn(t *testing.T) {
 	query := fmt.Sprintf("select id from user where id in (%s)", In(len(ids)))
 	fmt.Println(query)
 
+}
+
+func NewModel() *Model {
+	c := Config{
+		DataSource: "root:qxqgqzx2018@tcp(106.54.101.160:3306)/nest_statistics?parseTime=true",
+		Cache: cache.ClusterConf{
+			{
+				Conf: redis.Conf{
+					Host: "106.54.101.160:6382",
+					//Host: "192.168.0.17:6379",
+					Mode: redis.StandaloneMode,
+				},
+				Weight: 100,
+			},
+		},
+	}
+
+	return &Model{
+		c:       c,
+		Profile: NewProfileModel(NewMySQL(c.DataSource)),
+	}
+}
+
+func TestScan2Struct(t *testing.T) {
+	model := NewModel()
+	profile, err := model.Profile.FindOne(1)
+	assert.Nil(t, err)
+	fmt.Println(profile)
+	fmt.Println(profile.Nickname)
 }

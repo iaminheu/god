@@ -17,3 +17,8 @@ func TestParseCreateTable(t *testing.T) {
 	assert.Equal(t, "id", table.PrimaryKey.Name.Source())
 	assert.Equal(t, true, table.ContainsTime())
 }
+
+func TestParseSelect(t *testing.T) {
+	_, err := Parse("select * from user")
+	assert.Equal(t, unSupportDDL, err)
+}

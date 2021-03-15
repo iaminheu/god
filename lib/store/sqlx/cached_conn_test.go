@@ -16,7 +16,7 @@ var (
 	cacheUserNicknamePrefix = "cache#User#nickname#"
 )
 
-type Profile struct {
+type Profile2 struct {
 	ID       int64  `conn:"id"`
 	Kind     int    `conn:"kind"`
 	Nickname string `conn:"nickname"`
@@ -36,7 +36,7 @@ func TestCachedConn_FindOne(t *testing.T) {
 
 	userId := 128
 	userIdKey := fmt.Sprintf("%s%v", cacheUserIdPrefix, userId)
-	var profile Profile
+	var profile Profile2
 	var err error
 	err = c.Query(&profile, userIdKey, func(conn Conn, dest interface{}) error {
 		query := `select id, kind, nickname from nest_user.profile where id=? limit 1`
@@ -58,7 +58,7 @@ func TestCachedConn_FindByIndex(t *testing.T) {
 	//c := NewCachedConn(conn, r, cache.WithExpires(24*time.Hour), cache.WithNotFoundExpires(10*time.Second))
 	c := NewCachedConn(conn, r) // 默认缓存7天
 	//
-	var profile Profile
+	var profile Profile2
 	nickname := "测试小号9"
 	nicknameKey := fmt.Sprintf("%s%v", cacheUserNicknamePrefix, nickname)
 
