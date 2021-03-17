@@ -7,6 +7,7 @@ import (
 	"git.zc0901.com/go/god/lib/store/redis"
 	"github.com/alicebob/miniredis/v2"
 	"github.com/stretchr/testify/assert"
+	"math/rand"
 	"testing"
 )
 
@@ -226,5 +227,22 @@ func TestRedis_HMSet(t *testing.T) {
 		vals, err := client.HMGet("a", "aa", "bb")
 		assert.Nil(t, err)
 		assert.EqualValues(t, []string{"aaa", "bbb"}, vals)
+	})
+}
+
+func TestClusterStore_SetBit(t *testing.T) {
+	runOnCluster(t, func(store Store) {
+		for i := 0; i < 10; i++ {
+			value := rand.Intn(2)
+			fmt.Printf("INPUT %d\n", value)
+			err := store.SetBit("test", int64(i), value)
+			assert.Nil(t, err)
+		}
+
+		for i := 0; i < 10; i++ {
+			result, err := store.GetBit("test", int64(i))
+			assert.Nil(t, err)
+			fmt.Printf("OUTPUT %d\n", result)
+		}
 	})
 }
