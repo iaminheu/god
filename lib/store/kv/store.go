@@ -19,6 +19,7 @@ type (
 		Expire(key string, seconds int) error
 		ExpireAt(key string, expireTime int64) error
 		Get(key string) (string, error)
+		GetBit(key string, offset int64) (result int, err error)
 		MGet(keys ...string) ([]string, error)
 		HDel(key, field string) (bool, error)
 		HExists(key, field string) (bool, error)
@@ -46,6 +47,7 @@ type (
 		SAdd(key string, values ...interface{}) (int, error)
 		SCard(key string) (int64, error)
 		Set(key string, value string) error
+		SetBit(key string, offset int64, value int) error
 		SetEx(key, value string, seconds int) error
 		SetNX(key, value string) (bool, error)
 		SetNXEx(key, value string, seconds int) (bool, error)
@@ -163,6 +165,15 @@ func (cs clusterStore) Get(key string) (string, error) {
 	}
 
 	return node.Get(key)
+}
+
+func (cs clusterStore) GetBit(key string, offset int64) (result int, err error) {
+	node, err := cs.getRedis(key)
+	if err != nil {
+		return 0, err
+	}
+
+	return node.GetBit(key, offset)
 }
 
 func (cs clusterStore) Del2(keys ...string) (int, error) {
@@ -444,6 +455,15 @@ func (cs clusterStore) Set(key string, value string) error {
 	}
 
 	return node.Set(key, value)
+}
+
+func (cs clusterStore) SetBit(key string, offset int64, value int) error {
+	node, err := cs.getRedis(key)
+	if err != nil {
+		return err
+	}
+
+	return node.SetBit(key, offset, value)
 }
 
 func (cs clusterStore) SetEx(key, value string, seconds int) error {
