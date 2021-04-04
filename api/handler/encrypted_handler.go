@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/base64"
 	"errors"
@@ -8,6 +9,7 @@ import (
 	"git.zc0901.com/go/god/lib/logx"
 	"io"
 	"io/ioutil"
+	"net"
 	"net/http"
 )
 
@@ -46,6 +48,14 @@ type encryptedResponseWriter struct {
 
 func (w *encryptedResponseWriter) Header() http.Header {
 	return w.ResponseWriter.Header()
+}
+
+func (w *encryptedResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	if hijacked, ok := w.ResponseWriter.(http.Hijacker); ok {
+		return hijacked.Hijack()
+	}
+
+	return nil, nil, errors.New("server doesn't support hijacking")
 }
 
 func (w *encryptedResponseWriter) Write(p []byte) (int, error) {

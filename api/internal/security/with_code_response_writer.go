@@ -1,6 +1,10 @@
 package security
 
-import "net/http"
+import (
+	"bufio"
+	"net"
+	"net/http"
+)
 
 // 带有响应码的输出器
 type WithCodeResponseWriter struct {
@@ -8,6 +12,9 @@ type WithCodeResponseWriter struct {
 	Code   int
 }
 
+func (w *WithCodeResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	return w.Writer.(http.Hijacker).Hijack()
+}
 func (w *WithCodeResponseWriter) Header() http.Header {
 	return w.Writer.Header()
 }

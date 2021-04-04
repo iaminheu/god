@@ -236,7 +236,7 @@ func TestClusterStore_SetBit(t *testing.T) {
 			value := rand.Intn(2)
 			fmt.Printf("INPUT %d\n", value)
 			err := store.SetBit("test", int64(i), value)
-			assert.Nil(t, err)
+			asset.Nil(t, err)
 		}
 
 		for i := 0; i < 10; i++ {

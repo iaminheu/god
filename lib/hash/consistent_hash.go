@@ -117,13 +117,14 @@ func (h *ConsistentHash) Get(v interface{}) (interface{}, bool) {
 	}
 }
 
+// Remove 从 h 中移除指定节点
 func (h *ConsistentHash) Remove(node interface{}) {
 	nodeRepr := repr(node)
 
 	h.lock.Lock()
 	defer h.lock.Unlock()
 
-	if !h.contains(nodeRepr) {
+	if !h.containsNode(nodeRepr) {
 		return
 	}
 
@@ -132,7 +133,7 @@ func (h *ConsistentHash) Remove(node interface{}) {
 		index := sort.Search(len(h.keys), func(i int) bool {
 			return h.keys[i] >= hash
 		})
-		if index < len(h.keys) {
+		if index < len(h.keys) && h.keys[index] == hash {
 			h.keys = append(h.keys[:index], h.keys[index+1:]...)
 		}
 		h.removeRingNode(hash, nodeRepr)
@@ -167,7 +168,7 @@ func (h *ConsistentHash) addNode(nodeRepr string) {
 	h.nodes[nodeRepr] = lang.Placeholder
 }
 
-func (h *ConsistentHash) contains(nodeRepr string) bool {
+func (h *ConsistentHash) containsNode(nodeRepr string) bool {
 	_, ok := h.nodes[nodeRepr]
 	return ok
 }

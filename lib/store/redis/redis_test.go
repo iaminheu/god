@@ -10,6 +10,48 @@ import (
 	"time"
 )
 
+func TestRedis_EvalSha(t *testing.T) {
+	runOnRedis(t, func(client *Redis) {
+		client.Ping()
+		scriptHash, err := client.scriptLoad(`return redis.call("EXISTS", KEYS[1])`)
+		assert.Nil(t, err)
+		result, err := client.EvalSha(scriptHash, []string{"key1"})
+		assert.Nil(t, err)
+		assert.Equal(t, int64(0), result)
+	})
+}
+
+func TestRedis_BitCount(t *testing.T) {
+	runOnRedis(t, func(client *Redis) {
+		for i := 0; i < 11; i++ {
+			err := client.SetBit("key", int64(i), 1)
+			assert.Nil(t, err)
+		}
+
+		_, err := NewRedis(client.Addr, "").BitCount("key", 0, -1)
+		assert.NotNil(t, err)
+		val, err := client.BitCount("key", 0, -1)
+		assert.Nil(t, err)
+		assert.Equal(t, int64(11), val)
+
+		val, err = client.BitCount("key", 0, 0)
+		assert.Nil(t, err)
+		assert.Equal(t, int64(8), val)
+
+		val, err = client.BitCount("key", 1, 1)
+		assert.Nil(t, err)
+		assert.Equal(t, int64(3), val)
+
+		val, err = client.BitCount("key", 0, 1)
+		assert.Nil(t, err)
+		assert.Equal(t, int64(11), val)
+
+		val, err = client.BitCount("key", 2, 2)
+		assert.Nil(t, err)
+		assert.Equal(t, int64(0), val)
+	})
+}
+
 func TestRedis_Exists(t *testing.T) {
 	runOnRedis(t, func(client *Redis) {
 		_, err := NewRedis(client.Addr, "").Exists("a")

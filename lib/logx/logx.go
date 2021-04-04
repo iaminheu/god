@@ -49,8 +49,7 @@ const (
 	consoleMode = "console" // 命令行模式
 	volumeMode  = "volume"  // k8s 模式
 
-	timeFormat          = "2006-01-02T15:04:05.000Z07" // 日期格式
-	callerInnerDepth    = 5                            // 堆栈调用深度
+	callerInnerDepth    = 5 // 堆栈调用深度
 	flags               = 0x0
 	backupFileDelimiter = "-" // 日志备份文件分隔符
 )
@@ -69,6 +68,8 @@ var (
 	writeConsole bool      // 写控制台
 	once         sync.Once // 一次操作对象
 	options      logOptions
+
+	timeFormat = "2006-01-02T15:04:05.000Z07" // 日期格式
 
 	ErrLogServiceNameNotSet = errors.New("日志服务名称必须设置")
 	ErrLogPathNotSet        = errors.New("日志路径必须设置")
@@ -121,6 +122,10 @@ func Must(err error) {
 }
 
 func Setup(c LogConf) error {
+	if len(c.TimeFormat) > 0 {
+		timeFormat = c.TimeFormat
+	}
+
 	switch c.Mode {
 	case consoleMode:
 		setupWithConsole(c)

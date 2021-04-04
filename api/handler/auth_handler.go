@@ -1,8 +1,10 @@
 package handler
 
 import (
+	"bufio"
 	"context"
 	"errors"
+	"net"
 	"net/http"
 	"net/http/httputil"
 
@@ -123,8 +125,24 @@ func newGuardedResponseWriter(w http.ResponseWriter) *guardedResponseWriter {
 	}
 }
 
+func (grw *guardedResponseWriter) Flush() {
+	if flusher, ok := grw.writer.(http.Flusher); ok {
+		flusher.Flush()
+	}
+}
+
 func (grw *guardedResponseWriter) Header() http.Header {
 	return grw.writer.Header()
+}
+
+// Hijack 实现了 http.Hijacker 接口。
+// 如果底层 http.ResponseWriter 支持的话此举将 Response 填充到 http.Hijacker。
+func (grw *guardedResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	if hijacked, ok := grw.writer.(http.Hijacker); ok {
+		return hijacked.Hijack()
+	}
+
+	return nil, nil, errors.New("服务器不支持 hijack")
 }
 
 func (grw *guardedResponseWriter) Write(body []byte) (int, error) {

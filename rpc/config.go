@@ -16,7 +16,7 @@ type (
 		Redis         redis.KeyConf      `json:",optional"` // 鉴权redis存储及鉴权key
 		StrictControl bool               `json:",optional"`
 
-		// 不允许永久挂起，不要设置超时时间为0，如设为0，底层将自动重置为2秒。
+		// 设为 0 意味着无超时限制
 		Timeout      int64 `json:",default=2000"`
 		CpuThreshold int64 `json:",default=900,range=[0:1000]"`
 	}
@@ -27,7 +27,7 @@ type (
 		Endpoints []string           `json:",optional=!Etcd"`
 		App       string             `json:",optional"`
 		Token     string             `json:",optional"`
-		Timeout   int64              `json:",optional"`
+		Timeout   int64              `json:",default=2000"`
 	}
 )
 

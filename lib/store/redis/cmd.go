@@ -37,6 +37,23 @@ func (r *Redis) BLPop(conn Client, key string) (string, error) {
 	}
 }
 
+func (r *Redis) BitCount(key string, start, end int64) (val int64, err error) {
+	err = r.brk.DoWithAcceptable(func() error {
+		conn, err := getClient(r)
+		if err != nil {
+			return err
+		}
+
+		val, err = conn.BitCount(key, &red.BitCount{
+			Start: start,
+			End:   end,
+		}).Result()
+		return err
+	}, acceptable)
+
+	return
+}
+
 // Del 时间复杂度 O(N)，当删除的key是字符串意外的复杂类型如List、Set、Hash等则为 O(1)
 func (r *Redis) Del(keys ...string) (length int, err error) {
 	err = r.brk.DoWithAcceptable(func() error {
@@ -49,21 +66,37 @@ func (r *Redis) Del(keys ...string) (length int, err error) {
 		if err != nil {
 			return err
 		}
+
 		length = int(v)
 		return nil
 	}, acceptable)
+
 	return
 }
 
 // Eval 求解 Lua 脚本
-func (r *Redis) Eval(script string, keys []string, args ...interface{}) (result interface{}, err error) {
+func (r *Redis) Eval(script string, keys []string, args ...interface{}) (val interface{}, err error) {
 	err = r.brk.DoWithAcceptable(func() error {
 		client, err := getClient(r)
 		if err != nil {
 			return err
 		}
 
-		result, err = client.Eval(script, keys, args...).Result()
+		val, err = client.Eval(script, keys, args...).Result()
+		return err
+	}, acceptable)
+
+	return
+}
+
+func (r *Redis) EvalSha(script string, keys []string, args ...interface{}) (val interface{}, err error) {
+	err = r.brk.DoWithAcceptable(func() error {
+		conn, err := getClient(r)
+		if err != nil {
+			return err
+		}
+
+		val, err = conn.EvalSha(script, keys, args...).Result()
 		return err
 	}, acceptable)
 
@@ -153,14 +186,14 @@ func (r *Redis) GetBit(key string, offset int64) (result int, err error) {
 }
 
 // HDel 从 key 指定的哈希集合中删除指定 field。成功返回1，失败返回0。
-func (r *Redis) HDel(key, field string) (ok bool, err error) {
+func (r *Redis) HDel(key string, fields ...string) (ok bool, err error) {
 	err = r.brk.DoWithAcceptable(func() error {
 		client, err := getClient(r)
 		if err != nil {
 			return err
 		}
 
-		v, err := client.HDel(key, field).Result()
+		v, err := client.HDel(key, fields...).Result()
 		if err != nil {
 			return err
 		}
