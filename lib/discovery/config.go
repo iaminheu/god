@@ -3,8 +3,8 @@ package discovery
 import "errors"
 
 type EtcdConf struct {
-	Hosts []string
-	Key   string
+	Hosts []string // etcd监听的ip数组
+	Key   string   // rpc注册key
 }
 
 func (c EtcdConf) Validate() error {

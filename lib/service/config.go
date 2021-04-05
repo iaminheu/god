@@ -16,11 +16,11 @@ const (
 )
 
 type ServiceConf struct {
-	Name       string
-	Log        logx.LogConf
-	Mode       string              `json:",default=pro,options=dev|test|pre|pro"`
-	MetricsUrl string              `json:",optional"` // 向 Prometheus 推送的方式
-	Prometheus prometheus.PromConf `json:",optional"`
+	Name       string              // 服务名称
+	Log        logx.LogConf        // 日志配置
+	Mode       string              `json:",default=pro,options=dev|test|pre|pro"` // 服务环境，dev-开发环境，test-测试环境，pre-预发环境，pro-正式环境
+	MetricsUrl string              `json:",optional"`                             // 指标上报接口地址，该地址需要支持 post json 即可
+	Prometheus prometheus.PromConf `json:",optional"`                             // 普罗米修斯配置
 }
 
 func (sc ServiceConf) MustSetup() {

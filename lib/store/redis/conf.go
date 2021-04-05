@@ -10,9 +10,9 @@ var (
 
 type (
 	Conf struct {
-		Host     string
+		Host     string // redis地址
 		Mode     string `json:",default=standalone,options=standalone|cluster"` // 默认单点模式，可选集群模式
-		Password string `json:",optional"`
+		Password string `json:",optional"`                                      // redis密码
 	}
 
 	// KeyConf 带有指定key的redis配置，一般用于rpc调用鉴权

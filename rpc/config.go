@@ -9,16 +9,14 @@ import (
 type (
 	// ServerConf Rpc服务端配置
 	ServerConf struct {
-		service.ServiceConf
-		ListenOn      string
-		Etcd          discovery.EtcdConf `json:",optional"`
-		Auth          bool               `json:",optional"` // rpc通信鉴权
-		Redis         redis.KeyConf      `json:",optional"` // 鉴权redis存储及鉴权key
-		StrictControl bool               `json:",optional"`
-
-		// 设为 0 意味着无超时限制
-		Timeout      int64 `json:",default=2000"`
-		CpuThreshold int64 `json:",default=900,range=[0:1000]"`
+		service.ServiceConf                    // 服务配置
+		ListenOn            string             // rpc监听地址和端口，如：127.0.0.1:8888
+		Etcd                discovery.EtcdConf `json:",optional"`                   // etcd相关配置
+		Auth                bool               `json:",optional"`                   // 是否开启rpc通信鉴权，若是则Redis配置必填
+		Redis               redis.KeyConf      `json:",optional"`                   // rpc通信及安全的redis配置
+		StrictControl       bool               `json:",optional"`                   // 是否为严格模式，若是且遇到鉴权错误则抛出异常
+		Timeout             int64              `json:",default=2000"`               // 默认超时时长为2000毫秒，<=0则意味支持无限期等待
+		CpuThreshold        int64              `json:",default=900,range=[0:1000]"` // cpu降载阈值，默认900，支持区间为0-1000
 	}
 
 	// ServerConf Rpc客户端配置
