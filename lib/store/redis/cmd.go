@@ -6,7 +6,6 @@ import (
 	"git.zc0901.com/go/god/lib/gconv"
 	"git.zc0901.com/go/god/lib/mapping"
 	red "github.com/go-redis/redis"
-	"math"
 	"strconv"
 	"time"
 )
@@ -215,10 +214,12 @@ func (r *Redis) GetBits(key string, offsets []int64) (result map[int64]bool, err
 		}
 
 		resp, err := client.Eval(getBitsScript, []string{key}, args).Result()
+		if err != nil {
+			return err
+		}
 
 		intResp := gconv.Int64s(resp)
 		for i, v := range intResp {
-			//result = append(result, v == 1)
 			result[offsets[i]] = v == 1
 		}
 
@@ -1645,11 +1646,7 @@ func buildBitOffsetArgs(offsets []int64) ([]string, error) {
 	var args []string
 
 	for _, offset := range offsets {
-		if offset >= math.MaxInt64 {
-			return nil, ErrTooLargeOffset
-		}
-
-		args = append(args, strconv.FormatUint(uint64(offset), 10))
+		args = append(args, strconv.FormatInt(offset, 10))
 	}
 
 	return args, nil
