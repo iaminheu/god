@@ -201,8 +201,8 @@ func (r *Redis) GetBit(key string, offset int64) (result int, err error) {
 	return
 }
 
-func (r *Redis) GetBits(key string, offsets []uint) (result map[uint]bool, err error) {
-	result = map[uint]bool{}
+func (r *Redis) GetBits(key string, offsets []int64) (result map[int64]bool, err error) {
+	result = map[int64]bool{}
 	err = r.brk.DoWithAcceptable(func() error {
 		client, err := getClient(r)
 		if err != nil {
@@ -763,7 +763,7 @@ func (r *Redis) SetBit(key string, offset int64, value int) error {
 	}, acceptable)
 }
 
-func (r *Redis) SetBits(key string, offsets []uint) error {
+func (r *Redis) SetBits(key string, offsets []int64) error {
 	return r.brk.DoWithAcceptable(func() error {
 		client, err := getClient(r)
 		if err != nil {
@@ -1641,7 +1641,7 @@ func toStrings(vals []interface{}) []string {
 	return ret
 }
 
-func buildBitOffsetArgs(offsets []uint) ([]string, error) {
+func buildBitOffsetArgs(offsets []int64) ([]string, error) {
 	var args []string
 
 	for _, offset := range offsets {

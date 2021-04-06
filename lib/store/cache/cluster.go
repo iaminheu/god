@@ -17,9 +17,9 @@ type (
 		Set(key string, val interface{}) error
 		SetEx(key string, val interface{}, expires time.Duration) error
 		SetBit(key string, offset int64, value int) error
-		SetBits(key string, offset []uint) error
+		SetBits(key string, offset []int64) error
 		GetBit(key string, offset int64) (int, error)
-		GetBits(key string, offset []uint) (map[uint]bool, error)
+		GetBits(key string, offset []int64) (map[int64]bool, error)
 		Take(dest interface{}, key string, queryFn func(interface{}) error) error
 		TakeEx(dest interface{}, key string, queryFn func(interface{}, time.Duration) error) error
 	}
@@ -156,7 +156,7 @@ func (c cluster) SetBit(key string, offset int64, value int) error {
 	return node.(Cache).SetBit(key, offset, value)
 }
 
-func (c cluster) SetBits(key string, offset []uint) error {
+func (c cluster) SetBits(key string, offset []int64) error {
 	node, ok := c.dispatcher.Get(key)
 	if !ok {
 		return c.errNotFound
@@ -165,7 +165,7 @@ func (c cluster) SetBits(key string, offset []uint) error {
 	return node.(Cache).SetBits(key, offset)
 }
 
-func (c cluster) GetBits(key string, offset []uint) (map[uint]bool, error) {
+func (c cluster) GetBits(key string, offset []int64) (map[int64]bool, error) {
 	node, ok := c.dispatcher.Get(key)
 	if !ok {
 		return nil, c.errNotFound
