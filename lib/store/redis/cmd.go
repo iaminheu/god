@@ -1645,7 +1645,7 @@ func buildBitOffsetArgs(offsets []int64) ([]string, error) {
 	var args []string
 
 	for _, offset := range offsets {
-		if offset >= math.MaxUint64 {
+		if offset >= math.MaxInt64 {
 			return nil, ErrTooLargeOffset
 		}
 
