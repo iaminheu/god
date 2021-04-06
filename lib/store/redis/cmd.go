@@ -21,7 +21,7 @@ end
 	getBitsScript = `
 local ret = {}
 for i, offset in ipairs(ARGV) do
-	ret[i] = tonumber(redis.call("getbit", KEYS[1], offset)) == 1
+	ret[i] = tonumber(redis.call("getbit", KEYS[1], offset))
 end
 return ret
 `

@@ -72,18 +72,31 @@ func TestRedis_Eval(t *testing.T) {
 		_, err := NewRedis(client.Addr, "").Exists("a")
 		assert.NotNil(t, err)
 
-		_, err = client.Eval(`redis.call("EXISTS", KEYS[1])`, []string{"notexists"})
-		assert.Equal(t, redis.Nil, err)
+		key := "dhome:user-fav-content:6-0"
 
-		err = client.Set("key1", "value1")
-		assert.Nil(t, err)
+		for i := 0; i < 10000; i++ {
+			err = client.SetBit(key, int64(i), 1)
+			assert.Nil(t, err)
+		}
 
-		_, err = client.Eval(`redis.call("EXISTS", KEYS[1])`, []string{"key1"})
-		assert.Equal(t, redis.Nil, err)
+		//client.SetBit(key, 163, 1)
+		//client.SetBit(key, 11167, 1)
 
-		val, err := client.Eval(`return redis.call("EXISTS", KEYS[1])`, []string{"key1"})
-		assert.Nil(t, err)
-		assert.Equal(t, int64(1), val)
+		resp, err := client.Eval(getBitsScript, []string{key}, []string{"163", "11167", "3"})
+		fmt.Println(resp)
+
+		//_, err = client.Eval(`redis.call("EXISTS", KEYS[1])`, []string{"notexists"})
+		//assert.Equal(t, redis.Nil, err)
+		//
+		//err = client.Set("key1", "value1")
+		//assert.Nil(t, err)
+		//
+		//_, err = client.Eval(`redis.call("EXISTS", KEYS[1])`, []string{"key1"})
+		//assert.Equal(t, redis.Nil, err)
+		//
+		//val, err := client.Eval(`return redis.call("EXISTS", KEYS[1])`, []string{"key1"})
+		//assert.Nil(t, err)
+		//assert.Equal(t, int64(1), val)
 	})
 }
 
