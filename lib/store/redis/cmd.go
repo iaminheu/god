@@ -201,7 +201,8 @@ func (r *Redis) GetBit(key string, offset int64) (result int, err error) {
 	return
 }
 
-func (r *Redis) GetBits(key string, offsets []uint) (result []bool, err error) {
+func (r *Redis) GetBits(key string, offsets []uint) (result map[uint]bool, err error) {
+	result = map[uint]bool{}
 	err = r.brk.DoWithAcceptable(func() error {
 		client, err := getClient(r)
 		if err != nil {
@@ -216,8 +217,9 @@ func (r *Redis) GetBits(key string, offsets []uint) (result []bool, err error) {
 		resp, err := client.Eval(getBitsScript, []string{key}, args).Result()
 
 		intResp := gconv.Int64s(resp)
-		for _, v := range intResp {
-			result = append(result, v == 1)
+		for i, v := range intResp {
+			//result = append(result, v == 1)
+			result[offsets[i]] = v == 1
 		}
 
 		return nil
