@@ -94,6 +94,14 @@ func (n node) SetEx(key string, value interface{}, expires time.Duration) error 
 	return n.redis.SetEx(key, string(data), int(expires.Seconds()))
 }
 
+func (n node) SetBit(key string, offset int64, value int) error {
+	return n.redis.SetBit(key, offset, value)
+}
+
+func (n node) GetBit(key string, offset int64) (int, error) {
+	return n.redis.GetBit(key, offset)
+}
+
 // Take 拿key对应的dest缓存，拿不到缓存就查库并缓存
 func (n node) Take(dest interface{}, key string, queryFn func(interface{}) error) error {
 	return n.doTake(dest, key, queryFn, func(value interface{}) error {

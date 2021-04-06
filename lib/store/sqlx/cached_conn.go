@@ -60,6 +60,14 @@ func (cc CachedConn) SetCache(key string, value interface{}) error {
 	return cc.cache.Set(key, value)
 }
 
+func (cc CachedConn) SetBit(key string, offset int64, value int) error {
+	return cc.cache.SetBit(key, offset, value)
+}
+
+func (cc CachedConn) GetBit(key string, offset int64) (int, error) {
+	return cc.cache.GetBit(key, offset)
+}
+
 // Exec 执行增、删、改，并清空 keys 对应的缓存
 func (cc CachedConn) Exec(exec ExecFn, keys ...string) (sql.Result, error) {
 	result, err := exec(cc.conn)
