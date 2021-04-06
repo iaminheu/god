@@ -14,8 +14,7 @@ func UnaryTimeoutInterceptor(timeout time.Duration) grpc.UnaryServerInterceptor 
 		defer cancel()
 
 		var lock sync.Mutex
-		// create channel with buffer size 1 to avoid goroutine leak
-		done := make(chan struct{}, 1)
+		done := make(chan struct{})
 		panicChan := make(chan interface{}, 1)
 		go func() {
 			defer func() {
@@ -27,6 +26,7 @@ func UnaryTimeoutInterceptor(timeout time.Duration) grpc.UnaryServerInterceptor 
 			lock.Lock()
 			defer lock.Unlock()
 			resp, err = handler(ctx, req)
+			close(done)
 		}()
 
 		select {
