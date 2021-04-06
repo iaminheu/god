@@ -64,7 +64,7 @@ func (cc CachedConn) SetBit(key string, offset int64, value int) error {
 	return cc.cache.SetBit(key, offset, value)
 }
 
-func (cc CachedConn) SetBits(key string, offset []uint) error {
+func (cc CachedConn) SetBits(key string, offset []int64) error {
 	return cc.cache.SetBits(key, offset)
 }
 
