@@ -106,7 +106,7 @@ func (n node) GetBit(key string, offset int64) (int, error) {
 	return n.redis.GetBit(key, offset)
 }
 
-func (n node) GetBits(key string, offset []uint) ([]bool, error) {
+func (n node) GetBits(key string, offset []uint) (map[uint]bool, error) {
 	return n.redis.GetBits(key, offset)
 }
 

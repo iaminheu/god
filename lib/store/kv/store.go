@@ -176,6 +176,15 @@ func (cs clusterStore) GetBit(key string, offset int64) (result int, err error) 
 	return node.GetBit(key, offset)
 }
 
+func (cs clusterStore) GetBits(key string, offset []uint) (result map[uint]bool, err error) {
+	node, err := cs.getRedis(key)
+	if err != nil {
+		return nil, err
+	}
+
+	return node.GetBits(key, offset)
+}
+
 func (cs clusterStore) Del2(keys ...string) (int, error) {
 	var val int
 	var es errorx.Errors
@@ -464,6 +473,15 @@ func (cs clusterStore) SetBit(key string, offset int64, value int) error {
 	}
 
 	return node.SetBit(key, offset, value)
+}
+
+func (cs clusterStore) SetBits(key string, offset []uint) error {
+	node, err := cs.getRedis(key)
+	if err != nil {
+		return err
+	}
+
+	return node.SetBits(key, offset)
 }
 
 func (cs clusterStore) SetEx(key, value string, seconds int) error {

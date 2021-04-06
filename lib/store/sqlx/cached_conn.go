@@ -72,7 +72,7 @@ func (cc CachedConn) GetBit(key string, offset int64) (int, error) {
 	return cc.cache.GetBit(key, offset)
 }
 
-func (cc CachedConn) GetBits(key string, offset []uint) ([]bool, error) {
+func (cc CachedConn) GetBits(key string, offset []uint) (map[uint]bool, error) {
 	return cc.cache.GetBits(key, offset)
 }
 
