@@ -64,8 +64,16 @@ func (cc CachedConn) SetBit(key string, offset int64, value int) error {
 	return cc.cache.SetBit(key, offset, value)
 }
 
+func (cc CachedConn) SetBits(key string, offset []uint) error {
+	return cc.cache.SetBits(key, offset)
+}
+
 func (cc CachedConn) GetBit(key string, offset int64) (int, error) {
 	return cc.cache.GetBit(key, offset)
+}
+
+func (cc CachedConn) GetBits(key string, offset []uint) ([]bool, error) {
+	return cc.cache.GetBits(key, offset)
 }
 
 // Exec 执行增、删、改，并清空 keys 对应的缓存
