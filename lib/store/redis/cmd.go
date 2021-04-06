@@ -5,15 +5,30 @@ import (
 	"fmt"
 	"git.zc0901.com/go/god/lib/mapping"
 	red "github.com/go-redis/redis"
+	"math"
 	"strconv"
 	"time"
 )
 
 const (
 	blockingTimeout = 5 * time.Second
+
+	setBitsScript = `
+for _, offset in ipairs(ARGV) do
+	redis.call("setbit", KEYS[1], offset, 1)
+end
+`
+	getBitsScript = `
+local ret = {}
+for i, offset in ipairs(ARGV) do
+	ret[i] = tonumber(redis.call("getbit", KEYS[1], offset)) == 0
+end
+return ret
+`
 )
 
 var ErrNilConn = errors.New("redis 连接不可为空")
+var ErrTooLargeOffset = errors.New("redis bit位的偏移量超过int64最大值")
 
 type (
 	ZStore = red.ZStore
@@ -179,6 +194,32 @@ func (r *Redis) GetBit(key string, offset int64) (result int, err error) {
 			return err
 		}
 		result = int(v)
+		return nil
+	}, acceptable)
+
+	return
+}
+
+func (r *Redis) GetBits(key string, offsets []uint) (result []bool, err error) {
+	err = r.brk.DoWithAcceptable(func() error {
+		client, err := getClient(r)
+		if err != nil {
+			return err
+		}
+
+		args, err := buildBitOffsetArgs(offsets)
+		if err != nil {
+			return err
+		}
+
+		resp, err := client.Eval(getBitsScript, []string{key}, args).Result()
+
+		var ok bool
+		result, ok = resp.([]bool)
+		if !ok {
+			return errors.New("获取失败")
+		}
+
 		return nil
 	}, acceptable)
 
@@ -716,6 +757,23 @@ func (r *Redis) SetBit(key string, offset int64, value int) error {
 		}
 
 		_, err = client.SetBit(key, offset, value).Result()
+		return err
+	}, acceptable)
+}
+
+func (r *Redis) SetBits(key string, offsets []uint) error {
+	return r.brk.DoWithAcceptable(func() error {
+		client, err := getClient(r)
+		if err != nil {
+			return err
+		}
+
+		args, err := buildBitOffsetArgs(offsets)
+		if err != nil {
+			return err
+		}
+
+		_, err = client.Eval(setBitsScript, []string{key}, args).Result()
 		return err
 	}, acceptable)
 }
@@ -1576,4 +1634,18 @@ func toStrings(vals []interface{}) []string {
 		}
 	}
 	return ret
+}
+
+func buildBitOffsetArgs(offsets []uint) ([]string, error) {
+	var args []string
+
+	for _, offset := range offsets {
+		if offset >= math.MaxUint64 {
+			return nil, ErrTooLargeOffset
+		}
+
+		args = append(args, strconv.FormatUint(uint64(offset), 10))
+	}
+
+	return args, nil
 }
