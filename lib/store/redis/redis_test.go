@@ -74,10 +74,15 @@ func TestRedis_Eval(t *testing.T) {
 
 		key := "dhome:user-fav-content:6-0"
 
+		var offsets []uint
 		for i := 0; i < 10000; i++ {
-			err = client.SetBit(key, int64(i), 1)
-			assert.Nil(t, err)
+			//err = client.SetBit(key, int64(i), 1)
+			//assert.Nil(t, err)
+			offsets = append(offsets, uint(i))
 		}
+
+		err = client.SetBits(key, offsets)
+		assert.Nil(t, err)
 
 		//client.SetBit(key, 163, 1)
 		//client.SetBit(key, 11167, 1)

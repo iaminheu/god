@@ -774,6 +774,9 @@ func (r *Redis) SetBits(key string, offsets []uint) error {
 		}
 
 		_, err = client.Eval(setBitsScript, []string{key}, args).Result()
+		if err == Nil {
+			return nil
+		}
 		return err
 	}, acceptable)
 }
