@@ -3,6 +3,7 @@ package redis
 import (
 	"errors"
 	"fmt"
+	"git.zc0901.com/go/god/lib/gconv"
 	"git.zc0901.com/go/god/lib/mapping"
 	red "github.com/go-redis/redis"
 	"math"
@@ -214,10 +215,9 @@ func (r *Redis) GetBits(key string, offsets []uint) (result []bool, err error) {
 
 		resp, err := client.Eval(getBitsScript, []string{key}, args).Result()
 
-		var ok bool
-		result, ok = resp.([]bool)
-		if !ok {
-			return errors.New("获取失败")
+		intResp := gconv.Int64s(resp)
+		for _, v := range intResp {
+			result = append(result, v == 1)
 		}
 
 		return nil
