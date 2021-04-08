@@ -74,11 +74,11 @@ func TestRedis_Eval(t *testing.T) {
 
 		key := "dhome:user-fav-content:6-0"
 
-		var offsets []uint
+		var offsets []int64
 		for i := 0; i < 10000; i++ {
 			//err = client.SetBit(key, int64(i), 1)
 			//assert.Nil(t, err)
-			offsets = append(offsets, uint(i))
+			offsets = append(offsets, int64(i))
 		}
 
 		err = client.SetBits(key, offsets)
@@ -87,7 +87,8 @@ func TestRedis_Eval(t *testing.T) {
 		//client.SetBit(key, 163, 1)
 		//client.SetBit(key, 11167, 1)
 
-		resp, err := client.Eval(getBitsScript, []string{key}, []string{"163", "11167", "3"})
+		//resp, err := client.Eval(getBitsScript, []string{key}, []string{"163", "11167", "3"})
+		resp, err := client.GetBits(key, []int64{163, 11167, 3})
 		fmt.Println(resp)
 
 		//_, err = client.Eval(`redis.call("EXISTS", KEYS[1])`, []string{"notexists"})
