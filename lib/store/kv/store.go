@@ -176,7 +176,7 @@ func (cs clusterStore) GetBit(key string, offset int64) (result int, err error) 
 	return node.GetBit(key, offset)
 }
 
-func (cs clusterStore) GetBits(key string, offset []uint) (result map[uint]bool, err error) {
+func (cs clusterStore) GetBits(key string, offset []int64) (result map[int64]bool, err error) {
 	node, err := cs.getRedis(key)
 	if err != nil {
 		return nil, err
@@ -475,7 +475,7 @@ func (cs clusterStore) SetBit(key string, offset int64, value int) error {
 	return node.SetBit(key, offset, value)
 }
 
-func (cs clusterStore) SetBits(key string, offset []uint) error {
+func (cs clusterStore) SetBits(key string, offset []int64) error {
 	node, err := cs.getRedis(key)
 	if err != nil {
 		return err
