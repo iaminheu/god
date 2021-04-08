@@ -39,7 +39,7 @@ type (
 
 	Pair struct {
 		Key   string
-		Score int64
+		Score float64
 	}
 )
 

@@ -1085,7 +1085,7 @@ func (r *Redis) ZAdds(key string, pairs ...Pair) (val int64, err error) {
 
 		var zs []red.Z
 		for _, pair := range pairs {
-			z := red.Z{Score: float64(pair.Score), Member: pair.Key}
+			z := red.Z{Score: pair.Score, Member: pair.Key}
 			zs = append(zs, z)
 		}
 
@@ -1613,12 +1613,12 @@ func toPairs(vals []red.Z) []Pair {
 		case string:
 			pairs[i] = Pair{
 				Key:   member,
-				Score: int64(val.Score),
+				Score: val.Score,
 			}
 		default:
 			pairs[i] = Pair{
 				Key:   mapping.Repr(val.Member),
-				Score: int64(val.Score),
+				Score: val.Score,
 			}
 		}
 	}
