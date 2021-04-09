@@ -31,14 +31,14 @@ func (m *{{.upperTable}}Model) FindOne({{.primaryKey}} {{.dataType}}) (*{{.upper
 // 通过ids查询
 var FindMany = `
 func (m *{{.upperTable}}Model) FindMany(ids []{{.dataType}}, workers ...int) (list []*{{.upperTable}}) {
+	ids = gconv.Int64s(garray.NewArrayFrom(gconv.Interfaces(ids), true).Unique())
+
 	var nWorkers int
 	if len(workers) > 0 {
 		nWorkers = workers[0]
 	} else {
 		nWorkers = mathx.MinInt(10, len(ids))
 	}
-
-	ids = gconv.Int64s(garray.NewArrayFrom(gconv.Interfaces(ids), true).Unique())
 
 	channel := mr.Map(func(source chan<- interface{}) {
 		for _, id := range ids {
