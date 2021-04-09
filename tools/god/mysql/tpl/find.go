@@ -38,6 +38,8 @@ func (m *{{.upperTable}}Model) FindMany(ids []{{.dataType}}, workers ...int) (li
 		nWorkers = mathx.MinInt(10, len(ids))
 	}
 
+	ids = gconv.Int64s(garray.NewArrayFrom(gconv.Interfaces(ids), true).Unique())
+
 	channel := mr.Map(func(source chan<- interface{}) {
 		for _, id := range ids {
 			source <- id
