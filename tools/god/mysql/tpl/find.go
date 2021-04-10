@@ -49,6 +49,8 @@ func (m *{{.upperTable}}Model) FindMany(ids []{{.dataType}}, workers ...int) (li
 		one, err := m.FindOne(id)
 		if err == nil {
 			writer.Write(one)
+		} else {
+			logx.Error(err)
 		}
 	}, mr.WithWorkers(nWorkers))
 
