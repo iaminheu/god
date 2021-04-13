@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// AtomicDuration Duration类型 原子类
 type AtomicDuration int64
 
 func NewAtomicDuration() *AtomicDuration {

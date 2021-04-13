@@ -2,6 +2,7 @@ package syncx
 
 import "sync/atomic"
 
+// AtomicBool bool类型 原子类
 type AtomicBool uint32
 
 func NewAtomicBool() *AtomicBool {

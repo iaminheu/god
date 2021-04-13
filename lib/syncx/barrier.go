@@ -2,7 +2,7 @@ package syncx
 
 import "sync"
 
-// Locker 对操作加锁
+// Locker 对操作加锁/解锁
 type Locker struct {
 	lock sync.Mutex
 }
