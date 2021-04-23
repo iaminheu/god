@@ -10,21 +10,22 @@ func main() {
 	consumer := dq.NewConsumer(dq.Conf{
 		Beanstalks: []dq.Beanstalk{
 			{
-				Endpoint: "localhost:11300",
-				Tube:     "tube",
+				Endpoint: "dev:11300",
+				Tube:     "dhome-sms-login",
 			},
 			{
-				Endpoint: "localhost:11301",
-				Tube:     "tube",
+				Endpoint: "dev:11301",
+				Tube:     "dhome-sms-login",
 			},
 		},
 		Redis: redis.Conf{
-			Host: "192.168.0.17:6379",
+			Host: "192.168.0.17:6382",
 			Mode: redis.StandaloneMode,
 		},
 	})
 
 	consumer.Consume(func(body []byte) {
+		//time.Sleep(1* time.Second)
 		fmt.Println(body)
 	})
 }

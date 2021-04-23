@@ -8,11 +8,11 @@ const (
 )
 
 var (
-	ErrDuplicateItem  = errors.New("重复的项")
+	ErrDuplicateItem  = errors.New("重复的路由路径")
 	ErrDuplicateSlash = errors.New("重复的 /")
-	ErrEmptyItem      = errors.New("不能为空项")
-	ErrInvalidState   = errors.New("搜索树处在无效状态")
-	ErrNotFromRoot    = errors.New("路径必须以 / 开头")
+	ErrEmptyItem      = errors.New("路由不能为空")
+	ErrInvalidState   = errors.New("路由搜索树处在无效状态")
+	ErrNotFromRoot    = errors.New("路由路径必须以 / 开头")
 	NotFound          Result // 未找到
 )
 
