@@ -57,13 +57,11 @@ func (sc ServerConf) HasEtcd() bool {
 
 // Validate 验证鉴权情况下redis的主机和部署模式是否已提供
 func (sc ServerConf) Validate() error {
-	if sc.Auth {
-		if err := sc.Redis.Validate(); err != nil {
-			return err
-		}
+	if !sc.Auth {
+		return nil
 	}
 
-	return nil
+	return sc.Redis.Validate()
 }
 
 // HasCredential 判断客户端配置是否存在App+token凭证

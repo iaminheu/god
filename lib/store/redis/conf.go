@@ -13,6 +13,7 @@ type (
 		Host     string // redis地址
 		Mode     string `json:",default=standalone,options=standalone|cluster"` // 默认单点模式，可选集群模式
 		Password string `json:",optional"`                                      // redis密码
+		TLS      bool   `json:",default=false,options=true|false"`
 	}
 
 	// KeyConf 带有指定key的redis配置，一般用于rpc调用鉴权
@@ -24,7 +25,18 @@ type (
 
 // 新建 Redis 示例
 func (c Conf) NewRedis() *Redis {
-	return NewRedis(c.Host, c.Mode, c.Password)
+	var opts []Option
+	if c.Mode == ClusterMode {
+		opts = append(opts, Cluster())
+	}
+	if len(c.Password) > 0 {
+		opts = append(opts, WithPassword(c.Password))
+	}
+	if c.TLS {
+		opts = append(opts, WithTLS())
+	}
+
+	return New(c.Host, opts...)
 }
 
 func (c Conf) Validate() error {

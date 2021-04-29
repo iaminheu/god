@@ -2,19 +2,21 @@ package server_interceptors
 
 import (
 	"context"
-	"git.zc0901.com/go/god/lib/contextx"
 	"google.golang.org/grpc"
 	"sync"
 	"time"
 )
 
 func UnaryTimeoutInterceptor(timeout time.Duration) grpc.UnaryServerInterceptor {
-	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
-		ctx, cancel := contextx.ShrinkDeadline(ctx, timeout)
+	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+		ctx, cancel := context.WithTimeout(ctx, timeout)
 		defer cancel()
 
+		var resp interface{}
+		var err error
 		var lock sync.Mutex
 		done := make(chan struct{})
+		// 创建缓存长度为1的通道以防协程泄露
 		panicChan := make(chan interface{}, 1)
 		go func() {
 			defer func() {

@@ -13,16 +13,23 @@ import (
 )
 
 const (
-	dialTimeout = time.Second * 2
+	dialTimeout = time.Second * 3
 	separator   = '/'
 )
 
 type (
+	// 包装 Conn 方法的接口
+	Client interface {
+		Conn() *grpc.ClientConn
+	}
+
+	// ClientOptions 是RPC客户端选择项
 	ClientOptions struct {
 		Timeout     time.Duration
 		DialOptions []grpc.DialOption
 	}
 
+	// ClientOption 是自定义客户端选项的方法
 	ClientOption func(options *ClientOptions)
 
 	client struct {
@@ -30,26 +37,24 @@ type (
 	}
 )
 
-func (c *client) dial(server string, opts ...ClientOption) error {
-	options := c.buildDialOptions(opts...)
-	timeCtx, cancel := context.WithTimeout(context.Background(), dialTimeout)
-	defer cancel()
+func init() {
+	// 注册服务直连和服务发现两种模式
+	resolver.RegisterResolver()
+}
 
-	conn, err := grpc.DialContext(timeCtx, server, options...)
-	if err != nil {
-		service := server
-		if errors.Is(err, context.DeadlineExceeded) {
-			pos := strings.LastIndexByte(server, separator)
-			if 0 < pos && pos < len(server)-1 {
-				service = server[pos+1:]
-			}
-		}
-		return fmt.Errorf("rpc dial: %s, 错误：%s, 请确保rpc服务 %s 已启动，如使用etcd也需确保已启动",
-			server, err.Error(), service)
+// NewClient 返回RPC客户端
+func NewClient(target string, opts ...ClientOption) (*client, error) {
+	var cli client
+	opts = append([]ClientOption{WithDialOption(grpc.WithBalancerName(p2c.Name))}, opts...)
+	if err := cli.dial(target, opts...); err != nil {
+		return nil, err
 	}
 
-	c.conn = conn
-	return nil
+	return &cli, nil
+}
+
+func (c *client) Conn() *grpc.ClientConn {
+	return c.conn
 }
 
 func (c *client) buildDialOptions(opts ...ClientOption) []grpc.DialOption {
@@ -73,23 +78,26 @@ func (c *client) buildDialOptions(opts ...ClientOption) []grpc.DialOption {
 	return append(options, cliOpts.DialOptions...)
 }
 
-func (c *client) Conn() *grpc.ClientConn {
-	return c.conn
-}
+func (c *client) dial(server string, opts ...ClientOption) error {
+	options := c.buildDialOptions(opts...)
+	timeCtx, cancel := context.WithTimeout(context.Background(), dialTimeout)
+	defer cancel()
 
-func init() {
-	// 注册服务直连和服务发现两种模式
-	resolver.RegisterResolver()
-}
-
-func NewClient(target string, opts ...ClientOption) (*client, error) {
-	var cli client
-	opts = append([]ClientOption{WithDialOption(grpc.WithBalancerName(p2c.Name))}, opts...)
-	if err := cli.dial(target, opts...); err != nil {
-		return nil, err
+	conn, err := grpc.DialContext(timeCtx, server, options...)
+	if err != nil {
+		service := server
+		if errors.Is(err, context.DeadlineExceeded) {
+			pos := strings.LastIndexByte(server, separator)
+			if 0 < pos && pos < len(server)-1 {
+				service = server[pos+1:]
+			}
+		}
+		return fmt.Errorf("rpc dial: %s, 错误：%s, 请确保rpc服务 %s 已启动，如使用etcd也需确保已启动",
+			server, err.Error(), service)
 	}
 
-	return &cli, nil
+	c.conn = conn
+	return nil
 }
 
 func WithDialOption(opt grpc.DialOption) ClientOption {

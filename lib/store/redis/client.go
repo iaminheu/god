@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"crypto/tls"
 	"fmt"
 	"git.zc0901.com/go/god/lib/logx"
 	"git.zc0901.com/go/god/lib/mapping"
@@ -11,6 +12,12 @@ import (
 	"strings"
 )
 
+const (
+	defaultDatabase = 0
+	maxRetries      = 3
+	idleConns       = 8
+)
+
 var (
 	clusterClientManager    = syncx.NewResourceManager()
 	standaloneClientManager = syncx.NewResourceManager()
@@ -19,21 +26,28 @@ var (
 func getClient(r *Redis) (Client, error) {
 	switch r.Mode {
 	case ClusterMode:
-		return getClusterClient(r.Addr, r.Password)
+		return getClusterClient(r)
 	case StandaloneMode:
-		return getStandaloneClient(r.Addr, r.Password)
+		return getStandaloneClient(r)
 	default:
 		return nil, fmt.Errorf("不支持的 redis 模式 '%s'", r.Mode)
 	}
 }
 
-func getClusterClient(addr, password string) (Client, error) {
-	client, err := clusterClientManager.Get(addr, func() (io.Closer, error) {
+func getClusterClient(r *Redis) (Client, error) {
+	client, err := clusterClientManager.Get(r.Addr, func() (io.Closer, error) {
+		var tlsConfig *tls.Config
+		if r.tls {
+			tlsConfig = &tls.Config{
+				InsecureSkipVerify: true,
+			}
+		}
 		client := redis.NewClusterClient(&redis.ClusterOptions{
-			Addrs:        []string{addr},
-			Password:     password,
+			Addrs:        []string{r.Addr},
+			Password:     r.Password,
 			MaxRetries:   maxRetries,
 			MinIdleConns: idleConns,
+			TLSConfig:    tlsConfig,
 		})
 		client.WrapProcess(process)
 		return client, nil
@@ -45,14 +59,22 @@ func getClusterClient(addr, password string) (Client, error) {
 	return client.(*redis.ClusterClient), nil
 }
 
-func getStandaloneClient(addr, password string) (Client, error) {
-	client, err := standaloneClientManager.Get(addr, func() (io.Closer, error) {
+func getStandaloneClient(r *Redis) (Client, error) {
+	client, err := standaloneClientManager.Get(r.Addr, func() (io.Closer, error) {
+		var tlsConfig *tls.Config
+		if r.tls {
+			tlsConfig = &tls.Config{
+				InsecureSkipVerify: true,
+			}
+		}
+
 		client := redis.NewClient(&redis.Options{
-			Addr:         addr,
-			Password:     password,
+			Addr:         r.Addr,
+			Password:     r.Password,
 			DB:           defaultDatabase,
 			MaxRetries:   maxRetries,
 			MinIdleConns: idleConns,
+			TLSConfig:    tlsConfig,
 		})
 		client.WrapProcess(process)
 		return client, nil

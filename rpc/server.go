@@ -3,21 +3,13 @@ package rpc
 import (
 	"git.zc0901.com/go/god/lib/load"
 	"git.zc0901.com/go/god/lib/logx"
-	"git.zc0901.com/go/god/lib/netx"
 	"git.zc0901.com/go/god/lib/stat"
 	"git.zc0901.com/go/god/rpc/internal"
 	"git.zc0901.com/go/god/rpc/internal/auth"
 	"git.zc0901.com/go/god/rpc/internal/server_interceptors"
 	"google.golang.org/grpc"
 	"log"
-	"os"
-	"strings"
 	"time"
-)
-
-const (
-	allEths  = "0.0.0.0"
-	envPodIp = "POD_IP"
 )
 
 type RpcServer struct {
@@ -48,8 +40,7 @@ func NewServer(c ServerConf, register internal.RegisterFn) (*RpcServer, error) {
 	// 新建内部RPC服务器
 	var server internal.Server
 	if c.HasEtcd() {
-		listenOn := figureOutListenOn(c.ListenOn)
-		server, err = internal.NewPubServer(c.Etcd.Hosts, c.Etcd.Key, listenOn, internal.WithMetrics(metrics))
+		server, err = internal.NewPubServer(c.Etcd.Hosts, c.Etcd.Key, c.ListenOn, internal.WithMetrics(metrics))
 		if err != nil {
 			return nil, err
 		}
@@ -90,58 +81,34 @@ func (rs *RpcServer) Start() {
 	}
 }
 
+// Stop 关闭RPC服务器
 func (rs *RpcServer) Stop() {
 	logx.Close()
 }
 
-func setupInterceptors(server internal.Server, sc ServerConf, metrics *stat.Metrics) error {
+func setupInterceptors(server internal.Server, c ServerConf, metrics *stat.Metrics) error {
 	// 自动降载（负载卸流拦截器）
-	if sc.CpuThreshold > 0 {
-		shedder := load.NewAdaptiveShedder(load.WithCpuThreshold(sc.CpuThreshold))
+	if c.CpuThreshold > 0 {
+		shedder := load.NewAdaptiveShedder(load.WithCpuThreshold(c.CpuThreshold))
 		server.AddUnaryInterceptors(server_interceptors.UnaryShedderInterceptor(shedder, metrics))
 	}
 
 	// 超时控制（超时拦截器）
-	if sc.Timeout > 0 {
+	if c.Timeout > 0 {
 		server.AddUnaryInterceptors(server_interceptors.UnaryTimeoutInterceptor(
-			time.Duration(sc.Timeout) * time.Millisecond))
+			time.Duration(c.Timeout) * time.Millisecond))
 	}
 
 	// 调用鉴权（鉴权拦截器）
-	if sc.Auth {
-		authenticator, err := auth.NewAuthenticator(sc.Redis.NewRedis(), sc.Redis.Key, sc.StrictControl)
+	if c.Auth {
+		authenticator, err := auth.NewAuthenticator(c.Redis.NewRedis(), c.Redis.Key, c.StrictControl)
 		if err != nil {
 			return err
 		}
 
-		server.AddUnaryInterceptors(server_interceptors.UnaryAuthorizeInterceptor(authenticator))
 		server.AddStreamInterceptors(server_interceptors.StreamAuthorizeInterceptor(authenticator))
+		server.AddUnaryInterceptors(server_interceptors.UnaryAuthorizeInterceptor(authenticator))
 	}
 
 	return nil
-}
-
-func figureOutListenOn(listenOn string) string {
-	fields := strings.Split(listenOn, ":")
-
-	// 未传监听地址
-	if len(fields) == 0 {
-		return listenOn
-	}
-
-	// 传host且不是0.0.0.0
-	host := fields[0]
-	if len(host) > 0 && host != allEths {
-		return listenOn
-	}
-
-	ip := os.Getenv(envPodIp)
-	if len(ip) == 0 {
-		ip = netx.InternalIp()
-	}
-	if len(ip) == 0 {
-		return listenOn
-	} else {
-		return strings.Join(append([]string{ip}, fields[1:]...), ":")
-	}
 }

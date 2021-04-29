@@ -2,7 +2,6 @@ package client_interceptors
 
 import (
 	"context"
-	"git.zc0901.com/go/god/lib/contextx"
 	"google.golang.org/grpc"
 	"time"
 )
@@ -13,7 +12,7 @@ func TimeoutInterceptor(timeout time.Duration) grpc.UnaryClientInterceptor {
 			return invoker(ctx, method, req, reply, cc, opts...)
 		}
 
-		ctx, cancel := contextx.ShrinkDeadline(ctx, timeout)
+		ctx, cancel := context.WithTimeout(ctx, timeout)
 		defer cancel()
 
 		// create channel with buffer size 1 to avoid goroutine leak

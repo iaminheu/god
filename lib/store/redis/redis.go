@@ -11,10 +11,7 @@ const (
 	StandaloneMode = "standalone"
 	Nil            = red.Nil
 
-	defaultDatabase = 0
-	maxRetries      = 3
-	idleConns       = 8
-	slowThreshold   = 100 * time.Millisecond
+	slowThreshold = 100 * time.Millisecond
 )
 
 type (
@@ -22,6 +19,7 @@ type (
 		Addr     string
 		Mode     string
 		Password string
+		tls      bool
 		brk      breaker.Breaker
 	}
 
@@ -41,19 +39,57 @@ type (
 		Key   string
 		Score float64
 	}
+
+	// Option 自定义Redis的方法
+	Option func(r *Redis)
 )
 
-func NewRedis(addr, mode string, password ...string) *Redis {
-	// 为了支持不提供 password 的情况
-	var pwd string
-	for _, v := range password {
-		pwd = v
+// New 返回一个根据自定义选项创建的Redis
+func New(addr string, opts ...Option) *Redis {
+	r := &Redis{
+		Addr: addr,
+		Mode: StandaloneMode,
+		brk:  breaker.NewBreaker(),
 	}
 
-	return &Redis{
-		Addr:     addr,
-		Mode:     mode,
-		Password: pwd,
-		brk:      breaker.NewBreaker(),
+	for _, opt := range opts {
+		opt(r)
+	}
+
+	return r
+}
+
+func NewRedis(addr, mode string, password ...string) *Redis {
+	var opts []Option
+	if mode == ClusterMode {
+		opts = append(opts, Cluster())
+	}
+
+	// 为了支持不提供 password 的情况
+	for _, v := range password {
+		opts = append(opts, WithPassword(v))
+	}
+
+	return New(addr, opts...)
+}
+
+// Cluster 自定义Redis为集群模式。
+func Cluster() Option {
+	return func(r *Redis) {
+		r.Mode = ClusterMode
+	}
+}
+
+// WithPassword 自定义Redis密码。
+func WithPassword(password string) Option {
+	return func(r *Redis) {
+		r.Password = password
+	}
+}
+
+// WithTLS 启用redis的TLS。
+func WithTLS() Option {
+	return func(r *Redis) {
+		r.tls = true
 	}
 }
