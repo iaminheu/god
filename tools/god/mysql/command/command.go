@@ -65,7 +65,7 @@ func GenCodeFromDSN(ctx *cli.Context) error {
 
 	//fmt.Println(strings.Join(ddlList, "\n"), dir, cache)
 	generator := gen.NewModelGenerator(ddlList, dir, gen.WithConsoleOption(log))
-	err = generator.Start(database, cache)
+	err = generator.Start(cache)
 	if err != nil {
 		log.Error("", err)
 	}

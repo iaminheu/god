@@ -58,7 +58,7 @@ func WithConsoleOption(c util.Console) Option {
 	}
 }
 
-func (g *ModelGenerator) Start(database string, withCache bool) error {
+func (g *ModelGenerator) Start(withCache bool) error {
 	dir, err := filepath.Abs(g.dir)
 	if err != nil {
 		return err
@@ -67,7 +67,7 @@ func (g *ModelGenerator) Start(database string, withCache bool) error {
 		return err
 	}
 
-	modelList, err := g.genFromDDL(database, withCache)
+	modelList, err := g.genFromDDL(withCache)
 	if err != nil {
 		return err
 	}
@@ -101,14 +101,14 @@ func (g *ModelGenerator) Start(database string, withCache bool) error {
 	return nil
 }
 
-func (g *ModelGenerator) genFromDDL(database string, withCache bool) (map[string]string, error) {
+func (g *ModelGenerator) genFromDDL(withCache bool) (map[string]string, error) {
 	m := make(map[string]string)
 	for _, ddl := range g.ddlList {
 		table, err := parser.Parse(ddl)
 		if err != nil {
 			return nil, err
 		}
-		modelCode, err := g.genModelCode(*table, database, withCache)
+		modelCode, err := g.genModelCode(*table, withCache)
 		if err != nil {
 			return nil, err
 		}
@@ -117,7 +117,7 @@ func (g *ModelGenerator) genFromDDL(database string, withCache bool) (map[string
 	return m, nil
 }
 
-func (g *ModelGenerator) genModelCode(table parser.Table, database string, withCache bool) (string, error) {
+func (g *ModelGenerator) genModelCode(table parser.Table, withCache bool) (string, error) {
 	// 生成缓存键代码
 	cacheKeys, err := genCacheKeys(table)
 	if err != nil {
@@ -147,7 +147,7 @@ func (g *ModelGenerator) genModelCode(table parser.Table, database string, withC
 	}
 
 	// 生成新生成模型的代码段
-	newCode, err := genNew(tableDTO, database, withCache)
+	newCode, err := genNew(tableDTO, withCache)
 	if err != nil {
 		return "", nil
 	}
