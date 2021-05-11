@@ -19,7 +19,7 @@ type (
 		CpuThreshold        int64              `json:",default=900,range=[0:1000]"` // cpu降载阈值，默认900，支持区间为0-1000
 	}
 
-	// ServerConf Rpc客户端配置
+	// ClientConf Rpc客户端配置
 	ClientConf struct {
 		Etcd      discovery.EtcdConf `json:",optional"`
 		Endpoints []string           `json:",optional=!Etcd"`

@@ -1,7 +1,8 @@
-package server_interceptors
+package serverinterceptors
 
 import (
 	"context"
+	"git.zc0901.com/go/god/lib/prometheus"
 	"git.zc0901.com/go/god/lib/prometheus/metric"
 	"git.zc0901.com/go/god/lib/timex"
 	"google.golang.org/grpc"
@@ -31,9 +32,13 @@ var (
 	})
 )
 
-// 统计rpc服务端请求时长和状态代码
+// UnaryPrometheusInterceptor 统计rpc服务端请求时长和状态代码
 func UnaryPrometheusInterceptor() grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+		if !prometheus.Enabled() {
+			return handler(ctx, req)
+		}
+
 		startTime := timex.Now()
 		resp, err := handler(ctx, req)
 		metricServerReqDur.Observe(int64(timex.Since(startTime)/time.Millisecond), info.FullMethod)

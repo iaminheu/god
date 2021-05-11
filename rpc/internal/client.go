@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"git.zc0901.com/go/god/rpc/internal/balancer/p2c"
-	"git.zc0901.com/go/god/rpc/internal/client_interceptors"
+	"git.zc0901.com/go/god/rpc/internal/clientinterceptors"
 	"git.zc0901.com/go/god/rpc/internal/resolver"
 	"google.golang.org/grpc"
 	"strings"
@@ -18,7 +18,7 @@ const (
 )
 
 type (
-	// 包装 Conn 方法的接口
+	// Client 包装 Conn 方法的接口
 	Client interface {
 		Conn() *grpc.ClientConn
 	}
@@ -67,11 +67,11 @@ func (c *client) buildDialOptions(opts ...ClientOption) []grpc.DialOption {
 		grpc.WithInsecure(),
 		grpc.WithBlock(),
 		WithUnaryClientInterceptors(
-			client_interceptors.TraceInterceptor,                    // 线路跟踪
-			client_interceptors.DurationInterceptor,                 // 慢查询日志
-			client_interceptors.BreakerInterceptor,                  // 自动熔断
-			client_interceptors.PrometheusInterceptor,               // 监控报警
-			client_interceptors.TimeoutInterceptor(cliOpts.Timeout), // 超时控制
+			clientinterceptors.TraceInterceptor,                    // 线路跟踪
+			clientinterceptors.DurationInterceptor,                 // 慢查询日志
+			clientinterceptors.BreakerInterceptor,                  // 自动熔断
+			clientinterceptors.PrometheusInterceptor,               // 监控报警
+			clientinterceptors.TimeoutInterceptor(cliOpts.Timeout), // 超时控制
 		),
 	}
 

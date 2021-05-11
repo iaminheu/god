@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// Unstable 值会在[0, 1]之间上下浮动的偏差结构体
+// Unstable 基于指定偏差生成随机值
 type Unstable struct {
 	deviation float64
 	r         *rand.Rand
@@ -36,6 +36,7 @@ func (u Unstable) AroundDuration(base time.Duration) time.Duration {
 	return val
 }
 
+//AroundInt 返回指定基数和偏差的随机int64
 func (u Unstable) AroundInt(base int64) int64 {
 	u.lock.Lock()
 	val := int64((1 + u.deviation - 2*u.deviation*u.r.Float64()) * float64(base))

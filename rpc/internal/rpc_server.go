@@ -3,7 +3,7 @@ package internal
 import (
 	"git.zc0901.com/go/god/lib/proc"
 	"git.zc0901.com/go/god/lib/stat"
-	"git.zc0901.com/go/god/rpc/internal/server_interceptors"
+	"git.zc0901.com/go/god/rpc/internal/serverinterceptors"
 	"google.golang.org/grpc"
 	"net"
 )
@@ -54,16 +54,16 @@ func (s *server) Start(register RegisterFn) error {
 
 	// 一元拦截器
 	unaryInterceptors := []grpc.UnaryServerInterceptor{
-		server_interceptors.UnaryTraceInterceptor(s.name),   // 链路跟踪
-		server_interceptors.UnaryCrashInterceptor(),         // 异常捕获
-		server_interceptors.UnaryStatInterceptor(s.metrics), // 数据统计
-		server_interceptors.UnaryPrometheusInterceptor(),    // 监控报警
+		serverinterceptors.UnaryTraceInterceptor(s.name),   // 链路跟踪
+		serverinterceptors.UnaryCrashInterceptor(),         // 异常捕获
+		serverinterceptors.UnaryStatInterceptor(s.metrics), // 数据统计
+		serverinterceptors.UnaryPrometheusInterceptor(),    // 监控报警
 	}
 	unaryInterceptors = append(unaryInterceptors, s.unaryInterceptors...)
 
 	// 流式拦截器
 	streamInterceptors := []grpc.StreamServerInterceptor{
-		server_interceptors.StreamCrashInterceptor,
+		serverinterceptors.StreamCrashInterceptor,
 	}
 	streamInterceptors = append(streamInterceptors, s.streamInterceptors...)
 

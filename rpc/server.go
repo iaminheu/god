@@ -6,7 +6,7 @@ import (
 	"git.zc0901.com/go/god/lib/stat"
 	"git.zc0901.com/go/god/rpc/internal"
 	"git.zc0901.com/go/god/rpc/internal/auth"
-	"git.zc0901.com/go/god/rpc/internal/server_interceptors"
+	"git.zc0901.com/go/god/rpc/internal/serverinterceptors"
 	"google.golang.org/grpc"
 	"log"
 	"time"
@@ -90,12 +90,12 @@ func setupInterceptors(server internal.Server, c ServerConf, metrics *stat.Metri
 	// 自动降载（负载卸流拦截器）
 	if c.CpuThreshold > 0 {
 		shedder := load.NewAdaptiveShedder(load.WithCpuThreshold(c.CpuThreshold))
-		server.AddUnaryInterceptors(server_interceptors.UnaryShedderInterceptor(shedder, metrics))
+		server.AddUnaryInterceptors(serverinterceptors.UnaryShedderInterceptor(shedder, metrics))
 	}
 
 	// 超时控制（超时拦截器）
 	if c.Timeout > 0 {
-		server.AddUnaryInterceptors(server_interceptors.UnaryTimeoutInterceptor(
+		server.AddUnaryInterceptors(serverinterceptors.UnaryTimeoutInterceptor(
 			time.Duration(c.Timeout) * time.Millisecond))
 	}
 
@@ -106,8 +106,8 @@ func setupInterceptors(server internal.Server, c ServerConf, metrics *stat.Metri
 			return err
 		}
 
-		server.AddStreamInterceptors(server_interceptors.StreamAuthorizeInterceptor(authenticator))
-		server.AddUnaryInterceptors(server_interceptors.UnaryAuthorizeInterceptor(authenticator))
+		server.AddStreamInterceptors(serverinterceptors.StreamAuthorizeInterceptor(authenticator))
+		server.AddUnaryInterceptors(serverinterceptors.UnaryAuthorizeInterceptor(authenticator))
 	}
 
 	return nil

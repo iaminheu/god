@@ -1,7 +1,8 @@
-package client_interceptors
+package clientinterceptors
 
 import (
 	"context"
+	"git.zc0901.com/go/god/lib/prometheus"
 	"git.zc0901.com/go/god/lib/prometheus/metric"
 	"git.zc0901.com/go/god/lib/timex"
 	"google.golang.org/grpc"
@@ -33,6 +34,10 @@ var (
 
 func PrometheusInterceptor(ctx context.Context, method string, req, reply interface{},
 	conn *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
+	if !prometheus.Enabled() {
+		return invoker(ctx, method, req, reply, conn, opts...)
+	}
+
 	startTime := timex.Now()
 	err := invoker(ctx, method, req, reply, conn, opts...)
 	metricClientReqDur.Observe(int64(timex.Since(startTime)/time.Millisecond), method)

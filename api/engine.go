@@ -45,27 +45,27 @@ func newEngine(c ApiConf) *engine {
 	return e
 }
 
-// 增加一批特定路由
+// AddRoutes 增加一批特定路由
 func (e *engine) AddRoutes(r featuredRoutes) {
 	e.routes = append(e.routes, r)
 }
 
-// 设置未授权回调函数
+// SetUnauthorizedCallback 设置未授权回调函数
 func (e *engine) SetUnauthorizedCallback(callback handler.UnauthorizedCallback) {
 	e.unauthorizedCallback = callback
 }
 
-// 设置未签名回调函数
+// SetUnsignedCallback 设置未签名回调函数
 func (e *engine) SetUnsignedCallback(callback handler.UnsignedCallback) {
 	e.unsignedCallback = callback
 }
 
-// 启动 API 引擎
+// Start 启动 API 引擎
 func (e *engine) Start() error {
 	return e.StartWithRouter(router.NewRouter())
 }
 
-// 启动路由器
+// StartWithRouter 启动路由器
 func (e *engine) StartWithRouter(router router.Router) error {
 	if err := e.bindRoutes(router); err != nil {
 		return err
@@ -93,17 +93,17 @@ func (e *engine) bindRoutes(router router.Router) error {
 func (e *engine) bindRoute(fr featuredRoutes, router router.Router, metrics *stat.Metrics,
 	route Route, verifier func(chain alice.Chain) alice.Chain) error {
 	chain := alice.New(
-		handler.TraceHandler,              // 链路追踪
-		e.getLogHandler(),                 // 日志记录
-		handler.MaxConns(e.conf.MaxConns), // 最大请求连接数
+		handler.TraceHandler,                                                   // 链路追踪
+		e.getLogHandler(),                                                      // 日志记录
+		handler.PrometheusHandler(route.Path),                                  // 请求时长和响应码监控
+		handler.MaxConns(e.conf.MaxConns),                                      // 最大请求连接数
 		handler.BreakerHandler(route.Method, route.Path, metrics),              // 自动熔断
 		handler.ShedderHandler(e.getShedder(fr.priority), metrics),             // 负载均衡
 		handler.TimeoutHandler(time.Duration(e.conf.Timeout)*time.Millisecond), // 超时控制
-		handler.RecoverHandler,                   // 异常捕获
-		handler.MetricHandler(metrics),           // 耗时监控
-		handler.PrometheusHandler(route.Path),    // 请求时长和响应码监控
-		handler.MaxBytesHandler(e.conf.MaxBytes), // 最大字节码
-		handler.GzipHandler,                      // Gzip压缩
+		handler.RecoverHandler,                                                 // 异常捕获
+		handler.MetricHandler(metrics),                                         // 耗时监控
+		handler.MaxBytesHandler(e.conf.MaxBytes),                               // 最大字节码
+		handler.GzipHandler,                                                    // Gzip压缩
 	)
 	chain = e.appendAuthHandler(fr, chain, verifier) // JWT鉴权
 

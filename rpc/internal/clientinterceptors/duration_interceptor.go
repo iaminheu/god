@@ -1,4 +1,4 @@
-package client_interceptors
+package clientinterceptors
 
 import (
 	"context"

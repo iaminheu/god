@@ -90,6 +90,7 @@ func MapReduce(generate GenerateFunc, mapper MapperFunc, reducer ReducerFunc, op
 	return MapReduceWithSource(source, mapper, reducer, opts...)
 }
 
+//MapReduceWithSource 映射源中的所有元素，并使用指定的reducer归纳输出的元素。
 func MapReduceWithSource(source <-chan interface{}, mapper MapperFunc, reducer ReducerFunc,
 	opts ...Option) (interface{}, error) {
 	options := buildOptions(opts...)
@@ -118,6 +119,8 @@ func MapReduceWithSource(source <-chan interface{}, mapper MapperFunc, reducer R
 
 	go func() {
 		defer func() {
+			drain(collector)
+
 			if r := recover(); r != nil {
 				cancel(fmt.Errorf("%v", r))
 			} else {
@@ -125,7 +128,6 @@ func MapReduceWithSource(source <-chan interface{}, mapper MapperFunc, reducer R
 			}
 		}()
 		reducer(collector, writer, cancel)
-		drain(collector)
 	}()
 
 	go executeMappers(func(item interface{}, w Writer) {
@@ -159,6 +161,7 @@ func MapVoid(generate GenerateFunc, mapper VoidMapFunc, opts ...Option) {
 	}, opts...))
 }
 
+//WithWorkers 自定义MapReduce的worker数量。
 func WithWorkers(workers int) Option {
 	return func(opts *mapReduceOptions) {
 		if workers < minWorkers {

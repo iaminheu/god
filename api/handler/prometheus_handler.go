@@ -2,6 +2,7 @@ package handler
 
 import (
 	"git.zc0901.com/go/god/api/internal/security"
+	"git.zc0901.com/go/god/lib/prometheus"
 	"git.zc0901.com/go/god/lib/prometheus/metric"
 	"git.zc0901.com/go/god/lib/timex"
 	"net/http"
@@ -30,9 +31,13 @@ var (
 	})
 )
 
-// API 监控中间件
+// PrometheusHandler API 监控中间件
 func PrometheusHandler(path string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
+		if !prometheus.Enabled() {
+			return next
+		}
+
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			startTime := timex.Now()
 			cw := &security.WithCodeResponseWriter{Writer: w}
