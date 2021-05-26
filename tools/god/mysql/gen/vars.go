@@ -1,10 +1,11 @@
 package gen
 
 import (
+	"strings"
+
 	"git.zc0901.com/go/god/lib/stringx"
 	"git.zc0901.com/go/god/tools/god/mysql/tpl"
 	"git.zc0901.com/go/god/tools/god/util"
-	"strings"
 )
 
 func genVars(table Table, withCache bool) (string, error) {

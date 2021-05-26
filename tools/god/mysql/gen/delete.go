@@ -1,11 +1,12 @@
 package gen
 
 import (
+	"strings"
+
 	"git.zc0901.com/go/god/lib/collection"
 	"git.zc0901.com/go/god/lib/stringx"
 	"git.zc0901.com/go/god/tools/god/mysql/tpl"
 	"git.zc0901.com/go/god/tools/god/util"
-	"strings"
 )
 
 func genDelete(table Table, withCache bool) (string, error) {
@@ -19,7 +20,7 @@ func genDelete(table Table, withCache bool) (string, error) {
 		}
 		keyNamesSet.AddStr(key.KeyName)
 	}
-	var containsIndexCache = false
+	containsIndexCache := false
 	for _, item := range table.Fields {
 		if item.IsUniqueKey {
 			containsIndexCache = true
@@ -54,7 +55,7 @@ func genTxDelete(table Table, withCache bool) (string, error) {
 		}
 		keyNamesSet.AddStr(key.KeyName)
 	}
-	var containsIndexCache = false
+	containsIndexCache := false
 	for _, item := range table.Fields {
 		if item.IsUniqueKey {
 			containsIndexCache = true

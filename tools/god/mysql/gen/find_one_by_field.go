@@ -2,10 +2,11 @@ package gen
 
 import (
 	"fmt"
+	"strings"
+
 	"git.zc0901.com/go/god/lib/stringx"
 	"git.zc0901.com/go/god/tools/god/mysql/tpl"
 	"git.zc0901.com/go/god/tools/god/util"
-	"strings"
 )
 
 func genFindOneByField(table Table, withCache bool) (string, error) {

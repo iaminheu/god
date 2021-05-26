@@ -2,15 +2,16 @@ package gen
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"strings"
+
 	"git.zc0901.com/go/god/lib/fs"
 	"git.zc0901.com/go/god/lib/stringx"
 	"git.zc0901.com/go/god/tools/god/mysql/parser"
 	"git.zc0901.com/go/god/tools/god/mysql/tpl"
 	"git.zc0901.com/go/god/tools/god/util"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"strings"
 )
 
 const (
@@ -190,7 +191,7 @@ func (g *ModelGenerator) genModelCode(table parser.Table, withCache bool) (strin
 	}
 
 	// 合成查找代码段
-	var findCode = make([]string, 0)
+	findCode := make([]string, 0)
 	findCode = append(findCode, findOneCode, findManyCode, findOneByFieldCode)
 
 	// 生成更新代码段

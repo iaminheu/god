@@ -1,10 +1,11 @@
 package gen
 
 import (
+	"strings"
+
 	"git.zc0901.com/go/god/tools/god/mysql/parser"
 	"git.zc0901.com/go/god/tools/god/mysql/tpl"
 	"git.zc0901.com/go/god/tools/god/util"
-	"strings"
 )
 
 func genFields(fields []parser.Field) (string, error) {

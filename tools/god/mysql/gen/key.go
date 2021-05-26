@@ -2,6 +2,7 @@ package gen
 
 import (
 	"fmt"
+
 	"git.zc0901.com/go/god/lib/stringx"
 	"git.zc0901.com/go/god/tools/god/mysql/parser"
 )
