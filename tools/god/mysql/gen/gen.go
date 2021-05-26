@@ -19,8 +19,9 @@ const (
 
 type (
 	ModelGenerator struct {
-		ddlList []string
-		dir     string
+		database string
+		ddlList  []string
+		dir      string
 		util.Console
 	}
 
@@ -55,6 +56,12 @@ func newDefaultOption() Option {
 func WithConsoleOption(c util.Console) Option {
 	return func(gen *ModelGenerator) {
 		gen.Console = c
+	}
+}
+
+func WithDatabaseOption(database string) Option {
+	return func(gen *ModelGenerator) {
+		gen.database = database
 	}
 }
 
@@ -119,7 +126,7 @@ func (g *ModelGenerator) genFromDDL(withCache bool) (map[string]string, error) {
 
 func (g *ModelGenerator) genModelCode(table parser.Table, withCache bool) (string, error) {
 	// 生成缓存键代码
-	cacheKeys, err := genCacheKeys(table)
+	cacheKeys, err := genCacheKeys(g.database, table)
 	if err != nil {
 		return "", err
 	}

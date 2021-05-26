@@ -37,7 +37,7 @@ func (s String) Title() string {
 	return strings.Title(s.source)
 }
 
-// snake->camel(upper start)
+// ToCamel snake->camel(upper start)
 func (s String) ToCamel() string {
 	list := s.Split(func(r rune) bool {
 		return r == '_'
@@ -49,7 +49,7 @@ func (s String) ToCamel() string {
 	return strings.Join(target, "")
 }
 
-// camel->snake
+// ToSnake camel->snake
 func (s String) ToSnake() string {
 	list := s.Split(func(r rune) bool {
 		return unicode.IsUpper(r)
@@ -74,7 +74,7 @@ func (s String) UnTitle() string {
 	return string(unicode.ToLower(r)) + s.source[1:]
 }
 
-// it will not ignore spaces
+// Split it will not ignore spaces
 func (s String) Split(fn func(r rune) bool, remove bool) []string {
 	if s.IsEmptyOrSpace() {
 		return nil

@@ -38,7 +38,7 @@ func GenCodeFromDSN(ctx *cli.Context) error {
 	}
 
 	tables := collection.NewSet()
-	for _, table := range strings.Split(table, ",") {
+	for _, table = range strings.Split(table, ",") {
 		table = strings.TrimSpace(table)
 		if len(table) == 0 {
 			continue
@@ -64,7 +64,7 @@ func GenCodeFromDSN(ctx *cli.Context) error {
 	}
 
 	//fmt.Println(strings.Join(ddlList, "\n"), dir, cache)
-	generator := gen.NewModelGenerator(ddlList, dir, gen.WithConsoleOption(log))
+	generator := gen.NewModelGenerator(ddlList, dir, gen.WithConsoleOption(log), gen.WithDatabaseOption(database))
 	err = generator.Start(cache)
 	if err != nil {
 		log.Error("", err)

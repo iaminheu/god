@@ -73,7 +73,7 @@ func NewConn(driverName, dataSourceName string, opts ...Option) Conn {
 	return c
 }
 
-// 如果 dest 字段不写tag的话，系统按顺序配对，此时需要与sql中的查询字段顺序一致
+// Query 如果 dest 字段不写tag的话，系统按顺序配对，此时需要与sql中的查询字段顺序一致
 // 如果 dest 字段写了tag的话，系统按名称配对，此时可以和sql中的查询字段顺序不同
 func (c *conn) Query(dest interface{}, query string, args ...interface{}) error {
 	var scanError error
