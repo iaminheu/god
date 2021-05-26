@@ -3,6 +3,7 @@ package parser
 import (
 	"errors"
 	"fmt"
+
 	"git.zc0901.com/go/god/lib/stringx"
 	"git.zc0901.com/go/god/tools/god/mysql/converter"
 	"github.com/xwb1989/sqlparser"
@@ -95,7 +96,7 @@ func Parse(ddl string) (*Table, error) {
 		columnName := column.Column.String()
 		camelColumnName := stringx.From(columnName).ToCamel()
 		// 默认不使用 createdAt|updatedAt
-		if camelColumnName == "CreatedAt" || camelColumnName == "UpdatedAt" {
+		if camelColumnName == "CreatedAt" || camelColumnName == "UpdatedAt" || camelColumnName == "CreateTime" || camelColumnName == "UpdateTime" {
 			continue
 		}
 		if info.Unique {
@@ -117,8 +118,8 @@ func Parse(ddl string) (*Table, error) {
 		if column.Type.Comment != nil {
 			comment = string(column.Type.Comment.Val)
 		}
-		//dataType, err := converter.ConvertDataType(column.Type.Type)
-		var isDefaultNull = true
+		// dataType, err := converter.ConvertDataType(column.Type.Type)
+		isDefaultNull := true
 		if column.Type.NotNull {
 			isDefaultNull = false
 		} else {

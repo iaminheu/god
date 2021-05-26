@@ -37,7 +37,7 @@ func genCacheKeys(database string, table parser.Table) (map[string]Key, error) {
 
 		camelFieldName := field.Name.ToCamel()
 		lowerStartCamelFieldName := stringx.From(camelFieldName).UnTitle()
-		left := fmt.Sprintf("cache%s%s%sPrefix", database, camelTableName, camelFieldName)
+		left := fmt.Sprintf("cache%s%s%sPrefix", stringx.From(database).ToCamel(), camelTableName, camelFieldName)
 		right := fmt.Sprintf("cache:%s:%s:%s:", database, lowerStartCamelTableName, lowerStartCamelFieldName)
 		keyName := fmt.Sprintf("%s%sKey", lowerStartCamelTableName, camelFieldName)
 		m[field.Name.Source()] = Key{

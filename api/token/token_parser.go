@@ -1,29 +1,30 @@
 package token
 
 import (
-	"git.zc0901.com/go/god/lib/timex"
-	"github.com/dgrijalva/jwt-go"
-	"github.com/dgrijalva/jwt-go/request"
 	"net/http"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"git.zc0901.com/go/god/lib/timex"
+	"github.com/dgrijalva/jwt-go"
+	"github.com/dgrijalva/jwt-go/request"
 )
 
 const claimHistoryResetDuration = time.Hour * 24
 
 type (
-	TokenParser struct {
+	Parser struct {
 		resetTime     time.Duration
 		resetDuration time.Duration
 		history       sync.Map
 	}
 
-	ParseOption func(parser *TokenParser)
+	ParseOption func(parser *Parser)
 )
 
-func NewTokenParser(opts ...ParseOption) *TokenParser {
-	parser := &TokenParser{
+func NewTokenParser(opts ...ParseOption) *Parser {
+	parser := &Parser{
 		resetTime:     timex.Now(),
 		resetDuration: claimHistoryResetDuration,
 	}
@@ -35,7 +36,7 @@ func NewTokenParser(opts ...ParseOption) *TokenParser {
 	return parser
 }
 
-func (tp *TokenParser) ParseToken(r *http.Request, secret, prevSecret string) (*jwt.Token, error) {
+func (tp *Parser) ParseToken(r *http.Request, secret, prevSecret string) (*jwt.Token, error) {
 	var token *jwt.Token
 	var err error
 
@@ -73,14 +74,14 @@ func (tp *TokenParser) ParseToken(r *http.Request, secret, prevSecret string) (*
 	return token, nil
 }
 
-func (tp *TokenParser) doParseToken(r *http.Request, secret string) (*jwt.Token, error) {
+func (tp *Parser) doParseToken(r *http.Request, secret string) (*jwt.Token, error) {
 	return request.ParseFromRequest(r, request.AuthorizationHeaderExtractor,
 		func(token *jwt.Token) (interface{}, error) {
 			return []byte(secret), nil
 		}, request.WithParser(newParser()))
 }
 
-func (tp *TokenParser) incrementCount(secret string) {
+func (tp *Parser) incrementCount(secret string) {
 	now := timex.Now()
 	if tp.resetTime+tp.resetDuration < now {
 		tp.history.Range(func(key, value interface{}) bool {
@@ -98,7 +99,7 @@ func (tp *TokenParser) incrementCount(secret string) {
 	}
 }
 
-func (tp *TokenParser) loadCount(secret string) uint64 {
+func (tp *Parser) loadCount(secret string) uint64 {
 	value, ok := tp.history.Load(secret)
 	if ok {
 		return *value.(*uint64)
@@ -108,7 +109,7 @@ func (tp *TokenParser) loadCount(secret string) uint64 {
 }
 
 func WithResetDuration(duration time.Duration) ParseOption {
-	return func(parser *TokenParser) {
+	return func(parser *Parser) {
 		parser.resetDuration = duration
 	}
 }

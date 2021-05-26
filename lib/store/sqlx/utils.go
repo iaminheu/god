@@ -3,55 +3,87 @@ package sqlx
 import (
 	"database/sql"
 	"fmt"
+	"reflect"
+	"strconv"
+	"strings"
+
 	"git.zc0901.com/go/god/lib/logx"
 	"git.zc0901.com/go/god/lib/mapping"
-	"reflect"
-	"strings"
 )
 
-// formatQuery 格式查询字符串和参数
-func formatQuery(query string, args ...interface{}) (string, error) {
-	argNum := len(args)
-	if argNum == 0 {
+// format 格式查询字符串和参数
+func format(query string, args ...interface{}) (string, error) {
+	numArgs := len(args)
+	if numArgs == 0 {
 		return query, nil
 	}
 
 	var b strings.Builder
-	argIdx := 0
-	for _, char := range query {
-		if char != '?' {
-			b.WriteRune(char)
-		} else {
-			if argIdx >= argNum {
-				return "", fmt.Errorf("错误: 参数个数【少于】问号个数")
+	var argIdx int
+	bytes := len(query)
+
+	for i := 0; i < bytes; i++ {
+		ch := query[i]
+		switch ch {
+		case '?':
+			if argIdx >= numArgs {
+				return "", fmt.Errorf("错误：SQL中有 %d 个问号(?)，但提供的参数不够", argIdx)
 			}
 
-			arg := args[argIdx]
+			writeValue(&b, args[argIdx])
 			argIdx++
-
-			switch at := arg.(type) {
-			case bool:
-				if at {
-					b.WriteByte('1')
-				} else {
-					b.WriteByte('0')
+		case '$':
+			var j int
+			for j := i + 1; j < bytes; j++ {
+				char := query[j]
+				if char < '0' || char > '9' {
+					break
 				}
-			case string:
-				b.WriteByte('\'')
-				b.WriteString(escape(at))
-				b.WriteByte('\'')
-			default:
-				// 表示其他类型如 interface{} 的字符串形式
-				b.WriteString(mapping.Repr(at))
 			}
+			if j > i+1 {
+				index, err := strconv.Atoi(query[i+1 : j])
+				if err != nil {
+					return "", err
+				}
+
+				if index > argIdx {
+					argIdx = index
+				}
+				index--
+				if index < 0 || index >= numArgs {
+					return "", fmt.Errorf("错误：SQL index %d 越界", index)
+				}
+
+				writeValue(&b, args[index])
+				i = j - 1
+			}
+		default:
+			b.WriteByte(ch)
 		}
 	}
 
-	if argIdx < argNum {
-		return "", fmt.Errorf("参数个数【多于】问号个数")
+	if argIdx < numArgs {
+		return "", fmt.Errorf("错误：提供了 %d 个参数，和SQL不匹配", argIdx)
 	}
 
 	return b.String(), nil
+}
+
+func writeValue(buf *strings.Builder, arg interface{}) {
+	switch v := arg.(type) {
+	case bool:
+		if v {
+			buf.WriteByte('1')
+		} else {
+			buf.WriteByte('0')
+		}
+	case string:
+		buf.WriteByte('\'')
+		buf.WriteString(escape(v))
+		buf.WriteByte('\'')
+	default:
+		buf.WriteString(mapping.Repr(v))
+	}
 }
 
 // escape 字符串转义
@@ -123,66 +155,60 @@ func desensitize(dsn string) string {
 }
 
 // scan 将数据库结果转换为Golang的数据类型
-func scan(rows *sql.Rows, dest interface{}) error {
+func scan(dest interface{}, rows *sql.Rows) error {
+	if !rows.Next() {
+		if err := rows.Err(); err != nil {
+			return err
+		}
+		return ErrNotFound
+	}
+
 	// 验证接收目标必须为有效非空指针
-	dv := reflect.ValueOf(dest)
-	if err := mapping.ValidatePtr(&dv); err != nil {
+	rv := reflect.ValueOf(dest)
+	if err := mapping.ValidatePtr(&rv); err != nil {
 		return err
 	}
 
 	// 将行数据扫描进目标结果
-	dte := reflect.TypeOf(dest).Elem()
-	dve := dv.Elem()
-	switch dte.Kind() {
+	rte := reflect.TypeOf(dest).Elem()
+	rve := rv.Elem()
+	switch rte.Kind() {
 	case reflect.Bool,
 		reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
 		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
 		reflect.Float32, reflect.Float64,
 		reflect.String:
-		if dve.CanSet() {
-			if !rows.Next() {
-				if err := rows.Err(); err != nil {
-					return err
-				}
-				return ErrNotFound
-			}
+		if rve.CanSet() {
 			return rows.Scan(dest)
-		} else {
-			return ErrNotSettable
 		}
+		return ErrNotSettable
 	case reflect.Struct:
-		if !rows.Next() {
-			if err := rows.Err(); err != nil {
-				return err
-			}
-			return ErrNotFound
-		}
 		// 获取行的列名切片
-		colNames, err := rows.Columns()
+		columns, err := rows.Columns()
 		if err != nil {
 			return err
 		}
 
-		if values, err := mapStructFieldsIntoSlice(dve, colNames); err != nil {
+		values, err := mapStructFieldsIntoSlice(rve, columns)
+		if err != nil {
 			return err
-		} else {
-			return rows.Scan(values...)
 		}
+		return rows.Scan(values...)
 	case reflect.Slice:
-		if !dve.CanSet() {
+		if !rve.CanSet() {
 			return ErrNotSettable
 		}
 
-		ptr := dte.Elem().Kind() == reflect.Ptr
+		ptr := rte.Elem().Kind() == reflect.Ptr
 		appendFn := func(item reflect.Value) {
 			if ptr {
-				dve.Set(reflect.Append(dve, item))
+				rve.Set(reflect.Append(rve, item))
 			} else {
-				dve.Set(reflect.Append(dve, reflect.Indirect(item)))
+				rve.Set(reflect.Append(rve, reflect.Indirect(item)))
 			}
 		}
 		fillFn := func(value interface{}) error {
-			if dve.CanSet() {
+			if rve.CanSet() {
 				if err := rows.Scan(value); err != nil {
 					return err
 				} else {
@@ -193,7 +219,7 @@ func scan(rows *sql.Rows, dest interface{}) error {
 			return ErrNotSettable
 		}
 
-		base := mapping.Deref(dte.Elem())
+		base := mapping.Deref(rte.Elem())
 		switch base.Kind() {
 		case reflect.String, reflect.Bool, reflect.Float32, reflect.Float64,
 			reflect.Int, reflect.Int8, reflect.Int32, reflect.Int64,
@@ -234,7 +260,7 @@ func scan(rows *sql.Rows, dest interface{}) error {
 
 // 映射目标结构体字段到查询结果列，并赋初值
 func mapStructFieldsIntoSlice(dve reflect.Value, columns []string) ([]interface{}, error) {
-	columnValueMap, err := getColumnValueMap(dve)
+	columnValueMap, err := getFieldValueMap(dve)
 	if err != nil {
 		return nil, err
 	}
@@ -276,17 +302,17 @@ func mapStructFieldsIntoSlice(dve reflect.Value, columns []string) ([]interface{
 	return values, nil
 }
 
-// getColumnValueMap: 获取结构体字段中标记的列名——值映射关系
+// getFieldValueMap: 获取结构体字段中标记的字段名——值映射关系
 // 在编写字段tag的情况下，可以确保结构体字段和SQL选择列不一致的情况下不出错
-func getColumnValueMap(dve reflect.Value) (map[string]interface{}, error) {
+func getFieldValueMap(dve reflect.Value) (map[string]interface{}, error) {
 	t := mapping.Deref(dve.Type())
 	size := t.NumField()
 	result := make(map[string]interface{}, size)
 
 	for i := 0; i < size; i++ {
-		// 取字段标记中的列名，如`conn:"total"` 中的 total
-		columnName := getColumnName(t.Field(i))
-		if len(columnName) == 0 {
+		// 取字段标记中的列名，如`db:"total"` 中的 total
+		fieldName := getFieldName(t.Field(i))
+		if len(fieldName) == 0 {
 			return nil, nil
 		}
 
@@ -301,26 +327,25 @@ func getColumnValueMap(dve reflect.Value) (map[string]interface{}, error) {
 				typ := mapping.Deref(field.Type())
 				field.Set(reflect.New(typ))
 			}
-			result[columnName] = field.Interface()
+			result[fieldName] = field.Interface()
 		default:
 			if !field.CanAddr() || !field.Addr().CanInterface() {
 				return nil, ErrNotReadableValue
 			}
-			result[columnName] = field.Addr().Interface()
+			result[fieldName] = field.Addr().Interface()
 		}
 	}
 
 	return result, nil
 }
 
-// getColumnName 解析结构体字段中的数据库字段标记
-func getColumnName(field reflect.StructField) string {
+// getFieldName 获取结构体字段中标记的中的数据库字段名
+func getFieldName(field reflect.StructField) string {
 	key := field.Tag.Get(tagName)
 	if len(key) == 0 {
 		return ""
-	} else {
-		return strings.Split(key, ",")[0]
 	}
+	return strings.Split(key, ",")[0]
 }
 
 // getFields 递归获取目标结构体的字段列表

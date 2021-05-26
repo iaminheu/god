@@ -8,12 +8,13 @@ const (
 )
 
 var (
-	ErrDuplicateItem  = errors.New("重复的路由路径")
-	ErrDuplicateSlash = errors.New("重复的 /")
-	ErrEmptyItem      = errors.New("路由不能为空")
-	ErrInvalidState   = errors.New("路由搜索树处在无效状态")
-	ErrNotFromRoot    = errors.New("路由路径必须以 / 开头")
-	NotFound          Result // 未找到
+	errDuplicateItem  = errors.New("路由路径不能重复")
+	errDuplicateSlash = errors.New("/ 不能重复")
+	errEmptyItem      = errors.New("路由不能为空")
+	errInvalidState   = errors.New("路由树无效")
+	errNotFromRoot    = errors.New("路由应以 / 开头")
+
+	NotFound Result // 404 未找到页面结果
 )
 
 type (
@@ -45,11 +46,11 @@ func NewTree() *Tree {
 
 func (t *Tree) Add(route string, item interface{}) error {
 	if len(route) == 0 || route[0] != slash {
-		return ErrNotFromRoot
+		return errNotFromRoot
 	}
 
 	if item == nil {
-		return ErrEmptyItem
+		return errEmptyItem
 	}
 
 	return add(t.root, route[1:], item)
@@ -72,34 +73,42 @@ func (t *Tree) next(n *node, route string, result *Result) bool {
 	}
 
 	for i := range route {
-		if route[i] == slash {
-			token := route[:i]
-			for _, children := range n.children {
-				for k, v := range children {
-					if r := match(k, token); r.found {
-						if t.next(v, route[i+1:], result) {
-							if r.named {
-								addParam(result, r.key, r.value)
-							}
+		if route[i] != slash {
+			continue
+		}
 
-							return true
-						}
-					}
-				}
+		token := route[:i]
+		return n.forEach(func(k string, v *node) bool {
+			r := match(k, token)
+			if !r.found || !t.next(v, route[i+1:], result) {
+				return false
+			}
+			if r.named {
+				addParam(result, r.key, r.value)
 			}
 
-			return false
-		}
+			return true
+		})
 	}
 
-	for _, children := range n.children {
-		for k, v := range children {
-			if r := match(k, route); r.found && v.item != nil {
-				result.Item = v.item
-				if r.named {
-					addParam(result, r.key, r.value)
-				}
+	return n.forEach(func(k string, v *node) bool {
+		if r := match(k, route); r.found && v.item != nil {
+			result.Item = v.item
+			if r.named {
+				addParam(result, r.key, r.value)
+			}
 
+			return true
+		}
+
+		return false
+	})
+}
+
+func (n *node) forEach(fn func(string, *node) bool) bool {
+	for _, c := range n.children {
+		for k, v := range c {
+			if fn(k, v) {
 				return true
 			}
 		}
@@ -133,10 +142,9 @@ func match(pat string, token string) innerResult {
 }
 
 func add(n *node, route string, item interface{}) error {
-	// TODO 添加根目录？
 	if len(route) == 0 {
 		if n.item != nil {
-			return ErrDuplicateItem
+			return errDuplicateItem
 		}
 
 		n.item = item
@@ -144,30 +152,33 @@ func add(n *node, route string, item interface{}) error {
 	}
 
 	if route[0] == slash {
-		return ErrDuplicateSlash
+		return errDuplicateSlash
 	}
 
 	for i := range route {
-		if route[i] == slash {
-			token := route[:i]
-			children := n.getChildren(token)
-			if child, ok := children[token]; ok {
-				if child != nil {
-					return add(child, route[i+1:], item)
-				}
-				return ErrInvalidState
+		if route[i] != slash {
+			continue
+		}
+
+		token := route[:i]
+		children := n.getChildren(token)
+		if child, ok := children[token]; ok {
+			if child != nil {
+				return add(child, route[i+1:], item)
 			}
 
-			child := newNode(nil)
-			children[token] = child
-			return add(child, route[i+1:], item)
+			return errInvalidState
 		}
+
+		child := newNode(nil)
+		children[token] = child
+		return add(child, route[i+1:], item)
 	}
 
 	children := n.getChildren(route)
 	if child, ok := children[route]; ok {
 		if child.item != nil {
-			return ErrDuplicateItem
+			return errDuplicateItem
 		}
 
 		child.item = item
@@ -191,7 +202,6 @@ func newNode(item interface{}) *node {
 func (n *node) getChildren(route string) map[string]*node {
 	if len(route) > 0 && route[0] == colon {
 		return n.children[1]
-	} else {
-		return n.children[0]
 	}
+	return n.children[0]
 }

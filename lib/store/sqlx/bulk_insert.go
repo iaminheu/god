@@ -3,11 +3,12 @@ package sqlx
 import (
 	"database/sql"
 	"fmt"
+	"strings"
+	"time"
+
 	"git.zc0901.com/go/god/lib/dispatcher"
 	"git.zc0901.com/go/god/lib/logx"
 	"git.zc0901.com/go/god/lib/stringx"
-	"strings"
-	"time"
 )
 
 const (
@@ -24,7 +25,7 @@ const (
 var emptyBulkStmt bulkStmt
 
 type (
-	// 批量插入器结构
+	// BulkInserter 批量插入器结构
 	BulkInserter struct {
 		// 批量插入语句
 		stmt bulkStmt
@@ -57,7 +58,7 @@ type (
 		resultHandler ResultHandler
 	}
 
-	// 执行结果处理器
+	// ResultHandler 执行结果处理器
 	ResultHandler func(sql.Result, error)
 )
 
@@ -80,7 +81,7 @@ func NewBulkInserter(c Conn, stmt string) (*BulkInserter, error) {
 	}, nil
 }
 
-// NewBulkInserter 新建批量插入器（带有事务）
+// NewBulkInserterWithTx 新建批量插入器（带有事务）
 func NewBulkInserterWithTx(c TxSession, stmt string) (*BulkInserter, error) {
 	insertStmt, err := parseBulkInsertStmt(stmt)
 	if err != nil {
@@ -100,7 +101,7 @@ func NewBulkInserterWithTx(c TxSession, stmt string) (*BulkInserter, error) {
 }
 
 func (bi *BulkInserter) Insert(args ...interface{}) error {
-	value, err := formatQuery(bi.stmt.valueFormat, args...)
+	value, err := format(bi.stmt.valueFormat, args...)
 	if err != nil {
 		return err
 	}
@@ -114,7 +115,7 @@ func (bi *BulkInserter) Flush() bool {
 	return bi.dispatcher.Flush()
 }
 
-// SetResultHandler 设置结果处理器
+// SetRequestHandler 设置结果处理器
 func (bi *BulkInserter) SetRequestHandler(handler ResultHandler) {
 	bi.dispatcher.Sync(func() {
 		bi.manager.resultHandler = handler

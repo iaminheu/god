@@ -1,8 +1,9 @@
 package search
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 type mockedRoute struct {
@@ -146,9 +147,9 @@ func TestAddDuplicate(t *testing.T) {
 	err := tree.Add("/a/b", 1)
 	assert.Nil(t, err)
 	err = tree.Add("/a/b", 2)
-	assert.Equal(t, ErrDuplicateItem, err)
+	assert.Equal(t, errDuplicateItem, err)
 	err = tree.Add("/a/b/", 2)
-	assert.Equal(t, ErrDuplicateItem, err)
+	assert.Equal(t, errDuplicateItem, err)
 }
 
 func TestPlain(t *testing.T) {
@@ -164,19 +165,19 @@ func TestPlain(t *testing.T) {
 func TestSearchWithDoubleSlashes(t *testing.T) {
 	tree := NewTree()
 	err := tree.Add("//a", 1)
-	assert.Error(t, ErrDuplicateSlash, err)
+	assert.Error(t, errDuplicateSlash, err)
 }
 
 func TestSearchInvalidRoute(t *testing.T) {
 	tree := NewTree()
 	err := tree.Add("", 1)
-	assert.Equal(t, ErrNotFromRoot, err)
+	assert.Equal(t, errNotFromRoot, err)
 	err = tree.Add("bad", 1)
-	assert.Equal(t, ErrNotFromRoot, err)
+	assert.Equal(t, errNotFromRoot, err)
 }
 
 func TestSearchInvalidItem(t *testing.T) {
 	tree := NewTree()
 	err := tree.Add("/", nil)
-	assert.Equal(t, ErrEmptyItem, err)
+	assert.Equal(t, errEmptyItem, err)
 }

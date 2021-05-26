@@ -4,12 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"git.zc0901.com/go/god/lib/stringx"
 	"math"
 	"reflect"
 	"strconv"
 	"strings"
 	"sync"
+
+	"git.zc0901.com/go/god/lib/stringx"
 )
 
 const (
@@ -114,7 +115,7 @@ func Repr(v interface{}) string {
 // ValidatePtr 验证值是否为有效的指针，无效则报错
 func ValidatePtr(v *reflect.Value) error {
 	if !v.IsValid() || v.Kind() != reflect.Ptr || v.IsNil() {
-		return fmt.Errorf("非有效指针: %v", v)
+		return fmt.Errorf("无效指针: %v", v)
 	}
 	return nil
 }

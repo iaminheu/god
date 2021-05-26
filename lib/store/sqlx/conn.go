@@ -3,8 +3,9 @@ package sqlx
 import (
 	"database/sql"
 	"errors"
-	"git.zc0901.com/go/god/lib/breaker"
 	"time"
+
+	"git.zc0901.com/go/god/lib/breaker"
 )
 
 const (
@@ -23,10 +24,11 @@ var (
 )
 
 type (
-	// Session 提供外部查询和执行的会话接口
+	// Session 该接口表示一个原始数据库连接或事务的会话。
 	Session interface {
 		Query(dest interface{}, query string, args ...interface{}) error
 		Exec(query string, args ...interface{}) (sql.Result, error)
+		Prepare(query string) (StmtSession, error)
 	}
 
 	// 提供内部查询和执行的会话接口
@@ -44,10 +46,10 @@ type (
 		Transact(fn TransactFn) error
 	}
 
-	// conn 内部使用的数据库连接，封装查询、执行、事务及断路器支持
+	// conn 线程安全。提供内部使用的数据库连接，封装查询、执行、事务及断路器支持。
 	conn struct {
 		driverName     string          // 驱动名称，支持 mysql/postgres/clickhouse 等 command-like
-		dataSourceName string          // 数据源名称 Data Source Name，既数据库连接字符串
+		dataSourceName string          // 数据源名称 Data Source Name（DSN），既数据库连接字符串
 		beginTx        beginTxFn       // 可开始事务
 		brk            breaker.Breaker // 断路器，用于后端故障拒绝服务
 		accept         func(reqError error) bool
@@ -87,7 +89,7 @@ func (c *conn) Query(dest interface{}, query string, args ...interface{}) error 
 
 		// 做数据库查询
 		return doQuery(db, func(rows *sql.Rows) error {
-			scanError = scan(rows, dest)
+			scanError = scan(dest, rows)
 			return scanError
 		}, query, args...)
 	}, func(reqError error) bool {
@@ -97,11 +99,9 @@ func (c *conn) Query(dest interface{}, query string, args ...interface{}) error 
 
 func (c *conn) Exec(query string, args ...interface{}) (result sql.Result, err error) {
 	err = c.brk.DoWithAcceptable(func() error {
-		//fmt.Println("获取连接并做数据库执行")
-		//fmt.Println()
-
 		// 获取数据库连接
-		db, err := getConn(c.driverName, c.dataSourceName)
+		var db *sql.DB
+		db, err = getConn(c.driverName, c.dataSourceName)
 		if err != nil {
 			logConnError(c.dataSourceName, err)
 			return err
@@ -114,10 +114,36 @@ func (c *conn) Exec(query string, args ...interface{}) (result sql.Result, err e
 	return
 }
 
+func (c *conn) Prepare(query string) (stmt StmtSession, err error) {
+	err = c.brk.DoWithAcceptable(func() error {
+		// 获取数据库连接
+		var db *sql.DB
+		db, err = getConn(c.driverName, c.dataSourceName)
+		if err != nil {
+			logConnError(c.dataSourceName, err)
+			return err
+		}
+
+		// 预编译查询语句
+		st, err := db.Prepare(query)
+		if err != nil {
+			return err
+		}
+
+		stmt = statement{
+			query: query,
+			stmt:  st,
+		}
+
+		return nil
+	}, c.acceptable)
+
+	return
+}
+
+// Transact 执行事务，有错自动回滚，无错自动提交。
 func (c *conn) Transact(fn TransactFn) error {
 	return c.brk.DoWithAcceptable(func() error {
-		//fmt.Println("获取连接并做数据库事务")
-		//fmt.Println()
 		return doTx(c, c.beginTx, fn)
 	}, c.acceptable)
 }

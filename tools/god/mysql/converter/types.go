@@ -5,45 +5,43 @@ import (
 	"strings"
 )
 
-var (
-	types = map[string]string{
-		// 图省事，所有数据库整型字段都转为 int64
-		// number
-		"bool":      "int64",
-		"boolean":   "int64",
-		"tinyint":   "int64",
-		"smallint":  "int64",
-		"mediumint": "int64",
-		"int":       "int64",
-		"integer":   "int64",
-		"bigint":    "int64",
-		"float":     "float64",
-		"double":    "float64",
-		"decimal":   "float64",
+var types = map[string]string{
+	// 图省事，所有数据库整型字段都转为 int64
+	// number
+	"bool":      "int64",
+	"boolean":   "int64",
+	"tinyint":   "int64",
+	"smallint":  "int64",
+	"mediumint": "int64",
+	"int":       "int64",
+	"integer":   "int64",
+	"bigint":    "int64",
+	"float":     "float64",
+	"double":    "float64",
+	"decimal":   "float64",
 
-		// date&time
-		"date":      "time.Time",
-		"datetime":  "time.Time",
-		"timestamp": "time.Time",
-		"time":      "string",
-		"year":      "int64",
+	// date&time
+	"date":      "time.Time",
+	"datetime":  "time.Time",
+	"timestamp": "time.Time",
+	"time":      "string",
+	"year":      "int64",
 
-		// string
-		"char":       "string",
-		"varchar":    "string",
-		"binary":     "string",
-		"varbinary":  "string",
-		"tinytext":   "string",
-		"text":       "string",
-		"mediumtext": "string",
-		"longtext":   "string",
-		"enum":       "string",
-		"set":        "string",
-		"json":       "string",
-	}
-)
+	// string
+	"char":       "string",
+	"varchar":    "string",
+	"binary":     "string",
+	"varbinary":  "string",
+	"tinytext":   "string",
+	"text":       "string",
+	"mediumtext": "string",
+	"longtext":   "string",
+	"enum":       "string",
+	"set":        "string",
+	"json":       "string",
+}
 
-//func ConvertDataType(dataBaseType string) (goDataType string, err error) {
+// ConvertDataType {
 func ConvertDataType(dataBaseType string, isDefaultNull bool) (string, error) {
 	tp, ok := types[strings.ToLower(dataBaseType)]
 	if !ok {
