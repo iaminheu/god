@@ -156,59 +156,65 @@ func desensitize(dsn string) string {
 
 // scan 将数据库结果转换为Golang的数据类型
 func scan(dest interface{}, rows *sql.Rows) error {
-	if !rows.Next() {
-		if err := rows.Err(); err != nil {
-			return err
-		}
-		return ErrNotFound
-	}
-
 	// 验证接收目标必须为有效非空指针
-	rv := reflect.ValueOf(dest)
-	if err := mapping.ValidatePtr(&rv); err != nil {
+	dv := reflect.ValueOf(dest)
+	if err := mapping.ValidatePtr(&dv); err != nil {
 		return err
 	}
 
 	// 将行数据扫描进目标结果
-	rte := reflect.TypeOf(dest).Elem()
-	rve := rv.Elem()
-	switch rte.Kind() {
+	dte := reflect.TypeOf(dest).Elem()
+	dve := dv.Elem()
+	switch dte.Kind() {
 	case reflect.Bool,
 		reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
 		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
 		reflect.Float32, reflect.Float64,
 		reflect.String:
-		if rve.CanSet() {
+		if dve.CanSet() {
+			if !rows.Next() {
+				if err := rows.Err(); err != nil {
+					return err
+				}
+				return ErrNotFound
+			}
 			return rows.Scan(dest)
+		} else {
+			return ErrNotSettable
 		}
-		return ErrNotSettable
 	case reflect.Struct:
+		if !rows.Next() {
+			if err := rows.Err(); err != nil {
+				return err
+			}
+			return ErrNotFound
+		}
 		// 获取行的列名切片
-		columns, err := rows.Columns()
+		colNames, err := rows.Columns()
 		if err != nil {
 			return err
 		}
 
-		values, err := mapStructFieldsIntoSlice(rve, columns)
-		if err != nil {
+		if values, err := mapStructFieldsIntoSlice(dve, colNames); err != nil {
 			return err
+		} else {
+			return rows.Scan(values...)
 		}
-		return rows.Scan(values...)
 	case reflect.Slice:
-		if !rve.CanSet() {
+		if !dve.CanSet() {
 			return ErrNotSettable
 		}
 
-		ptr := rte.Elem().Kind() == reflect.Ptr
+		ptr := dte.Elem().Kind() == reflect.Ptr
 		appendFn := func(item reflect.Value) {
 			if ptr {
-				rve.Set(reflect.Append(rve, item))
+				dve.Set(reflect.Append(dve, item))
 			} else {
-				rve.Set(reflect.Append(rve, reflect.Indirect(item)))
+				dve.Set(reflect.Append(dve, reflect.Indirect(item)))
 			}
 		}
 		fillFn := func(value interface{}) error {
-			if rve.CanSet() {
+			if dve.CanSet() {
 				if err := rows.Scan(value); err != nil {
 					return err
 				} else {
@@ -219,7 +225,7 @@ func scan(dest interface{}, rows *sql.Rows) error {
 			return ErrNotSettable
 		}
 
-		base := mapping.Deref(rte.Elem())
+		base := mapping.Deref(dte.Elem())
 		switch base.Kind() {
 		case reflect.String, reflect.Bool, reflect.Float32, reflect.Float64,
 			reflect.Int, reflect.Int8, reflect.Int32, reflect.Int64,

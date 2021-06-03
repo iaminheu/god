@@ -1,12 +1,11 @@
 package sqlx
 
 import (
-	"git.zc0901.com/go/god/lib/logx"
 	"testing"
 )
 
 func BenchmarkTagQuery(b *testing.B) {
-	logx.Disable()
+	//logx.Disable()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			db := NewMySQL("root:asdfasdf@tcp(192.168.0.166:3306)/nest_label")

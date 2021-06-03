@@ -39,9 +39,9 @@ func New{{.server}}Server(svcCtx *svc.ServiceContext) *{{.server}}Server {
 `
 	functionTemplate = `
 {{if .hasComment}}{{.comment}}{{end}}
-func (s *{{.server}}Server) {{.method}} (ctx context.Context, in {{.request}}) ({{.response}}, error) {
+func (s *{{.server}}Server) {{.method}} (ctx context.Context, req {{.request}}) ({{.response}}, error) {
 	l := logic.New{{.logicName}}(ctx,s.svcCtx)
-	return l.{{.method}}(in)
+	return l.{{.method}}(req)
 }
 `
 )

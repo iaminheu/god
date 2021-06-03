@@ -24,7 +24,7 @@ type Profile2 struct {
 }
 
 func init() {
-	logx.Disable()
+	//logx.Disable()
 	//stat.SetReporter(nil)
 }
 
