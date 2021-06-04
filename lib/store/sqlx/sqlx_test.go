@@ -18,7 +18,7 @@ type Model struct {
 	c Config
 	// Profile *model.ProfileModel
 	//CaMemberModel *CaMemberModel
-	ChannelContentModel *ChannelContentModel
+	//ChannelContentModel *ChannelContentModel
 }
 
 type Area struct {
@@ -87,38 +87,38 @@ func NewModel() *Model {
 	return &Model{
 		c: c,
 		// Profile: model.NewProfileModel(NewMySQL(c.DataSource), c.Cache),
-		ChannelContentModel: NewChannelContentModel(NewMySQL(c.DataSource), c.Cache),
+		//ChannelContentModel: NewChannelContentModel(NewMySQL(c.DataSource), c.Cache),
 	}
 }
 
-func TestScan2Struct(t *testing.T) {
-	m := NewModel()
-
-	//type member struct {
-	//	Id   int64  `db:"id"`
-	//	Name string `db:"name"`
-	//}
-	//var members []*member
-	//
-	//err := m.ChannelContentModel.QueryNoCache(&members, "select id,name from ca_member limit 3")
-	//if err != nil {
-	//	t.Error(err)
-	//}
-	//
-	//for _, m := range members {
-	//	fmt.Printf("%d, %s\n", m.Id, m.Name)
-	//}
-
-	result, err := m.ChannelContentModel.Insert(ChannelContent{
-		ChannelId:   4,
-		ContentType: 4,
-		ContentId:   4,
-		ToppedAt:    NullTime{},
-		UnqKey:      "4",
-	})
-	if err != nil {
-		t.Error(err)
-	}
-
-	t.Log(result)
-}
+//func TestScan2Struct(t *testing.T) {
+//	m := NewModel()
+//
+//	//type member struct {
+//	//	Id   int64  `db:"id"`
+//	//	Name string `db:"name"`
+//	//}
+//	//var members []*member
+//	//
+//	//err := m.ChannelContentModel.QueryNoCache(&members, "select id,name from ca_member limit 3")
+//	//if err != nil {
+//	//	t.Error(err)
+//	//}
+//	//
+//	//for _, m := range members {
+//	//	fmt.Printf("%d, %s\n", m.Id, m.Name)
+//	//}
+//
+//	result, err := m.ChannelContentModel.Insert(ChannelContent{
+//		ChannelId:   4,
+//		ContentType: 4,
+//		ContentId:   4,
+//		ToppedAt:    NullTime{},
+//		UnqKey:      "4",
+//	})
+//	if err != nil {
+//		t.Error(err)
+//	}
+//
+//	t.Log(result)
+//}
