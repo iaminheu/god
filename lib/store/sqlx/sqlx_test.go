@@ -18,6 +18,7 @@ type Model struct {
 	c Config
 	// Profile *model.ProfileModel
 	//CaMemberModel *CaMemberModel
+	ChannelContentModel *ChannelContentModel
 }
 
 type Area struct {
@@ -70,7 +71,7 @@ func TestSqlIn(t *testing.T) {
 
 func NewModel() *Model {
 	c := Config{
-		DataSource: "root:FfRyn2b5BKM3MNPz@tcp(dev:33061)/nest_corp?parseTime=true&charset=utf8mb4",
+		DataSource: "root:FfRyn2b5BKM3MNPz@tcp(dev:33061)/nest_content_online?parseTime=true&charset=utf8mb4",
 		Cache: cache.ClusterConf{
 			{
 				Conf: redis.Conf{
@@ -86,25 +87,38 @@ func NewModel() *Model {
 	return &Model{
 		c: c,
 		// Profile: model.NewProfileModel(NewMySQL(c.DataSource), c.Cache),
-		//CaMemberModel: NewCaMemberModel(NewMySQL(c.DataSource), c.Cache),
+		ChannelContentModel: NewChannelContentModel(NewMySQL(c.DataSource), c.Cache),
 	}
 }
 
-//func TestScan2Struct(t *testing.T) {
-//	m := NewModel()
-//
-//	type member struct {
-//		Id   int64  `db:"id"`
-//		Name string `db:"name"`
-//	}
-//	var members []*member
-//
-//	err := m.CaMemberModel.QueryNoCache(&members, "select id,name from ca_member limit 3")
-//	if err != nil {
-//		t.Error(err)
-//	}
-//
-//	for _, m := range members {
-//		fmt.Printf("%d, %s\n", m.Id, m.Name)
-//	}
-//}
+func TestScan2Struct(t *testing.T) {
+	m := NewModel()
+
+	//type member struct {
+	//	Id   int64  `db:"id"`
+	//	Name string `db:"name"`
+	//}
+	//var members []*member
+	//
+	//err := m.ChannelContentModel.QueryNoCache(&members, "select id,name from ca_member limit 3")
+	//if err != nil {
+	//	t.Error(err)
+	//}
+	//
+	//for _, m := range members {
+	//	fmt.Printf("%d, %s\n", m.Id, m.Name)
+	//}
+
+	result, err := m.ChannelContentModel.Insert(ChannelContent{
+		ChannelId:   4,
+		ContentType: 4,
+		ContentId:   4,
+		ToppedAt:    NullTime{},
+		UnqKey:      "4",
+	})
+	if err != nil {
+		t.Error(err)
+	}
+
+	t.Log(result)
+}

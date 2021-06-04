@@ -128,9 +128,28 @@ func doExec(db session, query string, args ...interface{}) (sql.Result, error) {
 		return nil, err
 	}
 
+	// 转换自定义 sqlx.NullXxx 为 sql.NullXxx
+	var nvArgs []interface{}
+	for _, arg := range args {
+		switch v := arg.(type) {
+		case NullTime:
+			nvArgs = append(nvArgs, sql.NullTime{Valid: v.Valid, Time: v.Time})
+		case NullBool:
+			nvArgs = append(nvArgs, sql.NullBool{Valid: v.Valid, Bool: v.Bool})
+		case NullString:
+			nvArgs = append(nvArgs, sql.NullString{Valid: v.Valid, String: v.String})
+		case NullInt64:
+			nvArgs = append(nvArgs, sql.NullInt64{Valid: v.Valid, Int64: v.Int64})
+		case NullFloat64:
+			nvArgs = append(nvArgs, sql.NullFloat64{Valid: v.Valid, Float64: v.Float64})
+		default:
+			nvArgs = append(nvArgs, arg)
+		}
+	}
+
 	// 带有慢查询检测
 	startTime := time.Now()
-	result, err := db.Exec(query, args...)
+	result, err := db.Exec(query, nvArgs...)
 	duration := time.Since(startTime)
 
 	if duration > slowThreshold {
