@@ -187,6 +187,9 @@ func (nt *NullTime) UnmarshalJSON(b []byte) error {
 	x, err := time.Parse(time.RFC3339, s)
 	if err != nil {
 		nt.Valid = false
+		if s == "null" {
+			return nil
+		}
 		return err
 	}
 

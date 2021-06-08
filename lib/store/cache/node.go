@@ -117,7 +117,7 @@ func (n node) Take(dest interface{}, key string, queryFn func(interface{}) error
 	})
 }
 
-// Take 读不到就写并设置有效期，然后返回
+// TakeEx 读不到就写并设置有效期，然后返回
 func (n node) TakeEx(dest interface{}, key string, queryFn func(interface{}, time.Duration) error) error {
 	expires := n.aroundDuration(n.expires)
 	return n.doTake(dest, key, func(value interface{}) error {
@@ -235,7 +235,7 @@ func (n node) processCache(key string, result string, dest interface{}) error {
 		return nil
 	}
 
-	msg := fmt.Sprintf("Unmarshl缓存失败，缓存节点：%s，键：%s，值：%s，错误：%v", n.redis.Addr, key, result, err)
+	msg := fmt.Sprintf("JSON 解编排缓存失败，缓存节点：%s，键：%s，值：%s，错误：%v", n.redis.Addr, key, result, err)
 	logx.Error(msg)
 	stat.Report(msg)
 	if _, err = n.redis.Del(key); err != nil {
@@ -260,7 +260,7 @@ func (n node) processCaches(values []string, dest []interface{}, keys ...string)
 			continue
 		} else {
 			dest = append(dest, nil)
-			msg := fmt.Sprintf("Unmarshl缓存失败，缓存节点：%s，键：%s，值：%s，错误：%v", n.redis.Addr, keys[i], value, err)
+			msg := fmt.Sprintf("JSON 解编排缓存失败，缓存节点：%s，键：%s，值：%s，错误：%v", n.redis.Addr, keys[i], value, err)
 			logx.Error(msg)
 			stat.Report(msg)
 			if _, err = n.redis.Del(keys[i]); err != nil {
