@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"git.zc0901.com/go/god/lib/os/gtime"
 	"github.com/go-sql-driver/mysql"
 	"reflect"
 	"time"
@@ -182,18 +183,13 @@ func (nt *NullTime) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON for NullTime
 func (nt *NullTime) UnmarshalJSON(b []byte) error {
 	s := string(b)
-	// s = Stripchars(s, "\"")
-
-	x, err := time.Parse(time.RFC3339, s)
-	if err != nil {
+	x := gtime.NewFromStr(s)
+	if x == nil {
 		nt.Valid = false
-		if s == "null" {
-			return nil
-		}
-		return err
+		return nil
 	}
 
-	nt.Time = x
+	nt.Time = x.Time
 	nt.Valid = true
 	return nil
 }
