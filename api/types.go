@@ -26,7 +26,7 @@ type (
 	// 签名设置
 	signatureSetting struct {
 		SignatureConf
-		enabled bool // 是否启用签名校验 TODO ?
+		enabled bool // 是否启用签名校验
 	}
 
 	// 特色路由，支持高优先级、jwt令牌校验、签名校验

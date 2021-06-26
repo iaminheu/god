@@ -2,7 +2,6 @@ package timex
 
 import "time"
 
-// TODO 没理解
 // 使用足够长的过去时间作为起始时间，以防 time.Now() - lastTime 等于 0
 var initTime = time.Now().AddDate(-1, -1, -1)
 
