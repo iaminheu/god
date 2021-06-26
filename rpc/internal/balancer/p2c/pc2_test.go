@@ -3,17 +3,19 @@ package p2c
 import (
 	"context"
 	"fmt"
-	"git.zc0901.com/go/god/lib/logx"
-	"git.zc0901.com/go/god/lib/mathx"
-	"github.com/stretchr/testify/assert"
-	"google.golang.org/grpc/balancer"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/resolver"
-	"google.golang.org/grpc/status"
 	"runtime"
 	"strconv"
 	"sync"
 	"testing"
+
+	"git.zc0901.com/go/god/lib/logx"
+	"git.zc0901.com/go/god/lib/mathx"
+	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc/balancer"
+	"google.golang.org/grpc/balancer/base"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/resolver"
+	"google.golang.org/grpc/status"
 )
 
 func init() {
@@ -22,12 +24,11 @@ func init() {
 
 func TestPicker_PickNil(t *testing.T) {
 	builder := new(pickerBuilder)
-	picker := builder.Build(nil)
-	_, _, err := picker.Pick(context.Background(),
-		balancer.PickInfo{
-			FullMethodName: "/",
-			Ctx:            context.Background(),
-		})
+	picker := builder.Build(base.PickerBuildInfo{})
+	_, err := picker.Pick(balancer.PickInfo{
+		FullMethodName: "/",
+		Ctx:            context.Background(),
+	})
 	assert.NotNil(t, err)
 	fmt.Println(err)
 }
@@ -62,16 +63,22 @@ func TestPicker_Pick(t *testing.T) {
 
 			const total = 10000
 			builder := new(pickerBuilder)
-			ready := make(map[resolver.Address]balancer.SubConn)
+			ready := make(map[balancer.SubConn]base.SubConnInfo)
 			for i := 0; i < test.candidates; i++ {
-				ready[resolver.Address{Addr: strconv.Itoa(i)}] = new(mockClientConn)
+				ready[new(mockClientConn)] = base.SubConnInfo{
+					Address: resolver.Address{
+						Addr: strconv.Itoa(i),
+					},
+				}
 			}
 
-			picker := builder.Build(ready)
+			picker := builder.Build(base.PickerBuildInfo{
+				ReadySCs: ready,
+			})
 			var wg sync.WaitGroup
 			wg.Add(total)
 			for i := 0; i < total; i++ {
-				_, done, err := picker.Pick(context.Background(), balancer.PickInfo{
+				result, err := picker.Pick(balancer.PickInfo{
 					FullMethodName: "/",
 					Ctx:            context.Background(),
 				})
@@ -81,12 +88,14 @@ func TestPicker_Pick(t *testing.T) {
 				}
 				go func() {
 					runtime.Gosched()
-					done(balancer.DoneInfo{Err: err})
+					result.Done(balancer.DoneInfo{
+						Err: err,
+					})
 					wg.Done()
 				}()
 			}
-			wg.Wait()
 
+			wg.Wait()
 			dist := make(map[interface{}]int)
 			conns := picker.(*p2cPicker).conns
 			for _, conn := range conns {
@@ -101,8 +110,7 @@ func TestPicker_Pick(t *testing.T) {
 	}
 }
 
-type mockClientConn struct {
-}
+type mockClientConn struct{}
 
 func (m mockClientConn) UpdateAddresses(addresses []resolver.Address) {
 }

@@ -3,58 +3,46 @@ package internal
 import (
 	"context"
 	"fmt"
-	"git.zc0901.com/go/god/lib/contextx"
-	"git.zc0901.com/go/god/lib/lang"
-	"git.zc0901.com/go/god/lib/logx"
-	"git.zc0901.com/go/god/lib/syncx"
-	"git.zc0901.com/go/god/lib/threading"
-	"go.etcd.io/etcd/clientv3"
 	"io"
 	"sort"
 	"strings"
 	"sync"
 	"time"
+
+	"git.zc0901.com/go/god/lib/contextx"
+	"git.zc0901.com/go/god/lib/lang"
+	"git.zc0901.com/go/god/lib/logx"
+	"git.zc0901.com/go/god/lib/syncx"
+	"git.zc0901.com/go/god/lib/threading"
+	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
 var (
-	registryInstance = Registry{
+	registry = Registry{
 		clusters: make(map[string]*cluster),
 	}
 	connManager = syncx.NewResourceManager()
 )
 
-type (
-	cluster struct {
-		endpoints  []string
-		key        string
-		values     map[string]map[string]string
-		listeners  map[string][]UpdateListener
-		watchGroup *threading.RoutineGroup
-		done       chan lang.PlaceholderType
-		lock       sync.Mutex
-	}
-
-	Registry struct {
-		clusters map[string]*cluster
-		lock     sync.Mutex
-	}
-)
-
-// GetRegistry 获取注册中心
-func GetRegistry() *Registry {
-	return &registryInstance
+// Registry 是管理Etcd客户端连接的注册器。
+type Registry struct {
+	clusters map[string]*cluster
+	lock     sync.Mutex
 }
 
-// 新建 EtcdClient 客户端
-func DialClient(endpoints []string) (EtcdClient, error) {
-	return clientv3.New(clientv3.Config{
-		Endpoints:            endpoints,
-		AutoSyncInterval:     autoSyncInterval,
-		DialTimeout:          DialTimeout,
-		DialKeepAliveTime:    dialKeepAliveTime,
-		DialKeepAliveTimeout: DialTimeout,
-		RejectOldCluster:     true,
-	})
+// GetRegistry 返回一个全局 Registry。
+func GetRegistry() *Registry {
+	return &registry
+}
+
+// GetConn 返回指定 endpoints 的 Etcd客户端连接。
+func (r *Registry) GetConn(endpoints []string) (EtcdClient, error) {
+	return r.getCluster(endpoints).getClient()
+}
+
+// Monitor 监控指定 endpoints 上的 key，使用指定的 UpdateListener 进行通知。
+func (r *Registry) Monitor(endpoints []string, key string, l UpdateListener) error {
+	return r.getCluster(endpoints).monitor(key, l)
 }
 
 // getCluster 根据服务端点数组获取服务集群
@@ -71,12 +59,14 @@ func (r *Registry) getCluster(endpoints []string) *cluster {
 	return c
 }
 
-func (r *Registry) GetConn(endpoints []string) (EtcdClient, error) {
-	return r.getCluster(endpoints).getClient()
-}
-
-func (r *Registry) Monitor(endpoints []string, key string, l UpdateListener) error {
-	return r.getCluster(endpoints).monitor(key, l)
+type cluster struct {
+	endpoints  []string
+	key        string
+	values     map[string]map[string]string
+	listeners  map[string][]UpdateListener
+	watchGroup *threading.RoutineGroup
+	done       chan lang.PlaceholderType
+	lock       sync.Mutex
 }
 
 func newCluster(endpoints []string) *cluster {
@@ -196,20 +186,20 @@ func (c *cluster) handleChanges(key string, kvs []KV) {
 	var remove []KV
 	c.lock.Lock()
 	listeners := append([]UpdateListener(nil), c.listeners[key]...)
-	vals, ok := c.values[key]
+	values, ok := c.values[key]
 	if !ok {
 		add = kvs
-		vals = make(map[string]string)
+		values = make(map[string]string)
 		for _, kv := range kvs {
-			vals[kv.Key] = kv.Val
+			values[kv.Key] = kv.Val
 		}
-		c.values[key] = vals
+		c.values[key] = values
 	} else {
 		m := make(map[string]string)
 		for _, kv := range kvs {
 			m[kv.Key] = kv.Val
 		}
-		for k, v := range vals {
+		for k, v := range values {
 			if val, ok := m[k]; !ok || v != val {
 				remove = append(remove, KV{
 					Key: k,
@@ -218,7 +208,7 @@ func (c *cluster) handleChanges(key string, kvs []KV) {
 			}
 		}
 		for k, v := range m {
-			if val, ok := vals[k]; !ok || v != val {
+			if val, ok := values[k]; !ok || v != val {
 				add = append(add, KV{
 					Key: k,
 					Val: v,
@@ -242,26 +232,34 @@ func (c *cluster) handleChanges(key string, kvs []KV) {
 }
 
 func (c *cluster) watch(cli EtcdClient, key string) {
+	for {
+		if c.watchStream(cli, key) {
+			return
+		}
+	}
+}
+
+func (c *cluster) watchStream(cli EtcdClient, key string) bool {
 	rch := cli.Watch(clientv3.WithRequireLeader(c.context(cli)), makeKeyPrefix(key), clientv3.WithPrefix())
 	for {
 		select {
-		case wresp, ok := <-rch:
+		case wResp, ok := <-rch:
 			if !ok {
 				logx.Error("etcd monitor chan has been closed")
-				return
+				return false
 			}
-			if wresp.Canceled {
+			if wResp.Canceled {
 				logx.Error("etcd monitor chan has been canceled")
-				return
+				return false
 			}
-			if wresp.Err() != nil {
-				logx.Error(fmt.Sprintf("etcd monitor chan error: %v", wresp.Err()))
-				return
+			if wResp.Err() != nil {
+				logx.Error(fmt.Sprintf("etcd monitor chan error: %v", wResp.Err()))
+				return false
 			}
 
-			c.handleWatchEvents(key, wresp.Events)
+			c.handleWatchEvents(key, wResp.Events)
 		case <-c.done:
-			return
+			return true
 		}
 	}
 }
@@ -275,8 +273,8 @@ func (c *cluster) handleWatchEvents(key string, events []*clientv3.Event) {
 		switch ev.Type {
 		case clientv3.EventTypePut:
 			c.lock.Lock()
-			if vals, ok := c.values[key]; ok {
-				vals[string(ev.Kv.Key)] = string(ev.Kv.Value)
+			if values, ok := c.values[key]; ok {
+				values[string(ev.Kv.Key)] = string(ev.Kv.Value)
 			} else {
 				c.values[key] = map[string]string{string(ev.Kv.Key): string(ev.Kv.Value)}
 			}
@@ -288,8 +286,8 @@ func (c *cluster) handleWatchEvents(key string, events []*clientv3.Event) {
 				})
 			}
 		case clientv3.EventTypeDelete:
-			if vals, ok := c.values[key]; ok {
-				delete(vals, string(ev.Kv.Key))
+			if values, ok := c.values[key]; ok {
+				delete(values, string(ev.Kv.Key))
 			}
 			for _, l := range listeners {
 				l.OnDelete(KV{
@@ -298,9 +296,21 @@ func (c *cluster) handleWatchEvents(key string, events []*clientv3.Event) {
 				})
 			}
 		default:
-			logx.Errorf("Unknown event type: %v", ev.Type)
+			logx.Errorf("未知的 Etcd 客户端事件类型：%v", ev.Type)
 		}
 	}
+}
+
+// DialClient 拨打指定 endpoints 的 EtcdClient 客户端。
+func DialClient(endpoints []string) (EtcdClient, error) {
+	return clientv3.New(clientv3.Config{
+		Endpoints:            endpoints,
+		AutoSyncInterval:     autoSyncInterval,
+		DialTimeout:          DialTimeout,
+		DialKeepAliveTime:    dialKeepAliveTime,
+		DialKeepAliveTimeout: DialTimeout,
+		RejectOldCluster:     true,
+	})
 }
 
 // getClusterKey 获取按字符排序的端点合并字符串

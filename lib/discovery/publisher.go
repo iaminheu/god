@@ -7,7 +7,7 @@ import (
 	"git.zc0901.com/go/god/lib/proc"
 	"git.zc0901.com/go/god/lib/syncx"
 	"git.zc0901.com/go/god/lib/threading"
-	"go.etcd.io/etcd/clientv3"
+	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
 type (
@@ -135,6 +135,7 @@ func (p *Publisher) revoke(cli internal.EtcdClient) {
 	}
 }
 
+// WithId 设定 Publisher 的 id。
 func WithId(id int64) PublisherOption {
 	return func(publisher *Publisher) {
 		publisher.id = id

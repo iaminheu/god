@@ -1,10 +1,11 @@
 package p2c
 
 import (
-	"google.golang.org/grpc/balancer"
-	"google.golang.org/grpc/resolver"
 	"math"
 	"sync/atomic"
+
+	"google.golang.org/grpc/balancer"
+	"google.golang.org/grpc/resolver"
 )
 
 type subConn struct {
@@ -14,8 +15,8 @@ type subConn struct {
 	inflight int64  // 飞行中的数量
 	requests int64  // 请求数
 	success  uint64 // 请求成功数
-	lastTime int64  // 该连接最后使用时间
-	pickTime int64  // 该连接被选举时间
+	last     int64  // 该连接最后使用时间
+	pick     int64  // 该连接被选举时间
 }
 
 func (c *subConn) healthy() bool {

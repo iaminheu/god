@@ -1,12 +1,13 @@
 package stat
 
 import (
-	"git.zc0901.com/go/god/lib/logx"
-	"git.zc0901.com/go/god/lib/stat/internal"
-	"git.zc0901.com/go/god/lib/threading"
 	"runtime"
 	"sync/atomic"
 	"time"
+
+	"git.zc0901.com/go/god/lib/logx"
+	"git.zc0901.com/go/god/lib/stat/internal"
+	"git.zc0901.com/go/god/lib/threading"
 )
 
 const (
@@ -31,9 +32,9 @@ func init() {
 			case <-cpuTicker.C:
 				threading.RunSafe(func() {
 					curUsage := internal.RefreshCpuUsage()
-					preUsage := atomic.LoadInt64(&cpuUsage)
+					prevUsage := atomic.LoadInt64(&cpuUsage)
 					// cpu占用率计算公式：cpu = cpuᵗ⁻¹ * beta + cpuᵗ * (1 - beta)
-					usage := int64(float64(preUsage)*beta + float64(curUsage)*(1-beta))
+					usage := int64(float64(prevUsage)*beta + float64(curUsage)*(1-beta))
 					atomic.StoreInt64(&cpuUsage, usage)
 				})
 			case <-allTicker.C:
@@ -48,11 +49,11 @@ func printUsage() {
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
 	logx.Statf("CPU: %dm, 内存: 分配=%.1fMi, 累计分配=%.1fMi, 系统=%.1fMi, GC次数=%d",
-		CpuUsage(), bToMb(m.Alloc), bToMb(m.TotalAlloc), bToMb(m.Sys), m.NumGC)
+		CpuUsage(), bytesToMb(m.Alloc), bytesToMb(m.TotalAlloc), bytesToMb(m.Sys), m.NumGC)
 }
 
-// bToMb 字节转Mb
-func bToMb(b uint64) float32 {
+// bytesToMb 字节转Mb
+func bytesToMb(b uint64) float32 {
 	return float32(b) / 1024 / 1024
 }
 

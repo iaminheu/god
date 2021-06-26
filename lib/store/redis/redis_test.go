@@ -2,12 +2,13 @@ package redis
 
 import (
 	"fmt"
-	"github.com/alicebob/miniredis/v2"
-	"github.com/go-redis/redis"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"testing"
 	"time"
+
+	"github.com/alicebob/miniredis/v2"
+	"github.com/go-redis/redis"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestRedis_EvalSha(t *testing.T) {
@@ -76,18 +77,18 @@ func TestRedis_Eval(t *testing.T) {
 
 		var offsets []int64
 		for i := 0; i < 10000; i++ {
-			//err = client.SetBit(key, int64(i), 1)
-			//assert.Nil(t, err)
+			// err = client.SetBit(key, int64(i), 1)
+			// assert.Nil(t, err)
 			offsets = append(offsets, int64(i))
 		}
 
 		err = client.SetBits(key, offsets)
 		assert.Nil(t, err)
 
-		//client.SetBit(key, 163, 1)
-		//client.SetBit(key, 11167, 1)
+		// client.SetBit(key, 163, 1)
+		// client.SetBit(key, 11167, 1)
 
-		//resp, err := client.Eval(getBitsScript, []string{key}, []string{"163", "11167", "3"})
+		// resp, err := client.Eval(getBitsScript, []string{key}, []string{"163", "11167", "3"})
 		resp, err := client.GetBits(key, []int64{163, 11167, 3})
 		fmt.Println(resp)
 
@@ -377,53 +378,42 @@ func TestRedis_Scan(t *testing.T) {
 
 func TestRedis_Set(t *testing.T) {
 	runOnRedis(t, func(client *Redis) {
-		var list []string
-		for i := 0; i < 1500; i++ {
-			list = append(list, fmt.Sprintf("value_%d", i))
-		}
-		length, err := client.SAdd("set", list)
+		_, err := New(client.Addr, badMode()).SAdd("key", 1, 2, 3, 4)
+		assert.NotNil(t, err)
+		num, err := client.SAdd("key", 1, 2, 3, 4)
 		assert.Nil(t, err)
-		assert.Equal(t, 1500, length)
+		assert.Equal(t, 4, num)
 
-		var cursor uint64 = 0
-		var total = 0
-		for {
-			keys, nextCur, err := client.SScan("set", cursor, "", 100)
-			assert.Nil(t, err)
-			total += len(keys)
-			if nextCur == 0 {
-				break
-			}
-			cursor = nextCur
-		}
-		assert.Equal(t, 1500, total)
-
-		card, err := client.SCard("set")
+		_, err = New(client.Addr, badMode()).SCard("key")
+		assert.NotNil(t, err)
+		val, err := client.SCard("key")
 		assert.Nil(t, err)
-		assert.Equal(t, int64(1500), card)
+		assert.Equal(t, int64(4), val)
 
-		ok, err := client.SIsMember("set", "value_2")
+		_, err = New(client.Addr, badMode()).SIsMember("key", 2)
+		assert.NotNil(t, err)
+		ok, err := client.SIsMember("key", 1)
 		assert.Nil(t, err)
 		assert.True(t, ok)
 
-		length, err = client.SRem("set", "value_2", "value_3")
+		_, err = New(client.Addr, badMode()).SRem("key", 3, 4)
+		assert.NotNil(t, err)
+		num, err = client.SRem("key", 3, 4)
 		assert.Nil(t, err)
-		assert.Equal(t, 2, length)
-
-		members, err := client.SRandMemberN("set", 3)
-		assert.Nil(t, err)
-		fmt.Println(members)
-
-		length, err = client.Del("set")
-		assert.Nil(t, err)
-		assert.Equal(t, 1, length)
+		assert.Equal(t, 2, num)
 	})
+}
+
+func badMode() Option {
+	return func(r *Redis) {
+		r.Mode = "bad"
+	}
 }
 
 func TestRedisGeo(t *testing.T) {
 	runOnRedis(t, func(client *Redis) {
 		client.Ping()
-		var geoLocation = []*GeoLocation{{Longitude: 13.361389, Latitude: 38.115556, Name: "Palermo"}, {Longitude: 15.087269, Latitude: 37.502669, Name: "Catania"}}
+		geoLocation := []*GeoLocation{{Longitude: 13.361389, Latitude: 38.115556, Name: "Palermo"}, {Longitude: 15.087269, Latitude: 37.502669, Name: "Catania"}}
 		v, err := client.GeoAdd("sicily", geoLocation...)
 		assert.Nil(t, err)
 		assert.Equal(t, int64(2), v)
@@ -441,7 +431,7 @@ func TestRedisGeo(t *testing.T) {
 		assert.Nil(t, err)
 		assert.Equal(t, int64(v4[0].Dist), int64(190))
 		assert.Equal(t, int64(v4[1].Dist), int64(56))
-		var geoLocation2 = []*GeoLocation{{Longitude: 13.583333, Latitude: 37.316667, Name: "Agrigento"}}
+		geoLocation2 := []*GeoLocation{{Longitude: 13.583333, Latitude: 37.316667, Name: "Agrigento"}}
 		v5, err := client.GeoAdd("sicily", geoLocation2...)
 		assert.Nil(t, err)
 		assert.Equal(t, int64(1), v5)
@@ -462,7 +452,7 @@ func runOnRedis(t *testing.T, fn func(client *Redis)) {
 		//})
 
 		client, err := standaloneClientManager.Get(s.Addr(), func() (io.Closer, error) {
-			//return nil, errors.New("可能已经存在")
+			// return nil, errors.New("可能已经存在")
 			return nil, nil
 		})
 		if err != nil {

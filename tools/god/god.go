@@ -2,6 +2,13 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"runtime"
+
+	"git.zc0901.com/go/god/lib/stat"
+
+	"git.zc0901.com/go/god/lib/load"
+	"git.zc0901.com/go/god/lib/logx"
 	"git.zc0901.com/go/god/tools/god/api/apigen"
 	"git.zc0901.com/go/god/tools/god/api/dartgen"
 	"git.zc0901.com/go/god/tools/god/api/docgen"
@@ -15,8 +22,6 @@ import (
 	"git.zc0901.com/go/god/tools/god/mysql/command"
 	rpc "git.zc0901.com/go/god/tools/god/rpc/cli"
 	"github.com/urfave/cli"
-	"os"
-	"runtime"
 )
 
 var (
@@ -270,6 +275,10 @@ var (
 )
 
 func main() {
+	logx.Disable()
+	load.Disable()
+	stat.CpuUsage()
+
 	app := cli.NewApp()
 	app.Usage = "God 代码生成器"
 	app.Version = fmt.Sprintf("%s %s/%s", BuildTime, runtime.GOOS, runtime.GOARCH)

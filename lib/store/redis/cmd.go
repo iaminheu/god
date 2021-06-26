@@ -3,11 +3,12 @@ package redis
 import (
 	"errors"
 	"fmt"
+	"strconv"
+	"time"
+
 	"git.zc0901.com/go/god/lib/gconv"
 	"git.zc0901.com/go/god/lib/mapping"
 	red "github.com/go-redis/redis"
-	"strconv"
-	"time"
 )
 
 const (
@@ -28,7 +29,6 @@ return ret
 )
 
 var ErrNilConn = errors.New("redis 连接不可为空")
-var ErrTooLargeOffset = errors.New("redis bit位的偏移量超过int64最大值")
 
 type (
 	ZStore = red.ZStore
@@ -262,7 +262,7 @@ func (r *Redis) HExists(key, field string) (ok bool, err error) {
 	return
 }
 
-// HExists 从指定 key 的哈希中指定 field 的字符串值。
+// HGet 从指定 key 的哈希中指定 field 的字符串值。
 func (r *Redis) HGet(key, field string) (result string, err error) {
 	err = r.brk.DoWithAcceptable(func() error {
 		client, err := getClient(r)
@@ -686,7 +686,6 @@ func (r *Redis) Pipelined(fn func(Pipeliner) error) (err error) {
 
 		_, err = client.Pipelined(fn)
 		return err
-
 	}, acceptable)
 
 	return
@@ -880,14 +879,14 @@ func (r *Redis) SetNXEx(key, value string, seconds int) (ok bool, err error) {
 	return
 }
 
-// SIsMemeber 返回成员 member 是否是存储的集合 key 的成员.
-func (r *Redis) SIsMember(key string, member interface{}) (ok bool, err error) {
+// SIsMember 返回成员 member 是否是存储的集合 key 的成员.
+func (r *Redis) SIsMember(key string, value interface{}) (ok bool, err error) {
 	err = r.brk.DoWithAcceptable(func() error {
 		client, err := getClient(r)
 		if err != nil {
 			return err
 		}
-		ok, err = client.SIsMember(key, member).Result()
+		ok, err = client.SIsMember(key, value).Result()
 		return err
 	}, acceptable)
 
@@ -1023,6 +1022,41 @@ func (r *Redis) SDiffStore(destination string, keys ...string) (val int, err err
 			val = int(v)
 			return nil
 		}
+	}, acceptable)
+
+	return
+}
+
+// SInter 返回所有给定集合的交集。
+func (r *Redis) SInter(keys ...string) (val []string, err error) {
+	err = r.brk.DoWithAcceptable(func() error {
+		client, err := getClient(r)
+		if err != nil {
+			return err
+		}
+
+		val, err = client.SInter(keys...).Result()
+		return err
+	}, acceptable)
+
+	return
+}
+
+// SInterStore 返回给定集合之间的交集并存储在指定的集合中。
+func (r *Redis) SInterStore(destination string, keys ...string) (val int, err error) {
+	err = r.brk.DoWithAcceptable(func() error {
+		client, err := getClient(r)
+		if err != nil {
+			return err
+		}
+
+		v, err := client.SInterStore(destination, keys...).Result()
+		if err != nil {
+			return err
+		}
+
+		val = int(v)
+		return nil
 	}, acceptable)
 
 	return
@@ -1186,7 +1220,7 @@ func (r *Redis) ZScore(key string, member string) (val int64, err error) {
 
 // 其中有序集成员按score值递增(从小到大)顺序排列。
 
-// 排名以0为底，也就是说，score值最小的成员排名为0。
+// ZRank 排名以0为底，也就是说，score值最小的成员排名为0。
 // 倒序排名，使用 ZREVRANK
 func (r *Redis) ZRank(key, member string) (rank int64, err error) {
 	err = r.brk.DoWithAcceptable(func() error {
@@ -1326,7 +1360,7 @@ func (r *Redis) ZRevRangeWithScores(key string, start, stop int64) (pairs []Pair
 	return
 }
 
-// ZRangeByScoreWithScore 按得分升序取key有序集成员
+// ZRangeByScoreWithScores 按得分升序取key有序集成员
 //
 // - 返回数据带得分
 func (r *Redis) ZRangeByScoreWithScores(key string, start, stop int64) (pairs []Pair, err error) {
@@ -1414,7 +1448,6 @@ func (r *Redis) ZRevRangeByScoreWithScores(key string, start, stop int64) (pairs
 			Min: strconv.FormatInt(start, 10),
 			Max: strconv.FormatInt(stop, 10),
 		}).Result()
-
 		if err != nil {
 			return err
 		}
@@ -1554,6 +1587,7 @@ func (r *Redis) GeoRadius(key string, longitude, latitude float64, query *GeoRad
 	}, acceptable)
 	return
 }
+
 func (r *Redis) GeoRadiusByMember(key, member string, query *GeoRadiusQuery) (val []GeoLocation, err error) {
 	err = r.brk.DoWithAcceptable(func() error {
 		conn, err := getClient(r)

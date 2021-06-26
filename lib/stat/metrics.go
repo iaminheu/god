@@ -1,18 +1,20 @@
 package stat
 
 import (
-	"git.zc0901.com/go/god/lib/dispatcher"
-	"git.zc0901.com/go/god/lib/logx"
 	"os"
 	"sync"
 	"time"
+
+	"git.zc0901.com/go/god/lib/dispatcher"
+	"git.zc0901.com/go/god/lib/logx"
+	"git.zc0901.com/go/god/lib/syncx"
 )
 
 var (
-	LogInterval = time.Minute
-
+	LogInterval  = time.Minute
 	writerLock   sync.Mutex
 	reportWriter Writer = nil
+	logEnabled          = syncx.ForAtomicBool(true)
 )
 
 type (
@@ -52,6 +54,11 @@ type (
 		drops    int
 	}
 )
+
+// DisableLog 禁用统计日志。
+func DisableLog() {
+	logEnabled.Set(false)
+}
 
 func SetReportWriter(writer Writer) {
 	writerLock.Lock()
@@ -183,18 +190,20 @@ func getTopDuration(tasks []Task) float32 {
 	top := topK(tasks, 1)
 	if len(top) < 1 {
 		return 0
-	} else {
-		return float32(top[0].Duration) / float32(time.Millisecond)
 	}
+
+	return float32(top[0].Duration) / float32(time.Millisecond)
 }
 
 // log 写入远程metric地址
 func log(report *StatReport) {
 	writeReport(report)
-	logx.Statf("(%s) - qps: %.1f/s, drops: %d, avg time: %.1fms, med: %.1fms, "+
-		"90th: %.1fms, 99th: %.1fms, 99.9th: %.1fms",
-		report.Name, report.ReqsPerSecond, report.Drops, report.Average, report.Median,
-		report.Top90th, report.Top99th, report.Top99p9th)
+	if logEnabled.True() {
+		logx.Statf("(%s) - qps: %.1f/s, drops: %d, avg time: %.1fms, med: %.1fms, "+
+			"90th: %.1fms, 99th: %.1fms, 99.9th: %.1fms",
+			report.Name, report.ReqsPerSecond, report.Drops, report.Average, report.Median,
+			report.Top90th, report.Top99th, report.Top99p9th)
+	}
 }
 
 func writeReport(report *StatReport) {

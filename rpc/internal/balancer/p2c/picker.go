@@ -1,18 +1,18 @@
 package p2c
 
 import (
-	"context"
 	"fmt"
-	"git.zc0901.com/go/god/lib/logx"
-	"git.zc0901.com/go/god/lib/syncx"
-	"git.zc0901.com/go/god/lib/timex"
-	"git.zc0901.com/go/god/rpc/internal/codes"
-	"google.golang.org/grpc/balancer"
 	"math"
 	"math/rand"
 	"strings"
 	"sync"
 	"sync/atomic"
+
+	"git.zc0901.com/go/god/lib/logx"
+	"git.zc0901.com/go/god/lib/syncx"
+	"git.zc0901.com/go/god/lib/timex"
+	"git.zc0901.com/go/god/rpc/internal/codes"
+	"google.golang.org/grpc/balancer"
 )
 
 type p2cPicker struct {
@@ -22,15 +22,14 @@ type p2cPicker struct {
 	lock  sync.Mutex
 }
 
-func (p *p2cPicker) Pick(ctx context.Context, info balancer.PickInfo) (
-	conn balancer.SubConn, done func(doneInfo balancer.DoneInfo), err error) {
+func (p *p2cPicker) Pick(info balancer.PickInfo) (balancer.PickResult, error) {
 	p.lock.Lock()
 	defer p.lock.Unlock()
 
 	var chosen *subConn
 	switch len(p.conns) {
 	case 0: // 没有连接
-		return nil, nil, balancer.ErrNoSubConnAvailable
+		return balancer.PickResult{SubConn: nil, Done: nil}, balancer.ErrNoSubConnAvailable
 	case 1: // 一个连接
 		chosen = p.choose(p.conns[0], nil)
 	case 2: // 2个连接
@@ -49,19 +48,24 @@ func (p *p2cPicker) Pick(ctx context.Context, info balancer.PickInfo) (
 				break
 			}
 		}
+
 		chosen = p.choose(c1, c2)
 	}
 
 	atomic.AddInt64(&chosen.inflight, 1) // 飞行中+1
 	atomic.AddInt64(&chosen.requests, 1) // 请求数+1
-	return chosen.conn, p.buildDoneFunc(chosen), nil
+
+	return balancer.PickResult{
+		SubConn: chosen.conn,
+		Done:    p.buildDoneFunc(chosen),
+	}, nil
 }
 
 // choose 从两个连接中选举一个用于使用
 func (p *p2cPicker) choose(c1, c2 *subConn) *subConn {
-	startTime := int64(timex.Now())
+	start := int64(timex.Now())
 	if c2 == nil {
-		atomic.StoreInt64(&c1.pickTime, startTime)
+		atomic.StoreInt64(&c1.pick, start)
 		return c1
 	}
 
@@ -69,28 +73,28 @@ func (p *p2cPicker) choose(c1, c2 *subConn) *subConn {
 		c1, c2 = c2, c1
 	}
 
-	pickTime := atomic.LoadInt64(&c2.pickTime)
-	if startTime-pickTime > forcePickTime && atomic.CompareAndSwapInt64(&c2.pickTime, pickTime, startTime) {
+	pick := atomic.LoadInt64(&c2.pick)
+	if start-pick > forcePickTime && atomic.CompareAndSwapInt64(&c2.pick, pick, start) {
 		return c2
-	} else {
-		atomic.StoreInt64(&c1.pickTime, startTime)
-		return c1
 	}
+
+	atomic.StoreInt64(&c1.pick, start)
+	return c1
 }
 
 // buildDoneFunc 构建完成连接函数
 func (p *p2cPicker) buildDoneFunc(conn *subConn) func(doneInfo balancer.DoneInfo) {
-	startTime := int64(timex.Now())
-	return func(doneInfo balancer.DoneInfo) {
+	start := int64(timex.Now())
+	return func(info balancer.DoneInfo) {
 		atomic.AddInt64(&conn.inflight, -1)
 		now := timex.Now()
-		lastTime := atomic.SwapInt64(&conn.lastTime, int64(now))
-		duration := int64(now) - lastTime
+		last := atomic.SwapInt64(&conn.last, int64(now))
+		duration := int64(now) - last
 		if duration < 0 {
 			duration = 0
 		}
 		w := math.Exp(float64(-duration) / float64(decayTime))
-		lag := int64(now) - startTime
+		lag := int64(now) - start
 		if lag < 0 {
 			lag = 0
 		}
@@ -100,7 +104,7 @@ func (p *p2cPicker) buildDoneFunc(conn *subConn) func(doneInfo balancer.DoneInfo
 		}
 		atomic.StoreUint64(&conn.lag, uint64(float64(oldLag)*w+float64(lag)*(1-w)))
 		success := initSuccess
-		if doneInfo.Err != nil && !codes.Acceptable(doneInfo.Err) {
+		if info.Err != nil && !codes.Acceptable(info.Err) {
 			success = 0
 		}
 		oldSuccess := atomic.LoadUint64(&conn.success)

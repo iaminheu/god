@@ -1,14 +1,15 @@
 package httpx
 
 import (
+	"io"
+	"net/http"
+	"strings"
+
 	"git.zc0901.com/go/god/api/internal/context"
 	"git.zc0901.com/go/god/lib/container/gmap"
 	"git.zc0901.com/go/god/lib/gconv"
 	"git.zc0901.com/go/god/lib/gvalid"
 	"git.zc0901.com/go/god/lib/mapping"
-	"io"
-	"net/http"
-	"strings"
 )
 
 const (
@@ -29,7 +30,7 @@ var (
 	formUnmarshaler = mapping.NewUnmarshaler(formKey, mapping.WithStringValues())
 )
 
-// 依次将请求路径、表单和JSON中的参数，解析值目标 v
+// Parse 依次将请求路径、表单和JSON中的参数，解析值目标 v
 func Parse(r *http.Request, pointer interface{}) error {
 	pathParams, err := ParsePath(r, pointer)
 	if err != nil {
@@ -62,7 +63,7 @@ func Parse(r *http.Request, pointer interface{}) error {
 	return nil
 }
 
-// 解析请求体为JSON的参数
+// ParseJsonBody 解析请求体为JSON的参数
 func ParseJsonBody(r *http.Request, pointer interface{}) (*gmap.StrAnyMap, error) {
 	var reader io.Reader
 	if withJsonBody(r) {
@@ -74,7 +75,7 @@ func ParseJsonBody(r *http.Request, pointer interface{}) (*gmap.StrAnyMap, error
 	return mapping.UnmarshalJsonReader(reader, pointer)
 }
 
-// 解析表单请求参数（即Query参数）
+// ParseForm 解析表单请求参数（即Query参数）
 func ParseForm(r *http.Request, pointer interface{}) (*gmap.StrAnyMap, error) {
 	if err := r.ParseForm(); err != nil {
 		return nil, err
@@ -104,10 +105,10 @@ func ParseForm(r *http.Request, pointer interface{}) (*gmap.StrAnyMap, error) {
 	//}
 
 	return gmap.NewStrAnyMapFrom(params), nil
-	//return formUnmarshaler.Unmarshal(params, pointer)
+	// return formUnmarshaler.Unmarshal(params, pointer)
 }
 
-// 解析URL中的路径参数
+// ParsePath 解析URL中的路径参数。
 // 如：http://localhost/users/:name
 func ParsePath(r *http.Request, pointer interface{}) (*gmap.StrAnyMap, error) {
 	vars := context.Vars(r)
@@ -126,7 +127,7 @@ func ParsePath(r *http.Request, pointer interface{}) (*gmap.StrAnyMap, error) {
 	//}
 
 	return gmap.NewStrAnyMapFrom(params), nil
-	//return pathUnmarshaler.Unmarshal(params, pointer)
+	// return pathUnmarshaler.Unmarshal(params, pointer)
 }
 
 func ParseHeader(headerValue string) map[string]string {

@@ -1,36 +1,32 @@
 package p2c
 
 import (
-	"google.golang.org/grpc/balancer"
-	"google.golang.org/grpc/balancer/base"
 	"math"
 	"time"
+
+	"google.golang.org/grpc/balancer"
+	"google.golang.org/grpc/balancer/base"
 )
 
 const (
+	// Name p2c平衡器的名字
 	Name = "p2c_ewma"
 
+	decayTime       = int64(time.Second * 10) // 默认衰减时间
+	forcePickTime   = int64(time.Second)      // 强制选举时间
 	initSuccess     = 1000
 	throttleSuccess = initSuccess / 2      // 健康检测阈值
 	penalty         = int64(math.MaxInt32) // 最大惩罚值
-
-	forcePickTime = int64(time.Second) // 强制选举时间
-	pickTimes     = 3
-	decayTime     = int64(time.Second * 10) // 默认衰减时间
-	logInterval   = time.Minute
+	pickTimes       = 3
+	logInterval     = time.Minute
 )
+
+var emptyPickResult balancer.PickResult
 
 func init() {
 	balancer.Register(newBuilder())
-	//balancer.Register(newBuilderV2())
 }
 
 func newBuilder() balancer.Builder {
-	return base.NewBalancerBuilder(Name, new(pickerBuilder))
-}
-
-func newBuilderV2() balancer.Builder {
-	return base.NewBalancerBuilderV2(Name, new(pickerBuilderV2), base.Config{
-		HealthCheck: true,
-	})
+	return base.NewBalancerBuilder(Name, new(pickerBuilder), base.Config{HealthCheck: true})
 }

@@ -1,9 +1,10 @@
 package mapping
 
 import (
+	"io"
+
 	"git.zc0901.com/go/god/lib/container/gmap"
 	"git.zc0901.com/go/god/lib/jsonx"
-	"io"
 )
 
 const jsonTagKey = "json"
@@ -42,7 +43,12 @@ func unmarshalJsonReader(reader io.Reader, v interface{}, unmarshaler *Unmarshal
 	//	return err.Current()
 	//}
 
+	err := unmarshaler.Unmarshal(m, v)
+	if err != nil {
+		return nil, err
+	}
+
 	return gmap.NewStrAnyMapFrom(m), nil
 
-	//return unmarshaler.Unmarshal(m, v)
+	// return unmarshaler.Unmarshal(m, v)
 }
