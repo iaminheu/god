@@ -2,13 +2,14 @@ package sqlx
 
 import (
 	"fmt"
+	"sync/atomic"
+	"testing"
+	"time"
+
 	"git.zc0901.com/go/god/lib/logx"
 	"git.zc0901.com/go/god/lib/store/cache"
 	"git.zc0901.com/go/god/lib/store/redis"
 	"github.com/stretchr/testify/assert"
-	"sync/atomic"
-	"testing"
-	"time"
 )
 
 var (
@@ -24,14 +25,14 @@ type Profile2 struct {
 }
 
 func init() {
-	//logx.Disable()
-	//stat.SetReporter(nil)
+	// logx.Disable()
+	// stat.SetReporter(nil)
 }
 
 func TestCachedConn_FindOne(t *testing.T) {
 	resetStats()
-	r := redis.NewRedis("192.168.0.166:6800", redis.StandaloneMode)
-	conn := NewMySQL("root:asdfasdf@tcp(192.168.0.166:3306)/nest_user?parseTime=true")
+	r := redis.NewRedis("dev:6382", redis.StandaloneMode)
+	conn := NewMySQL("root:FfRyn2b5BKM3MNPz@tcp(dev:33061)/nest_user?parseTime=true")
 	c := NewCachedConn(conn, r, cache.WithExpires(time.Minute))
 
 	userId := 128
@@ -54,8 +55,8 @@ func TestCachedConn_FindByIndex(t *testing.T) {
 	resetStats()
 	r := redis.NewRedis("192.168.0.166:6800", redis.StandaloneMode)
 	conn := NewMySQL("root:asdfasdf@tcp(192.168.0.166:3306)/nest_user?parseTime=true")
-	//c := NewCachedConn(conn, r, cache.WithExpires(10*time.Second))
-	//c := NewCachedConn(conn, r, cache.WithExpires(24*time.Hour), cache.WithNotFoundExpires(10*time.Second))
+	// c := NewCachedConn(conn, r, cache.WithExpires(10*time.Second))
+	// c := NewCachedConn(conn, r, cache.WithExpires(24*time.Hour), cache.WithNotFoundExpires(10*time.Second))
 	c := NewCachedConn(conn, r) // 默认缓存7天
 	//
 	var profile Profile2
@@ -96,7 +97,7 @@ func TestCachedConn_FindByIndex(t *testing.T) {
 }
 
 func TestCachedConn_Exec(t *testing.T) {
-	//userIdKey := fmt.Sprintf("%s%v", cacheUserIdPrefix)
+	// userIdKey := fmt.Sprintf("%s%v", cacheUserIdPrefix)
 }
 
 func TestCachedConn_GetCache(t *testing.T) {
@@ -157,7 +158,7 @@ func TestCachedConn_QueryIndex_NoCache(t *testing.T) {
 	conn := NewMySQL("root:asdfasdf@tcp(192.168.0.166:3306)/nest_user?parseTime=true")
 	c := NewCachedConn(conn, r, cache.WithExpires(10*time.Second))
 
-	//var err error
+	// var err error
 	var str string
 	c.QueryIndex(&str, "sqlx/index", func(primaryKey interface{}) string {
 		// 返回主键的缓存键
@@ -207,8 +208,8 @@ func TestCachedConn_QueryNoCache(t *testing.T) {
 }
 
 func TestDisable(t *testing.T) {
-	//logx.Disable()
-	//logx.SetLevel(logx.ErrorLevel)
+	// logx.Disable()
+	// logx.SetLevel(logx.ErrorLevel)
 	logx.Info("大家好")
 	logx.Error("错误")
 }

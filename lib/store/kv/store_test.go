@@ -2,13 +2,14 @@ package kv
 
 import (
 	"fmt"
+	"math/rand"
+	"testing"
+
 	"git.zc0901.com/go/god/lib/hash"
 	"git.zc0901.com/go/god/lib/store/cache"
 	"git.zc0901.com/go/god/lib/store/redis"
 	"github.com/alicebob/miniredis/v2"
 	"github.com/stretchr/testify/assert"
-	"math/rand"
-	"testing"
 )
 
 var (
@@ -236,7 +237,7 @@ func TestClusterStore_SetBit(t *testing.T) {
 			value := rand.Intn(2)
 			fmt.Printf("INPUT %d\n", value)
 			err := store.SetBit("test", int64(i), value)
-			asset.Nil(t, err)
+			assert.Nil(t, err)
 		}
 
 		for i := 0; i < 10; i++ {

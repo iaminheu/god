@@ -2,10 +2,11 @@ package hash
 
 import (
 	"fmt"
-	"git.zc0901.com/go/god/lib/mathx"
-	"github.com/stretchr/testify/assert"
 	"strconv"
 	"testing"
+
+	"git.zc0901.com/go/god/lib/mathx"
+	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -14,18 +15,18 @@ const (
 )
 
 func TestConsistentHash_Add(t *testing.T) {
-	ch := NewCustomConsistentHash(0, nil)
-	val, ok := ch.Get("any")
+	h := NewCustomConsistentHash(0, nil)
+	val, ok := h.Get("any")
 	assert.False(t, ok)
 	assert.Nil(t, val)
 
 	for i := 0; i < keySize; i++ {
-		ch.AddWithReplicas("localhost:"+strconv.Itoa(i), minReplicas<<1)
+		h.AddWithReplicas("localhost:"+strconv.Itoa(i), minReplicas<<1)
 	}
 
 	keys := make(map[string]int)
 	for i := 0; i < requestSize; i++ {
-		key, ok := ch.Get(requestSize + i)
+		key, ok := h.Get(requestSize + i)
 		assert.True(t, ok)
 		keys[key.(string)]++
 	}
@@ -99,12 +100,12 @@ func TestConsistentHashLeastTransferOnFailure(t *testing.T) {
 }
 
 func TestConsistentHash_Remove(t *testing.T) {
-	ch := NewConsistentHash()
-	ch.Add("first")
-	ch.Add("second")
-	ch.Remove("first")
+	h := NewConsistentHash()
+	h.Add("first")
+	h.Add("second")
+	h.Remove("first")
 	for i := 0; i < 100; i++ {
-		val, ok := ch.Get(i)
+		val, ok := h.Get(i)
 		assert.True(t, ok)
 		assert.Equal(t, "second", val)
 	}

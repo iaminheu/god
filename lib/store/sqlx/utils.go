@@ -2,14 +2,57 @@ package sqlx
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
 
+	"git.zc0901.com/go/god/lib/g"
+	"git.zc0901.com/go/god/lib/gconv"
+	"git.zc0901.com/go/god/lib/stringx"
+
 	"git.zc0901.com/go/god/lib/logx"
 	"git.zc0901.com/go/god/lib/mapping"
 )
+
+type UpdateArgs struct {
+	Id     string
+	Fields string
+	Args   []interface{}
+}
+
+func ExtractUpdateArgs(allFieldList []string, updateMap g.Map) (*UpdateArgs, error) {
+	vid, ok := updateMap["id"]
+	id := gconv.Int64(vid)
+	if !ok || id == 0 {
+		return nil, errors.New("主键id必须传递")
+	}
+
+	var fields []string
+	var args []interface{}
+
+	for field, value := range updateMap {
+		if field == "id" {
+			continue
+		}
+
+		if !strings.HasPrefix(field, "`") {
+			field = fmt.Sprintf("`%s`", field)
+		}
+
+		if stringx.Contains(allFieldList, field) {
+			fields = append(fields, field)
+			args = append(args, value)
+		}
+	}
+
+	return &UpdateArgs{
+		gconv.String(id),
+		strings.Join(fields, "=?,") + "=?",
+		args,
+	}, nil
+}
 
 // format 格式查询字符串和参数
 func format(query string, args ...interface{}) (string, error) {

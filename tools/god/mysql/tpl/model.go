@@ -9,6 +9,7 @@ var Model = `package model
 {{.txInsert}}
 {{.find}}
 {{.update}}
+{{.updatePartial}}
 {{.txUpdate}}
 {{.delete}}
 {{.txDelete}}

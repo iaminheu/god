@@ -2,43 +2,48 @@ package hash
 
 import (
 	"fmt"
-	"git.zc0901.com/go/god/lib/lang"
-	"git.zc0901.com/go/god/lib/mapping"
 	"sort"
 	"strconv"
 	"sync"
+
+	"git.zc0901.com/go/god/lib/lang"
+	"git.zc0901.com/go/god/lib/mapping"
 )
 
 const (
+	// TopWeight 可设置的最大权重值。
+	TopWeight = 100
+
 	minReplicas = 100
-	TopWeight   = 100
 	prime       = 16777619
 )
 
-// Generate Hash 生成器
-type HashFunc func(data []byte) uint64
+// Func 定义哈希计算方法。
+type (
+	Func func(data []byte) uint64
 
-// 一致性hash结构
-//
-// ConsistentHash
-//
-// 	-> ring: {hash1: [node1, node2]}
-//	-> keys: [hash1, hash2]
-//	-> nodes: {'': {}}
-type ConsistentHash struct {
-	hashFunc HashFunc
-	replicas int
-	keys     []uint64                 // 以hash值为key, Sorted hash list
-	ring     map[uint64][]interface{} // 以hash值为键，node列表为值的map
-	nodes    map[string]lang.PlaceholderType
-	lock     sync.RWMutex
-}
+	// ConsistentHash 一致性hash结构，是一个基于 ring 的哈希实现。
+	//
+	// 	-> ring: {hash1: [node1, node2]}
+	//	-> keys: [hash1, hash2]
+	//	-> nodes: {'': {}}
+	ConsistentHash struct {
+		hashFunc Func
+		replicas int
+		keys     []uint64                 // 以hash值为key, Sorted hash list
+		ring     map[uint64][]interface{} // 以hash值为键，node列表为值的map
+		nodes    map[string]lang.PlaceholderType
+		lock     sync.RWMutex
+	}
+)
 
+// NewConsistentHash 返回一个 ConsistentHash。
 func NewConsistentHash() *ConsistentHash {
 	return NewCustomConsistentHash(minReplicas, Hash)
 }
 
-func NewCustomConsistentHash(replicas int, hashFunc HashFunc) *ConsistentHash {
+// NewCustomConsistentHash 返回使用指定的副本集和哈希计算函数创建的 ConsistentHash。
+func NewCustomConsistentHash(replicas int, hashFunc Func) *ConsistentHash {
 	if replicas < minReplicas {
 		replicas = minReplicas
 	}
@@ -55,16 +60,18 @@ func NewCustomConsistentHash(replicas int, hashFunc HashFunc) *ConsistentHash {
 	}
 }
 
+// Add 添加指定副本集数量的节点，后续调用将覆盖之前的副本。
 func (h *ConsistentHash) Add(node interface{}) {
 	h.AddWithReplicas(node, h.replicas)
 }
 
+// AddWithWeight 添加带权重的节点，权重值为1-100，代表百分比。后续调用将覆盖之前的副本。
 func (h *ConsistentHash) AddWithWeight(node interface{}, weight int) {
 	replicas := h.replicas * weight / TopWeight
 	h.AddWithReplicas(node, replicas)
 }
 
-// AddWithReplicas 向指定节点增加指定数量的副本。
+// AddWithReplicas 添加指定副本集数量的节点。
 // 如果副本数量比 h.replicas 多将被截断，后添加会覆盖之前添加的。
 func (h *ConsistentHash) AddWithReplicas(node interface{}, replicas int) {
 	h.Remove(node)
@@ -90,7 +97,7 @@ func (h *ConsistentHash) AddWithReplicas(node interface{}, replicas int) {
 	})
 }
 
-// Get 获取指定 v 对应的 node 节点
+// Get 获取 h 中指定 v 对应的 node 节点。
 func (h *ConsistentHash) Get(v interface{}) (interface{}, bool) {
 	h.lock.RLock()
 	defer h.lock.RUnlock()
@@ -117,7 +124,7 @@ func (h *ConsistentHash) Get(v interface{}) (interface{}, bool) {
 	}
 }
 
-// Remove 从 h 中移除指定节点
+// Remove 从 h 中移除指定节点。
 func (h *ConsistentHash) Remove(node interface{}) {
 	nodeRepr := repr(node)
 
