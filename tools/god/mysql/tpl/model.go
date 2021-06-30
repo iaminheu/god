@@ -11,6 +11,7 @@ var Model = `package model
 {{.update}}
 {{.updatePartial}}
 {{.txUpdate}}
+{{.txUpdatePartial}}
 {{.delete}}
 {{.txDelete}}
 `

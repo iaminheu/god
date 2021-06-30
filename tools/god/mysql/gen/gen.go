@@ -206,8 +206,14 @@ func (g *ModelGenerator) genModelCode(table parser.Table, withCache bool) (strin
 		return "", nil
 	}
 
-	// 生成更新代码段
+	// 生成事务型更新代码段
 	txUpdateCode, err := genTxUpdate(tableDTO, withCache)
+	if err != nil {
+		return "", nil
+	}
+
+	// 生成事务型局部更新代码段
+	txUpdatePartialCode, err := genTxUpdatePartial(tableDTO, withCache)
 	if err != nil {
 		return "", nil
 	}
@@ -229,18 +235,19 @@ func (g *ModelGenerator) genModelCode(table parser.Table, withCache bool) (strin
 		Parse(tpl.Model).
 		GoFmt(true).
 		Execute(map[string]interface{}{
-			"imports":       importsCode,
-			"vars":          varsCode,
-			"types":         typesCode,
-			"new":           newCode,
-			"insert":        insertCode,
-			"txInsert":      txInsertCode,
-			"find":          strings.Join(findCode, "\n"),
-			"update":        updateCode,
-			"updatePartial": updatePartialCode,
-			"txUpdate":      txUpdateCode,
-			"delete":        deleteCode,
-			"txDelete":      txDeleteCode,
+			"imports":         importsCode,
+			"vars":            varsCode,
+			"types":           typesCode,
+			"new":             newCode,
+			"insert":          insertCode,
+			"txInsert":        txInsertCode,
+			"find":            strings.Join(findCode, "\n"),
+			"update":          updateCode,
+			"updatePartial":   updatePartialCode,
+			"txUpdate":        txUpdateCode,
+			"txUpdatePartial": txUpdatePartialCode,
+			"delete":          deleteCode,
+			"txDelete":        txDeleteCode,
 		})
 	if err != nil {
 		return "", err
