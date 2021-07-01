@@ -393,10 +393,10 @@ func (u *Unmarshaler) processNamedFieldWithoutValue(field reflect.StructField, v
 			}
 			return u.processFieldNotFromString(field, value, emptyMap, opts, fullName)
 		}
-	default:
-		if !opts.optional() {
-			return newInitError(fullName)
-		}
+		//default:
+		//if !opts.optional() {
+		//	return newInitError(fullName)
+		//}
 	}
 
 	return nil
