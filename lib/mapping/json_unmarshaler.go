@@ -34,21 +34,8 @@ func unmarshalJsonReader(reader io.Reader, v interface{}, unmarshaler *Unmarshal
 		return nil, err
 	}
 
-	//// 转换
-	//if err := gconv.Struct(m, v); err != nil {
-	//	return err
-	//}
-	//// 验证
-	//if err := gvalid.CheckStruct(v, nil); err != nil {
-	//	return err.Current()
-	//}
-
-	err := unmarshaler.Unmarshal(m, v)
-	if err != nil {
-		return nil, err
-	}
+	// 弃用，该用gf方式以支持validator
+	// return unmarshaler.Unmarshal(m, v)
 
 	return gmap.NewStrAnyMapFrom(m), nil
-
-	// return unmarshaler.Unmarshal(m, v)
 }
