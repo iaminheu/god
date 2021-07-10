@@ -15,7 +15,7 @@ type (
 		Auth                bool               `json:",optional"`                   // 是否开启rpc通信鉴权，若是则Redis配置必填
 		Redis               redis.KeyConf      `json:",optional"`                   // rpc通信及安全的redis配置
 		StrictControl       bool               `json:",optional"`                   // 是否为严格模式，若是且遇到鉴权错误则抛出异常
-		Timeout             int64              `json:",default=2000"`               // 默认超时时长为2000毫秒，<=0则意味支持无限期等待
+		Timeout             int64              `json:",default=5000"`               // 默认超时时长为2000毫秒，<=0则意味支持无限期等待
 		CpuThreshold        int64              `json:",default=900,range=[0:1000]"` // cpu降载阈值，默认900，支持区间为0-1000
 	}
 
@@ -25,7 +25,7 @@ type (
 		Endpoints []string           `json:",optional=!Etcd"`
 		App       string             `json:",optional"`
 		Token     string             `json:",optional"`
-		Timeout   int64              `json:",default=2000"`
+		Timeout   int64              `json:",default=5000"`
 	}
 )
 
