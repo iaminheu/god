@@ -2,11 +2,12 @@ package clientinterceptors
 
 import (
 	"context"
+	"path"
+	"time"
+
 	"git.zc0901.com/go/god/lib/logx"
 	"git.zc0901.com/go/god/lib/timex"
 	"google.golang.org/grpc"
-	"path"
-	"time"
 )
 
 const slowThreshold = time.Millisecond * 500
@@ -18,12 +19,12 @@ func DurationInterceptor(ctx context.Context, method string, req, replay interfa
 	startTime := timex.Now()
 	err := invoker(ctx, method, req, replay, cc, opts...)
 	if err != nil {
-		logx.WithContext(ctx).WithDuration(timex.Since(startTime)).Infof("失败 - %s - %v - %s",
+		logx.WithContext(ctx).WithDuration(timex.Since(startTime)).Errorf("[RPC] 失败 - %s - %v - %s",
 			serviceName, req, err.Error())
 	} else {
 		elapsed := timex.Since(startTime)
 		if elapsed > slowThreshold {
-			logx.WithContext(ctx).WithDuration(elapsed).Slowf("[RPC] ok - 慢查询 - %s -%v - %v",
+			logx.WithContext(ctx).WithDuration(elapsed).Slowf("[RPC] 慢查询 - %s -%v - %v",
 				serviceName, req, replay)
 		}
 	}

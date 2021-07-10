@@ -42,7 +42,8 @@ func (tx txSession) Prepare(query string) (StmtSession, error) {
 	}
 
 	return statement{
-		stmt: stmt,
+		query: query,
+		stmt:  stmt,
 	}, nil
 }
 
