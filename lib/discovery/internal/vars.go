@@ -6,9 +6,9 @@ const (
 	endpointsSeparator = ","
 	autoSyncInterval   = time.Minute
 	coolDownInterval   = time.Second
-	dialTimeout        = time.Second * 5
-	dialKeepAliveTime  = time.Second * 5
-	requestTimeout     = time.Second * 3
+	dialTimeout        = 5 * time.Second
+	dialKeepAliveTime  = 5 * time.Second
+	requestTimeout     = 3 * time.Second
 	Delimiter          = '/'
 )
 

@@ -12,7 +12,7 @@ import (
 
 const (
 	// 每250毫秒检测一次最近5秒的cpu负载是否超过0.95
-	cpuRefreshInterval = time.Millisecond * 250 // 250毫秒采集一次
+	cpuRefreshInterval = 250 * time.Millisecond // 250毫秒采集一次
 	allRefreshInterval = time.Minute            // 1分钟打印一次
 	beta               = 0.95
 )
@@ -38,10 +38,22 @@ func init() {
 					atomic.StoreInt64(&cpuUsage, usage)
 				})
 			case <-allTicker.C:
-				printUsage()
+				if logEnabled.True() {
+					printUsage()
+				}
 			}
 		}
 	}()
+}
+
+// CpuUsage 当前 CPU 用量
+func CpuUsage() int64 {
+	return atomic.LoadInt64(&cpuUsage)
+}
+
+// bytesToMb 字节转Mb
+func bytesToMb(b uint64) float32 {
+	return float32(b) / 1024 / 1024
 }
 
 // printUsage 打印系统负载
@@ -50,13 +62,4 @@ func printUsage() {
 	runtime.ReadMemStats(&m)
 	logx.Statf("CPU: %dm, 内存: 分配=%.1fMi, 累计分配=%.1fMi, 系统=%.1fMi, GC次数=%d",
 		CpuUsage(), bytesToMb(m.Alloc), bytesToMb(m.TotalAlloc), bytesToMb(m.Sys), m.NumGC)
-}
-
-// bytesToMb 字节转Mb
-func bytesToMb(b uint64) float32 {
-	return float32(b) / 1024 / 1024
-}
-
-func CpuUsage() int64 {
-	return atomic.LoadInt64(&cpuUsage)
 }

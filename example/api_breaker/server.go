@@ -1,22 +1,23 @@
 package main
 
 import (
+	"net/http"
+	"runtime"
+	"time"
+
 	"git.zc0901.com/go/god/api"
 	"git.zc0901.com/go/god/lib/logx"
 	"git.zc0901.com/go/god/lib/service"
 	"git.zc0901.com/go/god/lib/stat"
 	"git.zc0901.com/go/god/lib/syncx"
-	"net/http"
-	"runtime"
-	"time"
 )
 
 func main() {
 	logx.Disable()
 	stat.SetReporter(nil)
 
-	server := api.MustNewServer(api.ApiConf{
-		ServiceConf: service.ServiceConf{
+	server := api.MustNewServer(api.Conf{
+		ServiceConf: service.Conf{
 			Name: "api breaker",
 			Log:  logx.LogConf{Mode: "console"},
 		},

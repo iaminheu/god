@@ -3,10 +3,11 @@ package internal
 import (
 	"errors"
 	"fmt"
-	"git.zc0901.com/go/god/lib/iox"
-	"git.zc0901.com/go/god/lib/logx"
 	"strings"
 	"time"
+
+	"git.zc0901.com/go/god/lib/iox"
+	"git.zc0901.com/go/god/lib/logx"
 )
 
 const (
@@ -66,7 +67,7 @@ func init() {
 	}
 }
 
-// RefreshCpuUsage 刷新Cpu占用率
+// RefreshCpuUsage 刷新 CPU 用量
 func RefreshCpuUsage() uint64 {
 	total, err := totalCpuUsage()
 	if err != nil {

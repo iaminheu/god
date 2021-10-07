@@ -21,7 +21,7 @@ const (
 import {{.authImport}}
 
 type Config struct {
-	api.ApiConf
+	api.Conf
 	{{.auth}}
 }
 `
@@ -48,13 +48,13 @@ func genConfig(dir string, cfg *config.Config, api *spec.ApiSpec) error {
 	}
 	defer fp.Close()
 
-	var authNames = getAuths(api)
+	authNames := getAuths(api)
 	var auths []string
 	for _, item := range authNames {
 		auths = append(auths, fmt.Sprintf("%s %s", item, jwtTemplate))
 	}
 
-	var authImportStr = fmt.Sprintf("\"%s/api\"", vars.ProjectOpenSourceUrl)
+	authImportStr := fmt.Sprintf("\"%s/api\"", vars.ProjectOpenSourceUrl)
 	text, err := ctlutil.LoadTemplate(category, configTemplateFile, configTemplate)
 	if err != nil {
 		return err

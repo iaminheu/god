@@ -4,16 +4,17 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
+	"time"
+
 	"git.zc0901.com/go/god/rpc/internal/balancer/p2c"
 	"git.zc0901.com/go/god/rpc/internal/clientinterceptors"
 	"git.zc0901.com/go/god/rpc/internal/resolver"
 	"google.golang.org/grpc"
-	"strings"
-	"time"
 )
 
 const (
-	dialTimeout = time.Second * 3
+	dialTimeout = 3 * time.Second
 	separator   = '/'
 )
 
@@ -67,12 +68,14 @@ func (c *client) buildDialOptions(opts ...ClientOption) []grpc.DialOption {
 		grpc.WithInsecure(),
 		grpc.WithBlock(),
 		WithUnaryClientInterceptors(
-			clientinterceptors.TraceInterceptor,                    // 线路跟踪
+			clientinterceptors.UnaryTraceInterceptor,               // 线路跟踪
 			clientinterceptors.DurationInterceptor,                 // 慢查询日志
-			clientinterceptors.BreakerInterceptor,                  // 自动熔断
 			clientinterceptors.PrometheusInterceptor,               // 监控报警
+			clientinterceptors.BreakerInterceptor,                  // 自动熔断
 			clientinterceptors.TimeoutInterceptor(cliOpts.Timeout), // 超时控制
 		),
+		// WithStreamClientInterceptors(
+		//	clientinterceptors.st),
 	}
 
 	return append(options, cliOpts.DialOptions...)
@@ -92,7 +95,7 @@ func (c *client) dial(server string, opts ...ClientOption) error {
 				service = server[pos+1:]
 			}
 		}
-		return fmt.Errorf("rpc dial: %s, 错误：%s, 请确保rpc服务 %s 已启动，如使用etcd也需确保已启动",
+		return fmt.Errorf("RPC 拨号失败: %s, 错误：%s, 请确保 RPC %s 已启动，如使用 etcd 也需确保启动",
 			server, err.Error(), service)
 	}
 

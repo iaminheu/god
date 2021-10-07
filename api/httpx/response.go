@@ -2,9 +2,10 @@ package httpx
 
 import (
 	"encoding/json"
-	"git.zc0901.com/go/god/lib/logx"
 	"net/http"
 	"sync"
+
+	"git.zc0901.com/go/god/lib/logx"
 )
 
 var (
@@ -13,7 +14,25 @@ var (
 	lock          sync.RWMutex
 )
 
-// 错误响应，支持自定义错误处理器
+type Message struct {
+	Code int         `json:"code"`
+	Data interface{} `json:"data"`
+	Msg  string      `json:"message"`
+}
+
+func (e *Message) Error() string {
+	return e.Msg
+}
+
+func NewCodeError(code int, msg string) error {
+	return &Message{Code: code, Msg: msg}
+}
+
+func NewDefaultError(msg string) error {
+	return NewCodeError(0, msg)
+}
+
+// Error 错误响应，支持自定义错误处理器
 func Error(w http.ResponseWriter, err error) {
 	lock.RLock()
 	handler := errorHandler
@@ -29,16 +48,22 @@ func Error(w http.ResponseWriter, err error) {
 	if ok {
 		http.Error(w, e.Error(), code)
 	} else {
+		if m, ok := body.(Message); ok {
+			if m.Code > 0 {
+				http.Error(w, m.Msg, http.StatusOK)
+				return
+			}
+		}
 		WriteJson(w, code, body)
 	}
 }
 
-// 正常响应
+// Ok 正常响应
 func Ok(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusOK)
 }
 
-// 正常JSON响应
+// OkJson 正常JSON响应
 func OkJson(w http.ResponseWriter, body interface{}) {
 	lock.RLock()
 	handler := okJsonHandler
@@ -52,21 +77,21 @@ func OkJson(w http.ResponseWriter, body interface{}) {
 	return
 }
 
-// 设置自定义错误处理器
+// SetErrorHandler 设置自定义错误处理器
 func SetErrorHandler(handler func(error) (int, interface{})) {
 	lock.Lock()
 	defer lock.Unlock()
 	errorHandler = handler
 }
 
-// 设置自定义成功处理器
+// SetOkJsonHandler 设置自定义成功处理器
 func SetOkJsonHandler(handler func(body interface{}) interface{}) {
 	lock.Lock()
 	defer lock.Unlock()
 	okJsonHandler = handler
 }
 
-// 写JSON响应
+// WriteJson 写JSON响应
 func WriteJson(w http.ResponseWriter, code int, body interface{}) {
 	w.Header().Set(ContentType, ApplicationJson)
 	w.WriteHeader(code)

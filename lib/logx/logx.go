@@ -4,9 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"git.zc0901.com/go/god/lib/iox"
-	"git.zc0901.com/go/god/lib/sysx"
-	"git.zc0901.com/go/god/lib/timex"
 	"io"
 	"io/ioutil"
 	"log"
@@ -19,10 +16,14 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"git.zc0901.com/go/god/lib/iox"
+	"git.zc0901.com/go/god/lib/sysx"
+	"git.zc0901.com/go/god/lib/timex"
 )
 
+// 日志级别值
 const (
-	// 日志级别值
 	InfoLevel = iota
 	SlowLevel
 	ErrorLevel
@@ -79,10 +80,10 @@ var (
 type (
 	// 日志结构
 	logEntry struct {
-		Timestamp string `json:"@timestamp"`
-		Level     string `json:"level"`
-		Duration  string `json:"duration,omitempty"`
-		Content   string `json:"content"`
+		Timestamp string      `json:"@timestamp"`
+		Level     string      `json:"level"`
+		Duration  string      `json:"duration,omitempty"`
+		Content   interface{} `json:"content"`
 	}
 
 	// 日志配置选项
@@ -94,12 +95,13 @@ type (
 
 	LogOption func(options *logOptions)
 
-	// 用于 durationLogger/traceLogger
+	// Logger 用于 durationLogger/traceLogger
 	Logger interface {
 		Info(...interface{})
 		Infof(string, ...interface{})
 		Error(...interface{})
 		Errorf(string, ...interface{})
+		Errorv(interface{})
 		Slow(...interface{})
 		Slowf(string, ...interface{})
 		WithDuration(time.Duration) Logger
@@ -230,6 +232,10 @@ func ErrorStack(v ...interface{}) {
 
 func ErrorStackf(format string, v ...interface{}) {
 	syncStack(fmt.Sprintf(format, v...))
+}
+
+func Errorv(v interface{}) {
+	errorAnySync(v)
 }
 
 func Fatal(v ...interface{}) {
@@ -364,6 +370,12 @@ func createOutput(filename string) (io.WriteCloser, error) {
 	)
 }
 
+func errorAnySync(v interface{}) {
+	if shouldLog(ErrorLevel) {
+		outputAny(errorLogger, errorLevel, v)
+	}
+}
+
 func syncInfo(msg string) {
 	if shouldLog(InfoLevel) {
 		output(infoLogger, infoLevel, msg)
@@ -399,6 +411,15 @@ func syncStat(msg string) {
 func outputError(writer io.WriteCloser, msg string, callDepth int) {
 	content := formatWithCaller(msg, callDepth)
 	output(writer, errorLevel, content)
+}
+
+func outputAny(writer io.Writer, level string, val interface{}) {
+	entry := logEntry{
+		Timestamp: getTimestamp(),
+		Level:     level,
+		Content:   val,
+	}
+	outputJson(writer, entry)
 }
 
 func formatWithCaller(msg string, callDepth int) string {

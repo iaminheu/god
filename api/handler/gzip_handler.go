@@ -2,14 +2,15 @@ package handler
 
 import (
 	"compress/gzip"
-	"git.zc0901.com/go/god/api/httpx"
 	"net/http"
 	"strings"
+
+	"git.zc0901.com/go/god/api/httpx"
 )
 
 const gzipEncoding = "gzip"
 
-// API Gzip 中间件
+// GzipHandler API Gzip 中间件
 func GzipHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.Contains(r.Header.Get(httpx.ContentEncoding), gzipEncoding) {

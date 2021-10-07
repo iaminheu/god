@@ -2,11 +2,12 @@ package api
 
 import (
 	"errors"
+	"log"
+	"net/http"
+
 	"git.zc0901.com/go/god/api/handler"
 	"git.zc0901.com/go/god/api/router"
 	"git.zc0901.com/go/god/lib/logx"
-	"log"
-	"net/http"
 )
 
 type (
@@ -22,7 +23,7 @@ type (
 	}
 )
 
-func MustNewServer(c ApiConf, opts ...RunOption) *Server {
+func MustNewServer(c Conf, opts ...RunOption) *Server {
 	server, err := NewServer(c, opts...)
 	if err != nil {
 		log.Fatal(err)
@@ -31,7 +32,7 @@ func MustNewServer(c ApiConf, opts ...RunOption) *Server {
 	return server
 }
 
-func NewServer(c ApiConf, opts ...RunOption) (*Server, error) {
+func NewServer(c Conf, opts ...RunOption) (*Server, error) {
 	if len(opts) > 1 {
 		return nil, errors.New("只允许一个 RunOption")
 	}

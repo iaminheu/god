@@ -3,14 +3,15 @@ package load
 import (
 	"errors"
 	"fmt"
+	"math"
+	"sync/atomic"
+	"time"
+
 	"git.zc0901.com/go/god/lib/collection"
 	"git.zc0901.com/go/god/lib/logx"
 	"git.zc0901.com/go/god/lib/stat"
 	"git.zc0901.com/go/god/lib/syncx"
 	"git.zc0901.com/go/god/lib/timex"
-	"math"
-	"sync/atomic"
-	"time"
 )
 
 const (
@@ -30,7 +31,7 @@ const (
 var (
 	ErrServiceOverloaded = errors.New("service overloaded - 服务超载")
 
-	// 是否启用自适应负载卸流器，默认启用
+	// 是否启用自适应负载泄流器，默认启用
 	enabled = syncx.ForAtomicBool(true)
 
 	// 系统超载检测函数（判断CPU用量是否超过预置的阈值）
@@ -50,7 +51,7 @@ type (
 		shedder *adaptiveShedder
 	}
 
-	// Shedder 负载卸流器
+	// Shedder 负载泄流器
 	Shedder interface {
 		Allow() (Promise, error)
 	}
@@ -63,7 +64,7 @@ type (
 
 	ShedderOption func(opts *shedderOptions)
 
-	// 自适应卸流器
+	// 自适应泄流器
 	adaptiveShedder struct {
 		cpuThreshold    int64
 		windows         int64 // 每秒的buckets
@@ -148,7 +149,7 @@ func (as *adaptiveShedder) shouldDrop() bool {
 			as.avgFlyingLock.Lock()
 			avgFlying := as.avgFlying
 			as.avgFlyingLock.Unlock()
-			msg := fmt.Sprintf("删除请求，cpu: %d, maxPass: %d, minRt: %.2f, hot: %t, flying: %d, avgFlying: %.2f",
+			msg := fmt.Sprintf("丢弃请求，CPU: %d, maxPass: %d, minRt: %.2f, hot: %t, flying: %d, avgFlying: %.2f",
 				stat.CpuUsage(), as.maxPass(), as.minRt(), as.stillHot(), flying, avgFlying)
 			logx.Error(msg)
 			stat.Report(msg)
@@ -212,7 +213,7 @@ func (as *adaptiveShedder) maxPass() int64 {
 
 // minRt 最小平均响应时间(毫秒)
 func (as *adaptiveShedder) minRt() float64 {
-	var result = defaultMinRt
+	result := defaultMinRt
 
 	as.rtCounter.Reduce(func(b *collection.Bucket) {
 		if b.Requests <= 0 {

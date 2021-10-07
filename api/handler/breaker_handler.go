@@ -2,18 +2,19 @@ package handler
 
 import (
 	"fmt"
+	"net/http"
+	"strings"
+
 	"git.zc0901.com/go/god/api/httpx"
 	"git.zc0901.com/go/god/api/internal/security"
 	"git.zc0901.com/go/god/lib/breaker"
 	"git.zc0901.com/go/god/lib/logx"
 	"git.zc0901.com/go/god/lib/stat"
-	"net/http"
-	"strings"
 )
 
 const breakerSeparator = "://"
 
-// API 熔断器中间件
+// BreakerHandler API 熔断器中间件
 func BreakerHandler(method, path string, metrics *stat.Metrics) func(http.Handler) http.Handler {
 	brk := breaker.NewBreaker(breaker.WithName(strings.Join([]string{method, path}, breakerSeparator)))
 	return func(next http.Handler) http.Handler {

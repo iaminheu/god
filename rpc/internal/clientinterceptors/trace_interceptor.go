@@ -2,13 +2,14 @@ package clientinterceptors
 
 import (
 	"context"
+
 	"git.zc0901.com/go/god/lib/trace"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
 
-// TraceInterceptor rpc客户端链路追踪拦截器
-func TraceInterceptor(ctx context.Context, method string, req, reply interface{},
+// UnaryTraceInterceptor rpc客户端链路追踪拦截器
+func UnaryTraceInterceptor(ctx context.Context, method string, req, reply interface{},
 	cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 	// 开启客户端跟踪操作
 	ctx, span := trace.StartClientSpan(ctx, cc.Target(), method)

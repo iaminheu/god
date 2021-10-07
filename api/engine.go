@@ -3,6 +3,9 @@ package api
 import (
 	"errors"
 	"fmt"
+	"net/http"
+	"time"
+
 	"git.zc0901.com/go/god/api/handler"
 	"git.zc0901.com/go/god/api/internal"
 	"git.zc0901.com/go/god/api/router"
@@ -10,8 +13,6 @@ import (
 	"git.zc0901.com/go/god/lib/load"
 	"git.zc0901.com/go/god/lib/stat"
 	"github.com/justinas/alice"
-	"net/http"
-	"time"
 )
 
 // 使用 1000m 来表示 cpu 负载为 100%
@@ -21,7 +22,7 @@ var ErrSignatureConfig = errors.New("错误的签名配置")
 
 // API 内部引擎
 type engine struct {
-	conf                 ApiConf
+	conf                 Conf
 	routes               []featuredRoutes
 	middlewares          []Middleware
 	unauthorizedCallback handler.UnauthorizedCallback
@@ -31,7 +32,7 @@ type engine struct {
 }
 
 // 新建 API 引擎
-func newEngine(c ApiConf) *engine {
+func newEngine(c Conf) *engine {
 	e := &engine{conf: c}
 
 	// 启用cpu负载均衡
@@ -209,7 +210,7 @@ func (e *engine) getLogHandler() alice.Constructor {
 	}
 }
 
-// 获取负载均衡卸流器
+// 获取负载均衡泄流器
 func (e *engine) getShedder(priority bool) load.Shedder {
 	if priority && e.priorityShedder != nil {
 		return e.priorityShedder

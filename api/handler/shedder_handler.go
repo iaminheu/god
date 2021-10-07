@@ -1,23 +1,24 @@
 package handler
 
 import (
+	"net/http"
+	"sync"
+
 	"git.zc0901.com/go/god/api/httpx"
 	"git.zc0901.com/go/god/api/internal/security"
 	"git.zc0901.com/go/god/lib/load"
 	"git.zc0901.com/go/god/lib/logx"
 	"git.zc0901.com/go/god/lib/stat"
-	"net/http"
-	"sync"
 )
 
-const serviceType = "api"
+const serviceType = "API"
 
 var (
 	shedderStat *load.ShedderStat
 	lock        sync.Mutex
 )
 
-// API 负载均衡中间件
+// ShedderHandler API 负载泄流中间件
 func ShedderHandler(shedder load.Shedder, metrics *stat.Metrics) func(http.Handler) http.Handler {
 	if shedder == nil {
 		return func(next http.Handler) http.Handler {

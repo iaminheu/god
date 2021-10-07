@@ -1,17 +1,18 @@
 package handler
 
 import (
+	"net/http"
+	"time"
+
 	"git.zc0901.com/go/god/api/httpx"
 	"git.zc0901.com/go/god/api/internal/security"
 	"git.zc0901.com/go/god/lib/codec"
 	"git.zc0901.com/go/god/lib/logx"
-	"net/http"
-	"time"
 )
 
 type UnsignedCallback func(w http.ResponseWriter, r *http.Request, next http.Handler, strict bool, code int) // 未签名回调函数
 
-// API 参数签名中间件
+// ContentSecurityHandler API 参数签名中间件
 func ContentSecurityHandler(decrypters map[string]codec.RsaDecrypter, tolerance time.Duration, strict bool, callbacks ...UnsignedCallback) func(handler http.Handler) http.Handler {
 	if len(callbacks) == 0 {
 		callbacks = append(callbacks, handleVerificationFailure)

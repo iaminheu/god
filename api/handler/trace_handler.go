@@ -1,13 +1,14 @@
 package handler
 
 import (
+	"net/http"
+
 	"git.zc0901.com/go/god/lib/logx"
 	"git.zc0901.com/go/god/lib/sysx"
 	"git.zc0901.com/go/god/lib/trace"
-	"net/http"
 )
 
-// API 链路跟踪中间件
+// TraceHandler API 链路跟踪中间件
 func TraceHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// **1** 拦截请求，获取 header 中的traceId信息

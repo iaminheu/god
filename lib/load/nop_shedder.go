@@ -1,6 +1,6 @@
 package load
 
-// nopShedder 无操作的负载卸流器
+// nopShedder 无操作的负载泄流器
 type (
 	nopShedder struct{}
 	nopPromise struct{}

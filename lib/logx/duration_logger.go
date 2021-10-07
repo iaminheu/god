@@ -2,9 +2,10 @@ package logx
 
 import (
 	"fmt"
-	"git.zc0901.com/go/god/lib/timex"
 	"io"
 	"time"
+
+	"git.zc0901.com/go/god/lib/timex"
 )
 
 const durationCallerDepth = 3
@@ -41,6 +42,12 @@ func (l *durationLogger) Errorf(format string, v ...interface{}) {
 	}
 }
 
+func (l *durationLogger) Errorv(v interface{}) {
+	if shouldLog(ErrorLevel) {
+		l.write(errorLogger, errorLevel, v)
+	}
+}
+
 func (l *durationLogger) Slow(v ...interface{}) {
 	if shouldLog(SlowLevel) {
 		l.write(slowLogger, slowLevel, fmt.Sprint(v...))
@@ -58,9 +65,9 @@ func (l *durationLogger) WithDuration(d time.Duration) Logger {
 	return l
 }
 
-func (l *durationLogger) write(writer io.Writer, level, content string) {
+func (l *durationLogger) write(writer io.Writer, level string, val interface{}) {
 	l.Timestamp = getTimestamp()
 	l.Level = level
-	l.Content = content
-	outputJson(writer, logEntry(*l))
+	l.Content = val
+	outputJson(writer, l)
 }

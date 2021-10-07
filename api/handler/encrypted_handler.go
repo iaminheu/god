@@ -5,19 +5,20 @@ import (
 	"bytes"
 	"encoding/base64"
 	"errors"
-	"git.zc0901.com/go/god/lib/codec"
-	"git.zc0901.com/go/god/lib/logx"
 	"io"
 	"io/ioutil"
 	"net"
 	"net/http"
+
+	"git.zc0901.com/go/god/lib/codec"
+	"git.zc0901.com/go/god/lib/logx"
 )
 
 const maxBytes = 1 << 20 // 1MB
 
 var errContentLengthExceeded = errors.New("内容超出长度限制")
 
-// API 加密响应中间件
+// EncrpytedHandler API 加密响应中间件
 // key: 解密秘钥
 func EncrpytedHandler(key []byte) func(handler http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {

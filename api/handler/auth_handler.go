@@ -39,7 +39,7 @@ type (
 	AuthorizeOption      func(opts *AuthorizeOptions)
 )
 
-// API JWT鉴权中间件
+// Authorize API JWT鉴权中间件
 func Authorize(secret string, opts ...AuthorizeOption) func(http.Handler) http.Handler {
 	var authOpts AuthorizeOptions
 	for _, opt := range opts {

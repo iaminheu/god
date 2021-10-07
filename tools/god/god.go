@@ -10,14 +10,10 @@ import (
 	"git.zc0901.com/go/god/lib/load"
 	"git.zc0901.com/go/god/lib/logx"
 	"git.zc0901.com/go/god/tools/god/api/apigen"
-	"git.zc0901.com/go/god/tools/god/api/dartgen"
 	"git.zc0901.com/go/god/tools/god/api/docgen"
 	"git.zc0901.com/go/god/tools/god/api/format"
 	"git.zc0901.com/go/god/tools/god/api/gogen"
-	"git.zc0901.com/go/god/tools/god/api/javagen"
-	"git.zc0901.com/go/god/tools/god/api/ktgen"
 	"git.zc0901.com/go/god/tools/god/api/new"
-	"git.zc0901.com/go/god/tools/god/api/tsgen"
 	"git.zc0901.com/go/god/tools/god/api/validate"
 	"git.zc0901.com/go/god/tools/god/mysql/command"
 	rpc "git.zc0901.com/go/god/tools/god/rpc/cli"
@@ -172,102 +168,23 @@ var (
 				},
 				{
 					Name:  "go",
-					Usage: "generate go files for provided api in yaml file",
+					Usage: "生成 Go 版本 API 服务",
 					Flags: []cli.Flag{
 						cli.StringFlag{
 							Name:  "dir",
-							Usage: "the target dir",
+							Usage: "目标目录",
 						},
 						cli.StringFlag{
 							Name:  "api",
-							Usage: "the api file",
+							Usage: "指定的 API 文件",
 						},
 						cli.StringFlag{
 							Name:     "style",
 							Required: false,
-							Usage:    "the file naming format, see [https://github.com/tal-tech/go-zero/tree/master/tools/goctl/config/readme.md]",
+							Usage:    "文件命名风格，详见 [https://github.com/tal-tech/go-zero/tree/master/tools/goctl/config/readme.md]",
 						},
 					},
 					Action: gogen.GoCommand,
-				},
-				{
-					Name:  "java",
-					Usage: "generate java files for provided api in api file",
-					Flags: []cli.Flag{
-						cli.StringFlag{
-							Name:  "dir",
-							Usage: "the target dir",
-						},
-						cli.StringFlag{
-							Name:  "api",
-							Usage: "the api file",
-						},
-					},
-					Action: javagen.JavaCommand,
-				},
-				{
-					Name:  "ts",
-					Usage: "generate ts files for provided api in api file",
-					Flags: []cli.Flag{
-						cli.StringFlag{
-							Name:  "dir",
-							Usage: "the target dir",
-						},
-						cli.StringFlag{
-							Name:  "api",
-							Usage: "the api file",
-						},
-						cli.StringFlag{
-							Name:     "webapi",
-							Usage:    "the web api file path",
-							Required: false,
-						},
-						cli.StringFlag{
-							Name:     "caller",
-							Usage:    "the web api caller",
-							Required: false,
-						},
-						cli.BoolFlag{
-							Name:     "unwrap",
-							Usage:    "unwrap the webapi caller for import",
-							Required: false,
-						},
-					},
-					Action: tsgen.TsCommand,
-				},
-				{
-					Name:  "dart",
-					Usage: "generate dart files for provided api in api file",
-					Flags: []cli.Flag{
-						cli.StringFlag{
-							Name:  "dir",
-							Usage: "the target dir",
-						},
-						cli.StringFlag{
-							Name:  "api",
-							Usage: "the api file",
-						},
-					},
-					Action: dartgen.DartCommand,
-				},
-				{
-					Name:  "kt",
-					Usage: "generate kotlin code for provided api file",
-					Flags: []cli.Flag{
-						cli.StringFlag{
-							Name:  "dir",
-							Usage: "the target directory",
-						},
-						cli.StringFlag{
-							Name:  "api",
-							Usage: "the api file",
-						},
-						cli.StringFlag{
-							Name:  "pkg",
-							Usage: "define package name for kotlin file",
-						},
-					},
-					Action: ktgen.KtCommand,
 				},
 			},
 		},

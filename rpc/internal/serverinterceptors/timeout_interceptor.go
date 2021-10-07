@@ -2,13 +2,21 @@ package serverinterceptors
 
 import (
 	"context"
-	"google.golang.org/grpc"
+	"fmt"
+	"runtime/debug"
+	"strings"
 	"sync"
 	"time"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
+	"google.golang.org/grpc"
 )
 
 func UnaryTimeoutInterceptor(timeout time.Duration) grpc.UnaryServerInterceptor {
-	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo,
+		handler grpc.UnaryHandler) (interface{}, error) {
 		ctx, cancel := context.WithTimeout(ctx, timeout)
 		defer cancel()
 
@@ -21,7 +29,8 @@ func UnaryTimeoutInterceptor(timeout time.Duration) grpc.UnaryServerInterceptor 
 		go func() {
 			defer func() {
 				if p := recover(); p != nil {
-					panicChan <- p
+					// 添加堆栈信息以防迷失在 goroutine 中
+					panicChan <- fmt.Sprintf("%+v\n\n%s", p, strings.TrimSpace(string(debug.Stack())))
 				}
 			}()
 
@@ -39,7 +48,14 @@ func UnaryTimeoutInterceptor(timeout time.Duration) grpc.UnaryServerInterceptor 
 			defer lock.Unlock()
 			return resp, err
 		case <-ctx.Done():
-			return nil, ctx.Err()
+			err := ctx.Err()
+
+			if err == context.Canceled {
+				err = status.Error(codes.Canceled, err.Error())
+			} else if err == context.DeadlineExceeded {
+				err = status.Error(codes.DeadlineExceeded, err.Error())
+			}
+			return nil, err
 		}
 	}
 }

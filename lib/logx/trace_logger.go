@@ -3,10 +3,11 @@ package logx
 import (
 	"context"
 	"fmt"
-	"git.zc0901.com/go/god/lib/timex"
-	"git.zc0901.com/go/god/lib/trace"
 	"io"
 	"time"
+
+	"git.zc0901.com/go/god/lib/timex"
+	"git.zc0901.com/go/god/lib/trace"
 )
 
 type traceLogger struct {
@@ -46,6 +47,12 @@ func (l *traceLogger) Errorf(format string, v ...interface{}) {
 	}
 }
 
+func (l *traceLogger) Errorv(v interface{}) {
+	if shouldLog(ErrorLevel) {
+		l.write(errorLogger, errorLevel, v)
+	}
+}
+
 func (l *traceLogger) Slow(v ...interface{}) {
 	if shouldLog(ErrorLevel) {
 		l.write(slowLogger, slowLevel, fmt.Sprint(v...))
@@ -63,7 +70,7 @@ func (l *traceLogger) WithDuration(duration time.Duration) Logger {
 	return l
 }
 
-func (l *traceLogger) write(writer io.WriteCloser, level string, content string) {
+func (l *traceLogger) write(writer io.WriteCloser, level string, content interface{}) {
 	l.Timestamp = getTimestamp()
 	l.Level = level
 	l.Content = content

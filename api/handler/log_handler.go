@@ -55,7 +55,7 @@ func (w *loggedResponseWriter) WriteHeader(code int) {
 	w.code = code
 }
 
-// API 日志记录中间件
+// LogHandler API 日志记录中间件
 func LogHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		timer := utils.NewElapsedTimer()
@@ -74,7 +74,7 @@ func LogHandler(next http.Handler) http.Handler {
 	})
 }
 
-// API 详细日志记录中间件
+// DetailedLogHandler API 详细日志记录中间件
 func DetailedLogHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		timer := utils.NewElapsedTimer()

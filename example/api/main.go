@@ -2,10 +2,11 @@ package main
 
 import (
 	"flag"
+	"net/http"
+
 	"git.zc0901.com/go/god/api"
 	"git.zc0901.com/go/god/api/httpx"
 	"git.zc0901.com/go/god/lib/conf"
-	"net/http"
 )
 
 var configFile = flag.String("f", "config.yaml", "API 配置文件")
@@ -13,7 +14,7 @@ var configFile = flag.String("f", "config.yaml", "API 配置文件")
 func main() {
 	// 读取配置文件
 	flag.Parse()
-	var c api.ApiConf
+	var c api.Conf
 	conf.MustLoad(*configFile, &c)
 
 	// 新建 API 服务器

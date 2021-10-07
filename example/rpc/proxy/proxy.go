@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+
 	"git.zc0901.com/go/god/example/rpc/pb/unary"
 	"git.zc0901.com/go/god/lib/logx"
 	"git.zc0901.com/go/god/lib/service"
@@ -34,7 +35,7 @@ func main() {
 
 	// 新建代理客户端
 	proxy := rpc.MustNewServer(rpc.ServerConf{
-		ServiceConf: service.ServiceConf{
+		ServiceConf: service.Conf{
 			Log: logx.LogConf{Mode: "console"},
 		},
 		ListenOn: *listen,

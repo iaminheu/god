@@ -1,11 +1,12 @@
 package handler
 
 import (
-	"git.zc0901.com/go/god/api/internal"
 	"net/http"
+
+	"git.zc0901.com/go/god/api/internal"
 )
 
-// API 最大请求字节中间件
+// MaxBytesHandler API 最大请求字节中间件
 func MaxBytesHandler(max int64) func(http.Handler) http.Handler {
 	if max <= 0 {
 		return func(next http.Handler) http.Handler {

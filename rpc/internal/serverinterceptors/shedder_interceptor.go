@@ -2,24 +2,26 @@ package serverinterceptors
 
 import (
 	"context"
+	"sync"
+
 	"git.zc0901.com/go/god/lib/load"
 	"git.zc0901.com/go/god/lib/stat"
 	"google.golang.org/grpc"
-	"sync"
 )
 
-const serviceType = "rpc"
+const serviceType = "RPC"
 
 var (
 	shedderStat *load.ShedderStat
 	lock        sync.Mutex
 )
 
-// 一元卸流拦截器
+// UnaryShedderInterceptor 一元泄流拦截器
 func UnaryShedderInterceptor(shedder load.Shedder, metrics *stat.Metrics) grpc.UnaryServerInterceptor {
 	ensureShedderStat()
 
-	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
+	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo,
+		handler grpc.UnaryHandler) (resp interface{}, err error) {
 		shedderStat.IncrTotal()
 
 		var promise load.Promise

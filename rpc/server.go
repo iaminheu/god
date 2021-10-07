@@ -1,6 +1,9 @@
 package rpc
 
 import (
+	"log"
+	"time"
+
 	"git.zc0901.com/go/god/lib/load"
 	"git.zc0901.com/go/god/lib/logx"
 	"git.zc0901.com/go/god/lib/stat"
@@ -8,8 +11,6 @@ import (
 	"git.zc0901.com/go/god/rpc/internal/auth"
 	"git.zc0901.com/go/god/rpc/internal/serverinterceptors"
 	"google.golang.org/grpc"
-	"log"
-	"time"
 )
 
 type RpcServer struct {
@@ -87,7 +88,7 @@ func (rs *RpcServer) Stop() {
 }
 
 func setupInterceptors(server internal.Server, c ServerConf, metrics *stat.Metrics) error {
-	// 自动降载（负载卸流拦截器）
+	// 自动降载（负载泄流拦截器）
 	if c.CpuThreshold > 0 {
 		shedder := load.NewAdaptiveShedder(load.WithCpuThreshold(c.CpuThreshold))
 		server.AddUnaryInterceptors(serverinterceptors.UnaryShedderInterceptor(shedder, metrics))

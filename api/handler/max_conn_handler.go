@@ -1,13 +1,14 @@
 package handler
 
 import (
+	"net/http"
+
 	"git.zc0901.com/go/god/api/internal"
 	"git.zc0901.com/go/god/lib/logx"
 	"git.zc0901.com/go/god/lib/syncx"
-	"net/http"
 )
 
-// API 最大请求连接数中间件
+// MaxConns API 最大请求连接数中间件
 func MaxConns(max int) func(http.Handler) http.Handler {
 	if max <= 0 {
 		return func(next http.Handler) http.Handler {

@@ -6,6 +6,6 @@ import (
 )
 
 type Config struct {
-	api.ApiConf
+	api.Conf
 	Rpc rpc.ClientConf
 }

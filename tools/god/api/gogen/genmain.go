@@ -32,7 +32,7 @@ func main() {
 	conf.MustLoad(*configFile, &c)
 
 	ctx := svc.NewServiceContext(c)
-	server := api.MustNewServer(c.ApiConf)
+	server := api.MustNewServer(c.Conf)
 	defer server.Stop()
 
 	handler.RegisterHandlers(server, ctx)

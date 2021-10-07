@@ -3,11 +3,12 @@ package util
 import (
 	"errors"
 	"fmt"
-	"git.zc0901.com/go/god/lib/fs"
 	"io"
 	"os"
 	"path"
 	"strings"
+
+	"git.zc0901.com/go/god/lib/fs"
 
 	"git.zc0901.com/go/god/lib/logx"
 	"git.zc0901.com/go/god/tools/god/api/spec"
@@ -70,7 +71,7 @@ func WriteIndent(writer io.Writer, indent int) {
 }
 
 func RemoveComment(line string) string {
-	var commentIdx = strings.Index(line, "//")
+	commentIdx := strings.Index(line, "//")
 	if commentIdx >= 0 {
 		return strings.TrimSpace(line[:commentIdx])
 	}
