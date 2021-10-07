@@ -1,13 +1,14 @@
-package dispatcher
+package executors
 
 import (
-	"git.zc0901.com/go/god/lib/timex"
-	"github.com/stretchr/testify/assert"
 	"runtime"
 	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"git.zc0901.com/go/god/lib/timex"
+	"github.com/stretchr/testify/assert"
 )
 
 // 自定义一个任务容器
@@ -43,7 +44,7 @@ func (c *container) Execute(tasks interface{}) {
 }
 
 // PopAll 自定义弹出方法
-func (c *container) PopAll() interface{} {
+func (c *container) RemoveAll() interface{} {
 	tasks := c.tasks
 	c.tasks = nil
 	return tasks
@@ -51,7 +52,7 @@ func (c *container) PopAll() interface{} {
 
 func TestPeriodicalDispatcher_Sync(t *testing.T) {
 	var done int32
-	executor := NewPeriodicalDispatcher(time.Second, newContainer(500*time.Millisecond, nil))
+	executor := NewPeriodicalExecutor(time.Second, newContainer(500*time.Millisecond, nil))
 	executor.Sync(func() {
 		atomic.AddInt32(&done, 1)
 	})
@@ -60,8 +61,8 @@ func TestPeriodicalDispatcher_Sync(t *testing.T) {
 
 func TestPeriodicalDispatcher_QuitGoroutine(t *testing.T) {
 	ticker := timex.NewFakeTicker()
-	dispatcher := NewPeriodicalDispatcher(time.Millisecond, newContainer(time.Millisecond, nil))
-	dispatcher.newTicker = func() timex.Ticker {
+	dispatcher := NewPeriodicalExecutor(time.Millisecond, newContainer(time.Millisecond, nil))
+	dispatcher.newTicker = func(d time.Duration) timex.Ticker {
 		return ticker
 	}
 
@@ -81,7 +82,7 @@ func TestPeriodicalDispatcher_Bulk(t *testing.T) {
 	var vals []int
 	var lock sync.Mutex // avoid data race
 
-	dispatcher := NewPeriodicalDispatcher(time.Millisecond, newContainer(time.Millisecond, func(tasks interface{}) {
+	dispatcher := NewPeriodicalExecutor(time.Millisecond, newContainer(time.Millisecond, func(tasks interface{}) {
 		t := tasks.([]int)
 		for _, each := range t {
 			lock.Lock()
@@ -91,7 +92,7 @@ func TestPeriodicalDispatcher_Bulk(t *testing.T) {
 	}))
 
 	ticker := timex.NewFakeTicker()
-	dispatcher.newTicker = func() timex.Ticker {
+	dispatcher.newTicker = func(d time.Duration) timex.Ticker {
 		return ticker
 	}
 
@@ -118,13 +119,12 @@ func TestPeriodicalDispatcher_Bulk(t *testing.T) {
 }
 
 func TestPeriodicalDispatcher_Wait(t *testing.T) {
-
 }
 
 func BenchmarkPeriodicalDispatcher_Add(b *testing.B) {
 	b.ReportAllocs()
 
-	executor := NewPeriodicalDispatcher(time.Second, newContainer(500*time.Millisecond, nil))
+	executor := NewPeriodicalExecutor(time.Second, newContainer(500*time.Millisecond, nil))
 	for i := 0; i < b.N; i++ {
 		executor.Add(i)
 	}

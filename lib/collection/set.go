@@ -94,9 +94,7 @@ func (s *Set) KeysInt() []int {
 	var keys []int
 
 	for key := range s.data {
-		if intKey, ok := key.(int); !ok {
-			continue
-		} else {
+		if intKey, ok := key.(int); ok {
 			keys = append(keys, intKey)
 		}
 	}
@@ -108,9 +106,7 @@ func (s *Set) KeysInt64() []int64 {
 	var keys []int64
 
 	for key := range s.data {
-		if intKey, ok := key.(int64); !ok {
-			continue
-		} else {
+		if intKey, ok := key.(int64); ok {
 			keys = append(keys, intKey)
 		}
 	}
@@ -122,9 +118,7 @@ func (s *Set) KeysUint() []uint {
 	var keys []uint
 
 	for key := range s.data {
-		if intKey, ok := key.(uint); !ok {
-			continue
-		} else {
+		if intKey, ok := key.(uint); ok {
 			keys = append(keys, intKey)
 		}
 	}
@@ -136,9 +130,7 @@ func (s *Set) KeysUint64() []uint64 {
 	var keys []uint64
 
 	for key := range s.data {
-		if intKey, ok := key.(uint64); !ok {
-			continue
-		} else {
+		if intKey, ok := key.(uint64); ok {
 			keys = append(keys, intKey)
 		}
 	}
@@ -150,9 +142,7 @@ func (s *Set) KeysStr() []string {
 	var keys []string
 
 	for key := range s.data {
-		if strKey, ok := key.(string); !ok {
-			continue
-		} else {
+		if strKey, ok := key.(string); ok {
 			keys = append(keys, strKey)
 		}
 	}

@@ -1,3 +1,4 @@
+//go:build linux
 // +build linux
 
 package stat
@@ -5,15 +6,16 @@ package stat
 import (
 	"flag"
 	"fmt"
-	"git.zc0901.com/go/god/lib/dispatcher"
-	"git.zc0901.com/go/god/lib/logx"
-	"git.zc0901.com/go/god/lib/proc"
-	"git.zc0901.com/go/god/lib/sysx"
-	"git.zc0901.com/go/god/lib/timex"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"git.zc0901.com/go/god/lib/executors"
+	"git.zc0901.com/go/god/lib/logx"
+	"git.zc0901.com/go/god/lib/proc"
+	"git.zc0901.com/go/god/lib/sysx"
+	"git.zc0901.com/go/god/lib/timex"
 )
 
 const (
@@ -25,7 +27,7 @@ const (
 var (
 	lock                sync.RWMutex
 	reporter            = logx.Alert
-	shortTimeDispatcher = dispatcher.NewShortTimeDispatcher(5 * time.Minute)
+	shortTimeDispatcher = executors.NewShortTimeExecutor(5 * time.Minute)
 	clusterName         = proc.Env(clusterNameKey)
 	dropped             int32
 )

@@ -25,11 +25,11 @@ import (
 )
 
 var (
-	BuildTime = "20201126"
+	BuildTime = "20211007"
 	commands  = []cli.Command{
 		{
 			Name:   "mysql",
-			Usage:  "从数据源生成MySQL模型层代码",
+			Usage:  "从数据源生成 MySQL 模型层代码",
 			Action: command.GenCodeFromDSN,
 			Flags: []cli.Flag{
 				cli.StringFlag{
@@ -52,59 +52,59 @@ var (
 		},
 		{
 			Name:  "rpc",
-			Usage: "generate rpc code",
+			Usage: "生成 GRPC 代码模板",
 			Subcommands: []cli.Command{
 				{
 					Name:  "new",
-					Usage: `generate rpc demo service`,
+					Usage: `生成 RPC 层示例服务`,
 					Flags: []cli.Flag{
 						cli.StringFlag{
 							Name:     "style",
 							Required: false,
-							Usage:    "the file naming format, see [https://github.com/tal-tech/go-zero/tree/master/tools/goctl/config/readme.md]",
+							Usage:    "文件命名风格，详见 [https://github.com/tal-tech/go-zero/tree/master/tools/goctl/config/readme.md]",
 						},
 						cli.BoolFlag{
 							Name:  "idea",
-							Usage: "whether the command execution environment is from idea plugin. [optional]",
+							Usage: "命令行执行环境是否为 Idea 插件。[可选]",
 						},
 					},
 					Action: rpc.RpcNew,
 				},
 				{
 					Name:  "template",
-					Usage: `generate proto template`,
+					Usage: `生成 proto 模板`,
 					Flags: []cli.Flag{
 						cli.StringFlag{
 							Name:  "out, o",
-							Usage: "the target path of proto",
+							Usage: "proto 协议目标路径。",
 						},
 					},
 					Action: rpc.RpcTemplate,
 				},
 				{
 					Name:  "proto",
-					Usage: `generate rpc from proto`,
+					Usage: `从 proto 协议生成 RPC 模板`,
 					Flags: []cli.Flag{
 						cli.StringFlag{
 							Name:  "src, s",
-							Usage: "the file path of the proto source file",
+							Usage: "proto 协议文件路径",
 						},
 						cli.StringSliceFlag{
 							Name:  "proto_path, I",
-							Usage: `native command of protoc, specify the directory in which to search for imports. [optional]`,
+							Usage: `protoc 原始命令路径，指定搜索导包路径。[导包]`,
 						},
 						cli.StringFlag{
 							Name:  "dir, d",
-							Usage: `the target path of the code`,
+							Usage: `代码目标路径`,
 						},
 						cli.StringFlag{
 							Name:     "style",
 							Required: false,
-							Usage:    "the file naming format, see [https://github.com/tal-tech/go-zero/tree/master/tools/goctl/config/readme.md]",
+							Usage:    "文件命名风格，详见 [https://github.com/tal-tech/go-zero/tree/master/tools/goctl/config/readme.md]",
 						},
 						cli.BoolFlag{
 							Name:  "idea",
-							Usage: "whether the command execution environment is from idea plugin. [optional]",
+							Usage: "命令行执行环境是否为 Idea 插件。[可选]",
 						},
 					},
 					Action: rpc.Rpc,
@@ -113,31 +113,31 @@ var (
 		},
 		{
 			Name:  "api",
-			Usage: "generate api related files",
+			Usage: "生成 API 层服务模板",
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "o",
-					Usage: "the output api file",
+					Usage: "输出的 API 文件路径",
 				},
 			},
 			Action: apigen.ApiCommand,
 			Subcommands: []cli.Command{
 				{
 					Name:   "new",
-					Usage:  "fast create api service",
+					Usage:  "快速生成 API 服务模板",
 					Action: new.NewService,
 				},
 				{
 					Name:  "format",
-					Usage: "format api files",
+					Usage: "格式化 API 文件",
 					Flags: []cli.Flag{
 						cli.StringFlag{
 							Name:  "dir",
-							Usage: "the format target dir",
+							Usage: "待格式化目录",
 						},
 						cli.BoolFlag{
 							Name:     "iu",
-							Usage:    "ignore update",
+							Usage:    "是否忽略更新",
 							Required: false,
 						},
 						cli.BoolFlag{
@@ -150,22 +150,22 @@ var (
 				},
 				{
 					Name:  "validate",
-					Usage: "validate api file",
+					Usage: "验证 API 文件",
 					Flags: []cli.Flag{
 						cli.StringFlag{
 							Name:  "api",
-							Usage: "validate target api file",
+							Usage: "待验证 API 文件",
 						},
 					},
 					Action: validate.GoValidateApi,
 				},
 				{
 					Name:  "doc",
-					Usage: "generate doc files",
+					Usage: "生成文档文件",
 					Flags: []cli.Flag{
 						cli.StringFlag{
 							Name:  "dir",
-							Usage: "the target dir",
+							Usage: "保存文件夹",
 						},
 					},
 					Action: docgen.DocCommand,

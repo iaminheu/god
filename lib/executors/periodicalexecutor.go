@@ -1,39 +1,34 @@
-package dispatcher
+package executors
 
 import (
+	"reflect"
+	"sync"
+	"sync/atomic"
+	"time"
+
 	"git.zc0901.com/go/god/lib/lang"
 	"git.zc0901.com/go/god/lib/proc"
 	"git.zc0901.com/go/god/lib/syncx"
 	"git.zc0901.com/go/god/lib/threading"
 	"git.zc0901.com/go/god/lib/timex"
-	"reflect"
-	"sync"
-	"sync/atomic"
-	"time"
 )
 
 const idleRound = 10
 
 type (
-	// TaskManager 任务管理者接口：负责任务的新增、执行、移除。
-	TaskManager interface {
-		Add(task interface{}) bool      // 添加任务
-		Execute(task interface{}) error // 执行任务
-		PopAll() interface{}            // 删除并返回当前所有任务
+	// TaskContainer 任务容器：负责任务的新增、执行、移除。
+	TaskContainer interface {
+		Add(task interface{}) bool // 添加任务
+		Execute(tasks interface{}) // 执行任务
+		RemoveAll() interface{}    // 删除并返回当前所有任务
 	}
 
-	// TaskChan 任务通道：一个传递 interface{} 的通道
-	TaskChan chan interface{}
-
-	// ConfirmChan 确认通道
-	ConfirmChan chan lang.PlaceholderType
-
-	// 定时调度器
-	PeriodicalDispatcher struct {
-		interval    time.Duration                             // 任务调度间隔
-		taskManager TaskManager                               // 任务管理者
-		taskChan    TaskChan                                  // 任务任务通道
-		confirmChan ConfirmChan                               // 任务确认通道
+	// PeriodicalExecutor 定时调度器
+	PeriodicalExecutor struct {
+		interval    time.Duration                             // 任务间隔
+		container   TaskContainer                             // 任务容器
+		commander   chan interface{}                          // 任务通道
+		confirmChan chan lang.PlaceholderType                 // 任务确认通道
 		waitGroup   sync.WaitGroup                            // 同步等待组
 		wgLocker    syncx.Locker                              // 同步等待组的加锁器
 		inflight    int32                                     // 飞行中协程数
@@ -43,12 +38,12 @@ type (
 	}
 )
 
-// NewPeriodicalDispatcher 定时调度器（间隔时间，任务管理器）
-func NewPeriodicalDispatcher(interval time.Duration, taskManager TaskManager) *PeriodicalDispatcher {
-	dispatcher := &PeriodicalDispatcher{
+// NewPeriodicalExecutor 定时调度器（间隔时间，任务管理器）
+func NewPeriodicalExecutor(interval time.Duration, container TaskContainer) *PeriodicalExecutor {
+	executor := &PeriodicalExecutor{
 		interval:    interval,
-		taskManager: taskManager,
-		taskChan:    make(chan interface{}, 1),
+		container:   container,
+		commander:   make(chan interface{}, 1),
 		confirmChan: make(chan lang.PlaceholderType),
 		newTicker: func(duration time.Duration) timex.Ticker {
 			return timex.NewTicker(duration)
@@ -57,39 +52,39 @@ func NewPeriodicalDispatcher(interval time.Duration, taskManager TaskManager) *P
 
 	// 程序关闭前，尽量执行剩余任务
 	proc.AddShutdownListener(func() {
-		dispatcher.Flush()
+		executor.Flush()
 	})
 
-	return dispatcher
+	return executor
 }
 
 // Add 添加新任务给任务通道并确认可以执行
-func (pd *PeriodicalDispatcher) Add(task interface{}) {
+func (pd *PeriodicalExecutor) Add(task interface{}) {
 	if tasks, ok := pd.setAndGet(task); ok {
-		pd.taskChan <- tasks // 将当前所有任务发给任务通道
-		<-pd.confirmChan     // 确认通道进行确认
+		pd.commander <- tasks // 将当前所有任务发给任务通道
+		<-pd.confirmChan      // 确认通道进行确认
 	}
 }
 
 // Flush 清洗任务
-func (pd *PeriodicalDispatcher) Flush() bool {
+func (pd *PeriodicalExecutor) Flush() bool {
 	pd.enter()
 	return pd.execute(func() interface{} {
 		pd.lock.Lock()
 		defer pd.lock.Unlock()
-		return pd.taskManager.PopAll()
+		return pd.container.RemoveAll()
 	}())
 }
 
 // Sync 同步执行一个自定义函数
-func (pd *PeriodicalDispatcher) Sync(fn func()) {
+func (pd *PeriodicalExecutor) Sync(fn func()) {
 	pd.lock.Lock()
 	defer pd.lock.Unlock()
 	fn()
 }
 
 // Wait 加锁保护等待操作
-func (pd *PeriodicalDispatcher) Wait() {
+func (pd *PeriodicalExecutor) Wait() {
 	pd.Flush()
 	pd.wgLocker.Guard(func() {
 		pd.waitGroup.Wait()
@@ -98,7 +93,7 @@ func (pd *PeriodicalDispatcher) Wait() {
 
 // setAndGet 新增并返回任务，如有可能则后台直接执行任务
 // 返回：加入后的所有待处理任务，是否已递交任务管理者
-func (pd *PeriodicalDispatcher) setAndGet(task interface{}) (interface{}, bool) {
+func (pd *PeriodicalExecutor) setAndGet(task interface{}) (interface{}, bool) {
 	pd.lock.Lock()
 	defer func() {
 		if !pd.guarded {
@@ -109,16 +104,16 @@ func (pd *PeriodicalDispatcher) setAndGet(task interface{}) (interface{}, bool) 
 		pd.lock.Unlock()
 	}()
 
-	if pd.taskManager.Add(task) {
+	if pd.container.Add(task) {
 		atomic.AddInt32(&pd.inflight, 1)
-		return pd.taskManager.PopAll(), true
+		return pd.container.RemoveAll(), true
 	}
 
 	return nil, false
 }
 
 // 后台任务清洗 - 起一个协程来处理任务
-func (pd *PeriodicalDispatcher) backgroundFlush() {
+func (pd *PeriodicalExecutor) backgroundFlush() {
 	threading.GoSafe(func() {
 		// 退出协程之前进行清理，避免丢失任务
 		defer pd.Flush()
@@ -131,7 +126,7 @@ func (pd *PeriodicalDispatcher) backgroundFlush() {
 		lastTime := timex.Now()
 		for {
 			select {
-			case tasks := <-pd.taskChan: // 主动触发上报
+			case tasks := <-pd.commander: // 主动触发上报
 				executed = true
 				atomic.AddInt32(&pd.inflight, -1)
 				pd.enter()
@@ -152,31 +147,31 @@ func (pd *PeriodicalDispatcher) backgroundFlush() {
 }
 
 // enter 执行者进入，等待组加锁
-func (pd *PeriodicalDispatcher) enter() {
+func (pd *PeriodicalExecutor) enter() {
 	pd.wgLocker.Guard(func() {
 		pd.waitGroup.Add(1)
 	})
 }
 
 // execute 调度任务管理者，执行任务
-func (pd *PeriodicalDispatcher) execute(tasks interface{}) bool {
+func (pd *PeriodicalExecutor) execute(tasks interface{}) bool {
 	defer pd.done()
 
 	ok := pd.has(tasks)
 	if ok {
-		pd.taskManager.Execute(tasks)
+		pd.container.Execute(tasks)
 	}
 
 	return ok
 }
 
 // done 完成分组任务
-func (pd *PeriodicalDispatcher) done() {
+func (pd *PeriodicalExecutor) done() {
 	pd.waitGroup.Done()
 }
 
 // has 判断任务有无
-func (pd *PeriodicalDispatcher) has(tasks interface{}) bool {
+func (pd *PeriodicalExecutor) has(tasks interface{}) bool {
 	if tasks == nil {
 		return false
 	}
@@ -191,7 +186,7 @@ func (pd *PeriodicalDispatcher) has(tasks interface{}) bool {
 	}
 }
 
-func (pd *PeriodicalDispatcher) shallQuit(lastTime time.Duration) (stop bool) {
+func (pd *PeriodicalExecutor) shallQuit(lastTime time.Duration) (stop bool) {
 	if timex.Since(lastTime) <= pd.interval*idleRound {
 		return
 	}

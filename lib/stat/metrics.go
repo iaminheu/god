@@ -5,7 +5,8 @@ import (
 	"sync"
 	"time"
 
-	"git.zc0901.com/go/god/lib/dispatcher"
+	"git.zc0901.com/go/god/lib/executors"
+
 	"git.zc0901.com/go/god/lib/logx"
 	"git.zc0901.com/go/god/lib/syncx"
 )
@@ -36,7 +37,7 @@ type (
 	}
 
 	Metrics struct {
-		dispatcher *dispatcher.PeriodicalDispatcher
+		dispatcher *executors.PeriodicalExecutor
 		manager    *metricsManager
 	}
 
@@ -74,7 +75,7 @@ func NewMetrics(name string) *Metrics {
 	}
 
 	return &Metrics{
-		dispatcher: dispatcher.NewPeriodicalDispatcher(LogInterval, manager),
+		dispatcher: executors.NewPeriodicalExecutor(LogInterval, manager),
 		manager:    manager,
 	}
 }
@@ -106,8 +107,8 @@ func (c *metricsManager) Add(v interface{}) bool {
 	return false
 }
 
-// 执行并写入远程普罗米修斯
-func (c *metricsManager) Execute(v interface{}) error {
+// Execute 执行并写入远程普罗米修斯
+func (c *metricsManager) Execute(v interface{}) {
 	pair := v.(tasksDurationPair)
 	tasks := pair.tasks
 	duration := pair.duration
@@ -168,10 +169,9 @@ func (c *metricsManager) Execute(v interface{}) error {
 	}
 
 	log(report)
-	return nil
 }
 
-func (c *metricsManager) PopAll() interface{} {
+func (c *metricsManager) RemoveAll() interface{} {
 	tasks := c.tasks
 	duration := c.duration
 	drops := c.drops

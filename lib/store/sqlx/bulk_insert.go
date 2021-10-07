@@ -6,7 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"git.zc0901.com/go/god/lib/dispatcher"
+	"git.zc0901.com/go/god/lib/executors"
+
 	"git.zc0901.com/go/god/lib/logx"
 	"git.zc0901.com/go/god/lib/stringx"
 )
@@ -34,7 +35,7 @@ type (
 		manager *insertManager
 
 		// 定时调度器
-		dispatcher *dispatcher.PeriodicalDispatcher
+		dispatcher *executors.PeriodicalExecutor
 	}
 
 	// 批量插入语句结构
@@ -77,7 +78,7 @@ func NewBulkInserter(c Conn, stmt string) (*BulkInserter, error) {
 	return &BulkInserter{
 		stmt:       insertStmt,
 		manager:    manager,
-		dispatcher: dispatcher.NewPeriodicalDispatcher(flushInterval, manager),
+		dispatcher: executors.NewPeriodicalExecutor(flushInterval, manager),
 	}, nil
 }
 
@@ -96,7 +97,7 @@ func NewBulkInserterWithTx(c TxSession, stmt string) (*BulkInserter, error) {
 	return &BulkInserter{
 		stmt:       insertStmt,
 		manager:    manager,
-		dispatcher: dispatcher.NewPeriodicalDispatcher(flushInterval, manager),
+		dispatcher: executors.NewPeriodicalExecutor(flushInterval, manager),
 	}, nil
 }
 
@@ -148,10 +149,10 @@ func (m *insertManager) Add(row interface{}) bool {
 	return len(m.values) >= maxBulkRows
 }
 
-func (m *insertManager) Execute(rows interface{}) error {
+func (m *insertManager) Execute(rows interface{}) {
 	values := rows.([]string)
 	if len(values) == 0 {
-		return nil
+		return
 	}
 
 	stmtWithoutValues := m.stmt.prefix
@@ -170,10 +171,9 @@ func (m *insertManager) Execute(rows interface{}) error {
 	} else if err != nil {
 		logx.Errorf("[批量插入] SQL: %s, 错误: %s", stmt, err)
 	}
-	return err
 }
 
-func (m *insertManager) PopAll() interface{} {
+func (m *insertManager) RemoveAll() interface{} {
 	values := m.values
 	m.values = nil
 	return values

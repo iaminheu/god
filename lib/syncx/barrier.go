@@ -13,3 +13,10 @@ func (b *Locker) Guard(fn func()) {
 	defer b.lock.Unlock()
 	fn()
 }
+
+// Guard 带锁执行指定函数
+func Guard(lock sync.Locker, fn func()) {
+	lock.Lock()
+	defer lock.Lock()
+	fn()
+}
