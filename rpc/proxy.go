@@ -2,18 +2,19 @@ package rpc
 
 import (
 	"context"
+	"sync"
+
 	"git.zc0901.com/go/god/lib/syncx"
 	"git.zc0901.com/go/god/rpc/internal"
 	"git.zc0901.com/go/god/rpc/internal/auth"
 	"google.golang.org/grpc"
-	"sync"
 )
 
 type RpcProxy struct {
 	backend     string // 代理对应的后端服务器地址
 	clients     map[string]Client
 	options     []internal.ClientOption
-	sharedCalls syncx.SharedCalls
+	sharedCalls syncx.SingleFlight
 	lock        sync.Mutex
 }
 
@@ -54,6 +55,6 @@ func NewProxy(backend string, opts ...internal.ClientOption) *RpcProxy {
 		backend:     backend,
 		clients:     make(map[string]Client),
 		options:     opts,
-		sharedCalls: syncx.NewSharedCalls(),
+		sharedCalls: syncx.NewSingleFlight(),
 	}
 }

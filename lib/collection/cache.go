@@ -2,18 +2,19 @@ package collection
 
 import (
 	"container/list"
-	"git.zc0901.com/go/god/lib/logx"
-	"git.zc0901.com/go/god/lib/mathx"
-	"git.zc0901.com/go/god/lib/syncx"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"git.zc0901.com/go/god/lib/logx"
+	"git.zc0901.com/go/god/lib/mathx"
+	"git.zc0901.com/go/god/lib/syncx"
 )
 
 const (
 	defaultCacheName = "proc" // 进程内缓存名
 	slots            = 300
-	statInterval     = time.Minute
+	statInterval     = time.Minute // 缓存统计间隔时长，默认为1分钟
 
 	// 缓存过期偏差值：通过过期偏差，避免大量缓存同时过期
 	// 将缓存到期时间偏差上下设置为0.05，也就是落到[0.95,1.05]*秒
@@ -23,6 +24,7 @@ const (
 var emptyLruCache = emptyLru{}
 
 type (
+	// Cache 表示一个内存中的缓存对象(in-memory)。
 	Cache struct {
 		name           string
 		lock           sync.Mutex
@@ -30,11 +32,12 @@ type (
 		expire         time.Duration
 		timingWheel    *TimingWheel
 		lruCache       lru
-		sharedCalls    syncx.SharedCalls
+		barrier        syncx.SingleFlight
 		unstableExpiry mathx.Unstable
 		stats          *cacheStat
 	}
 
+	// CacheOption 表示一个自定义 Cache 的函数。
 	CacheOption func(cache *Cache)
 )
 
@@ -44,7 +47,7 @@ func NewCache(expire time.Duration, opts ...CacheOption) (*Cache, error) {
 		data:           make(map[string]interface{}),
 		expire:         expire,
 		lruCache:       emptyLruCache,
-		sharedCalls:    syncx.NewSharedCalls(),
+		barrier:        syncx.NewSingleFlight(),
 		unstableExpiry: mathx.NewUnstable(expireDeviation),
 	}
 
@@ -73,6 +76,7 @@ func NewCache(expire time.Duration, opts ...CacheOption) (*Cache, error) {
 	return cache, nil
 }
 
+// WithLimit 自定义缓存条数的函数。
 func WithLimit(limit int) CacheOption {
 	return func(cache *Cache) {
 		if limit > 0 {
@@ -81,12 +85,14 @@ func WithLimit(limit int) CacheOption {
 	}
 }
 
+// WithName 自定义缓存名称的函数。
 func WithName(name string) CacheOption {
 	return func(cache *Cache) {
 		cache.name = name
 	}
 }
 
+// Del 从缓存中删除指定键。
 func (c *Cache) Del(key string) {
 	c.lock.Lock()
 	delete(c.data, key)
@@ -95,15 +101,16 @@ func (c *Cache) Del(key string) {
 	c.timingWheel.RemoveTimer(key)
 }
 
+// Get 从缓存中获取指定键的值。
 func (c *Cache) Get(key string) (interface{}, bool) {
-	value, ok := c.doGet(key)
+	v, ok := c.doGet(key)
 	if ok {
 		c.stats.IncrHit()
 	} else {
 		c.stats.IncrMiss()
 	}
 
-	return value, ok
+	return v, ok
 }
 
 func (c *Cache) Set(key string, value interface{}) {
@@ -121,7 +128,7 @@ func (c *Cache) Set(key string, value interface{}) {
 	}
 }
 
-// Take 缓存已有则返回，反之则获取（通过共享调用实现高并发）
+// Take 有缓存则返回，无则获取（通过共享调用实现高并发）
 func (c *Cache) Take(key string, fetch func() (interface{}, error)) (interface{}, error) {
 	if val, ok := c.doGet(key); ok {
 		c.stats.IncrHit()
@@ -129,7 +136,7 @@ func (c *Cache) Take(key string, fetch func() (interface{}, error)) (interface{}
 	}
 
 	// 回源获取，通过共享调用实现高并发
-	val, hit, err := c.sharedCalls.Do(key, func() (interface{}, error) {
+	val, hit, err := c.barrier.Do(key, func() (interface{}, error) {
 		// 因为在内存中进行的map搜索，时间为O(1)，而fetch是在IO上的查询
 		// 所以我们做双重检测，因为缓存有可能被其他调用取到了
 		if val, ok := c.doGet(key); ok {
@@ -161,12 +168,12 @@ func (c *Cache) doGet(key string) (interface{}, bool) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	value, ok := c.data[key]
+	val, ok := c.data[key]
 	if ok {
 		c.lruCache.add(key)
 	}
 
-	return value, ok
+	return val, ok
 }
 
 func (c *Cache) onEvict(key string) {
@@ -181,7 +188,6 @@ func (c *Cache) size() int {
 }
 
 //// LRU
-
 type (
 	lru interface {
 		add(key string)
@@ -207,11 +213,9 @@ func newKeyLru(limit int, onEvict func(key string)) *keyLru {
 	}
 }
 
-func (el emptyLru) add(string) {
-}
+func (l emptyLru) add(string) {}
 
-func (el emptyLru) remove(string) {
-}
+func (l emptyLru) remove(string) {}
 
 func (kl *keyLru) add(key string) {
 	if elem, ok := kl.elements[key]; ok {
@@ -249,6 +253,7 @@ func (kl *keyLru) removeElement(e *list.Element) {
 	kl.onEvict(key)
 }
 
+// cacheStat 表示一个缓存统计项。
 type cacheStat struct {
 	name         string
 	hit          uint64
@@ -257,35 +262,35 @@ type cacheStat struct {
 }
 
 func newCacheStat(name string, sizeCallback func() int) *cacheStat {
-	cs := &cacheStat{
+	s := &cacheStat{
 		name:         name,
 		sizeCallback: sizeCallback,
 	}
-	go cs.loop()
-	return cs
+	go s.loop()
+	return s
 }
 
-func (cs *cacheStat) loop() {
+func (s *cacheStat) loop() {
 	ticker := time.NewTicker(statInterval)
 	defer ticker.Stop()
 
 	for range ticker.C {
-		hit := atomic.SwapUint64(&cs.hit, 0)
-		miss := atomic.SwapUint64(&cs.miss, 0)
+		hit := atomic.SwapUint64(&s.hit, 0)
+		miss := atomic.SwapUint64(&s.miss, 0)
 		total := hit + miss
 		if total == 0 {
 			continue
 		}
 		hitRatio := 100 * float32(hit) / float32(total)
-		logx.Statf("cache(%s) - qpm: %d, hitRatio: %.1f%%, elements: %d, hit: %d, miss: %d",
-			cs.name, total, hitRatio, cs.sizeCallback(), hit, miss)
+		logx.Statf("缓存(%s) - 一分钟请求数: %d, 命中率: %.1f%%, 成员: %d, 命中: %d, 未命中: %d",
+			s.name, total, hitRatio, s.sizeCallback(), hit, miss)
 	}
 }
 
-func (cs *cacheStat) IncrHit() {
-	atomic.AddUint64(&cs.hit, 1)
+func (s *cacheStat) IncrHit() {
+	atomic.AddUint64(&s.hit, 1)
 }
 
-func (cs *cacheStat) IncrMiss() {
-	atomic.AddUint64(&cs.miss, 1)
+func (s *cacheStat) IncrMiss() {
+	atomic.AddUint64(&s.miss, 1)
 }

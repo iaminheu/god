@@ -10,7 +10,7 @@ import (
 
 const gzipEncoding = "gzip"
 
-// GzipHandler API Gzip 中间件
+// GzipHandler 返回一个 通过 gzip 压缩 http 请求体的中间件。
 func GzipHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.Contains(r.Header.Get(httpx.ContentEncoding), gzipEncoding) {

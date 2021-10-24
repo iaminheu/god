@@ -3,15 +3,16 @@ package cache
 import (
 	"encoding/json"
 	"fmt"
+	"math"
+	"strconv"
+	"testing"
+	"time"
+
 	"git.zc0901.com/go/god/lib/errorx"
 	"git.zc0901.com/go/god/lib/hash"
 	"git.zc0901.com/go/god/lib/store/redis"
 	"git.zc0901.com/go/god/lib/syncx"
 	"github.com/stretchr/testify/assert"
-	"math"
-	"strconv"
-	"testing"
-	"time"
 )
 
 type mockedNode struct {
@@ -100,7 +101,7 @@ func TestCluster_SetDel(t *testing.T) {
 		},
 	}
 
-	c := NewCacheCluster(confs, syncx.NewSharedCalls(), NewCacheStat("mock"), errPlaceholder)
+	c := NewCacheCluster(confs, syncx.NewSingleFlight(), NewCacheStat("mock"), errPlaceholder)
 
 	// 写
 	for i := 0; i < total; i++ {

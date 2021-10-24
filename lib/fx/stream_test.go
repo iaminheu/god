@@ -3,15 +3,16 @@ package fx
 import (
 	"bufio"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"os/exec"
 	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
-func TestFrom(t *testing.T) {
+func TestBuffer(t *testing.T) {
 	const N = 5
 	var count int32
 	var wait sync.WaitGroup
@@ -23,7 +24,7 @@ func TestFrom(t *testing.T) {
 		for i := 0; i < 2*N; i++ {
 			select {
 			case source <- i:
-				fmt.Println("add", 1)
+				fmt.Println("add", i)
 				atomic.AddInt32(&count, 1)
 			case <-ticker.C:
 				wait.Done()
@@ -38,6 +39,17 @@ func TestFrom(t *testing.T) {
 	})
 }
 
+func TestBufferNegative(t *testing.T) {
+	var result int
+	Just(1, 2, 3, 4).Buffer(-1).Reduce(func(pipe <-chan interface{}) (interface{}, error) {
+		for item := range pipe {
+			result += item.(int)
+		}
+		return result, nil
+	})
+	assert.Equal(t, 10, result)
+}
+
 func TestJust(t *testing.T) {
 	var result int
 	result2, err := Just(1, 2, 3, 4).Buffer(-1).Reduce(func(pipe <-chan interface{}) (interface{}, error) {
@@ -46,9 +58,18 @@ func TestJust(t *testing.T) {
 		}
 		return result, nil
 	})
+	assert.Nil(t, err)
 	fmt.Println(result)
 	fmt.Println(result2)
-	fmt.Println(err)
+}
+
+func TestParallelJust(t *testing.T) {
+	var count int32
+	Just(1, 2, 3).Parallel(func(item interface{}) {
+		time.Sleep(100 * time.Millisecond)
+		atomic.AddInt32(&count, int32(item.(int)))
+	}, UnlimitedWorkers())
+	assert.Equal(t, int32(6), count)
 }
 
 func TestConvertVideo(t *testing.T) {

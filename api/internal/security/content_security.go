@@ -5,16 +5,17 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"git.zc0901.com/go/god/api/httpx"
-	"git.zc0901.com/go/god/lib/codec"
-	"git.zc0901.com/go/god/lib/iox"
-	"git.zc0901.com/go/god/lib/logx"
 	"io"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
+
+	"git.zc0901.com/go/god/api/httpx"
+	"git.zc0901.com/go/god/lib/codec"
+	"git.zc0901.com/go/god/lib/iox"
+	"git.zc0901.com/go/god/lib/logx"
 )
 
 const (
@@ -43,7 +44,7 @@ func (h *ContentSecurityHeader) Encrypted() bool {
 	return h.ContentType == httpx.EncryptedType
 }
 
-func ParseContentSecurity(decrypters map[string]codec.RsaDecrypter, r *http.Request) (
+func ParseContentSecurity(decrypters map[string]codec.RsaDecryptor, r *http.Request) (
 	*ContentSecurityHeader, error) {
 	contentSecurity := r.Header.Get(httpx.ContentSecurity)
 	attrs := httpx.ParseHeader(contentSecurity)

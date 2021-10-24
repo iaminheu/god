@@ -14,6 +14,8 @@ import (
 	"testing"
 	"time"
 
+	"git.zc0901.com/go/god/lib/gconv"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -357,7 +359,7 @@ func doTestStructedLog(t *testing.T, level string, setup func(writer io.WriteClo
 		t.Error(err)
 	}
 	assert.Equal(t, level, entry.Level)
-	assert.True(t, strings.Contains(entry.Content, message))
+	assert.True(t, strings.Contains(gconv.String(entry.Content), message))
 }
 
 func testSetLevelTwiceWithMode(t *testing.T, mode string) {

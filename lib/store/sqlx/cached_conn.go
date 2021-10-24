@@ -2,17 +2,18 @@ package sqlx
 
 import (
 	"database/sql"
+	"time"
+
 	"git.zc0901.com/go/god/lib/store/cache"
 	"git.zc0901.com/go/god/lib/store/redis"
 	"git.zc0901.com/go/god/lib/syncx"
-	"time"
 )
 
 // 索引建和主键缓存之间的安全时间间隔
 const safeGapBetweenIndexAndPrimary = 5 * time.Second
 
 var (
-	exclusiveCalls = syncx.NewSharedCalls()
+	exclusiveCalls = syncx.NewSingleFlight()
 	cacheStat      = cache.NewCacheStat("cached_conn")
 )
 

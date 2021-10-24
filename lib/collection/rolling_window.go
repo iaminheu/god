@@ -2,13 +2,14 @@ package collection
 
 import (
 	"fmt"
-	"git.zc0901.com/go/god/lib/timex"
 	"sync"
 	"time"
+
+	"git.zc0901.com/go/god/lib/timex"
 )
 
 type (
-	// 滚动窗口计数器，维护窗口内每个桶的请求个数和次数
+	// RollingWindow 滚动窗口计数器，维护窗口内每个桶的请求个数和次数
 	RollingWindow struct {
 		size                int           // 滚动窗口被分为的存储桶个数
 		duration            time.Duration // 滚动窗口的持续时间段，通常为10-15秒
@@ -54,7 +55,7 @@ func (rw *RollingWindow) Add(n float64) {
 	rw.win.add(rw.offset, n)
 }
 
-// 归并符合条件的桶内计数
+// Reduce 归并符合条件的桶内计数
 func (rw *RollingWindow) Reduce(fn func(b *Bucket)) {
 	rw.lock.RLock()
 	defer rw.lock.RUnlock()
@@ -151,7 +152,7 @@ func (w *window) reduceBuckets(start, count int, fn func(b *Bucket)) {
 	}
 }
 
-// --------------- 滚动窗口使用的请求桶 --------------- //
+// Bucket --------------- 滚动窗口使用的请求桶 --------------- //
 // Bucket 存储桶是滚动窗口给定时间段内的请求集合
 type Bucket struct {
 	Requests int64   // 桶内请求次数
@@ -171,5 +172,5 @@ func (b *Bucket) reset() {
 }
 
 func (b *Bucket) String() string {
-	return fmt.Sprintf("Requests: %.0f, Accepts: %.0d\n", b.Requests, b.Accepts)
+	return fmt.Sprintf("Requests: %.0d, Accepts: %.0f\n", b.Requests, b.Accepts)
 }

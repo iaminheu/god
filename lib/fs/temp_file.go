@@ -24,7 +24,7 @@ func TempFileWithText(text string) (*os.File, error) {
 }
 
 // TempFilenameWithText 用给定的内容创建文件，并返回文件名(完整路径)。
-// 调用者应该在使用后删除文件。
+// 调用者应随后删除。
 func TempFilenameWithText(text string) (string, error) {
 	tempFile, err := TempFileWithText(text)
 	if err != nil {

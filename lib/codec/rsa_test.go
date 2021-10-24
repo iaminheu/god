@@ -3,8 +3,10 @@ package codec
 import (
 	"encoding/base64"
 	"fmt"
-	"git.zc0901.com/go/god/lib/fs"
+	"os"
 	"testing"
+
+	"git.zc0901.com/go/god/lib/fs"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -31,19 +33,19 @@ FstHGSkUYFLe+nl1dEKHbD+/Zt95L757J3xGTrwoTc7KCTxbrgn+stn0w52BNjj/
 kIE2ko4lbh/v8Fl14AyVR9msfKtKOnhe5FCT72mdtApr+qvzcC3q9hfXwkyQU32p
 v7q5UimZ205iKSBmgQIDAQAB
 -----END PUBLIC KEY-----`
-	testBody = `this is the content`
+	testBody = `这是密文原始内容`
 )
 
-func TestCryption(t *testing.T) {
-	enc, err := NewRsaEncrypter([]byte(publicKey))
+func TestCrypt(t *testing.T) {
+	enc, err := NewRsaEncryptor([]byte(publicKey))
 	assert.Nil(t, err)
 	ret, err := enc.Encrypt([]byte(testBody))
 	assert.Nil(t, err)
-	fmt.Println(ret)
 
 	file, err := fs.TempFilenameWithText(privateKey)
 	assert.Nil(t, err)
-	dec, err := NewRsaDecrypter(file)
+	defer os.Remove(file)
+	dec, err := NewRsaDecryptor(file)
 	assert.Nil(t, err)
 	actual, err := dec.Decrypt(ret)
 	assert.Nil(t, err)
@@ -53,9 +55,10 @@ func TestCryption(t *testing.T) {
 	actual, err = dec.DecryptBase64(base64.StdEncoding.EncodeToString(ret))
 	assert.Nil(t, err)
 	assert.Equal(t, testBody, string(actual))
+	fmt.Println(string(actual))
 }
 
 func TestBadPubKey(t *testing.T) {
-	_, err := NewRsaEncrypter([]byte("foo"))
+	_, err := NewRsaEncryptor([]byte("foo"))
 	assert.Equal(t, ErrPublicKey, err)
 }

@@ -2,18 +2,20 @@ package breaker
 
 import (
 	"errors"
+
 	"git.zc0901.com/go/god/lib/stringx"
 )
 
+// ErrServiceUnavailable 当 Breaker 打开时返回的错误信息
 var ErrServiceUnavailable = errors.New("断路器打开")
 
 type (
-	State      = int32                     // 断路器状态
-	Request    func() error                // 待执行的请求
 	Acceptable func(reqError error) bool   // 判断错误是否可接受的函数
+	Request    func() error                // 待执行的请求
 	Fallback   func(acceptErr error) error // 备用函数
-	Option     func(b *breaker)            // 断路器可选项应用函数
+	Option     func(b *breaker)            // 自定义断路器的方法
 
+	// Breaker 表示一个断路器。
 	Breaker interface {
 		// Name 是 netflixBreaker 断路器的名称
 		Name() string
@@ -36,9 +38,10 @@ type (
 		DoWithFallbackAcceptable(req Request, fallback Fallback, acceptable Acceptable) error
 	}
 
+	// Promise 接口定义 Breaker.Allow 返回的回调方法。
 	Promise interface {
-		Accept()
-		Reject(reason string)
+		Accept()              // 告知 Breaker 调用成功。
+		Reject(reason string) // 告知 Breaker 调用失败。
 	}
 
 	throttle interface {
@@ -52,6 +55,8 @@ type (
 	}
 )
 
+// NewBreaker 返回一个 Breaker 断路器对象。
+// opts 用于自定义 Breaker。
 func NewBreaker(opts ...Option) Breaker {
 	var b breaker
 	for _, opt := range opts {
@@ -64,6 +69,7 @@ func NewBreaker(opts ...Option) Breaker {
 	return &b
 }
 
+// WithName 返回设置 Breaker 名称的函数。
 func WithName(name string) Option {
 	return func(b *breaker) {
 		b.name = name
@@ -85,6 +91,7 @@ func (b *breaker) Do(req Request) error {
 func (b *breaker) DoWithFallback(req Request, fallback Fallback) error {
 	return b.throttle.doReq(req, fallback, defaultAcceptable)
 }
+
 func (b *breaker) DoWithAcceptable(req Request, acceptable Acceptable) error {
 	return b.throttle.doReq(req, nil, acceptable)
 }

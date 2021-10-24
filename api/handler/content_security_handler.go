@@ -13,7 +13,7 @@ import (
 type UnsignedCallback func(w http.ResponseWriter, r *http.Request, next http.Handler, strict bool, code int) // 未签名回调函数
 
 // ContentSecurityHandler API 参数签名中间件
-func ContentSecurityHandler(decrypters map[string]codec.RsaDecrypter, tolerance time.Duration, strict bool, callbacks ...UnsignedCallback) func(handler http.Handler) http.Handler {
+func ContentSecurityHandler(decrypters map[string]codec.RsaDecryptor, tolerance time.Duration, strict bool, callbacks ...UnsignedCallback) func(handler http.Handler) http.Handler {
 	if len(callbacks) == 0 {
 		callbacks = append(callbacks, handleVerificationFailure)
 	}

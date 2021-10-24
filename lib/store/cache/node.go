@@ -3,15 +3,16 @@ package cache
 import (
 	"errors"
 	"fmt"
+	"math/rand"
+	"sync"
+	"time"
+
 	"git.zc0901.com/go/god/lib/logx"
 	"git.zc0901.com/go/god/lib/mathx"
 	"git.zc0901.com/go/god/lib/stat"
 	"git.zc0901.com/go/god/lib/store/redis"
 	"git.zc0901.com/go/god/lib/syncx"
 	jsoniter "github.com/json-iterator/go"
-	"math/rand"
-	"sync"
-	"time"
 )
 
 const (
@@ -23,7 +24,7 @@ var errPlaceholder = errors.New("placeholder")
 
 type node struct {
 	redis           *redis.Redis
-	barrier         syncx.SharedCalls
+	barrier         syncx.SingleFlight
 	expires         time.Duration
 	notFoundExpires time.Duration
 	unstableExpires mathx.Unstable
@@ -33,7 +34,7 @@ type node struct {
 	errNotFound     error
 }
 
-func NewCacheNode(r *redis.Redis, barrier syncx.SharedCalls, stat *Stat, errNotFound error, opts ...Option) Cache {
+func NewCacheNode(r *redis.Redis, barrier syncx.SingleFlight, stat *Stat, errNotFound error, opts ...Option) Cache {
 	o := newOptions(opts...)
 	return node{
 		redis:           r,
@@ -184,7 +185,7 @@ func (n node) doMGet(keys []string, dest []interface{}) error {
 }
 
 func (n node) doTake(dest interface{}, key string, queryFn func(newVal interface{}) error, cacheValFn func(newVal interface{}) error) error {
-	// 防缓存击穿 barrier -> SharedCalls
+	// 防缓存击穿 barrier -> SingleFlight
 	result, hit, err := n.barrier.Do(key, func() (interface{}, error) {
 		if err := n.doGet(key, dest); err != nil {
 			if err == errPlaceholder {

@@ -11,18 +11,20 @@ import (
 )
 
 var (
-	ErrPrivateKey = errors.New("private key error")
-	ErrPublicKey  = errors.New("failed to parse PEM block containing the public key")
-	ErrNotRsaKey  = errors.New("key type is not RSA")
+	ErrPrivateKey = errors.New("无效的私钥")
+	ErrPublicKey  = errors.New("无效的公钥")
+	ErrNotRsaKey  = errors.New("无效的 RSA key")
 )
 
 type (
-	RsaDecrypter interface {
+	// RsaDecryptor 表示一个 RSA 解密器。
+	RsaDecryptor interface {
 		Decrypt(input []byte) ([]byte, error)
 		DecryptBase64(input string) ([]byte, error)
 	}
 
-	RsaEncrypter interface {
+	// RsaEncryptor 表示一个 RSA 加密器。
+	RsaEncryptor interface {
 		Encrypt(input []byte) ([]byte, error)
 	}
 
@@ -35,13 +37,14 @@ type (
 		privateKey *rsa.PrivateKey
 	}
 
-	rsaEncrypter struct {
+	rsaEncryptor struct {
 		rsaBase
 		publicKey *rsa.PublicKey
 	}
 )
 
-func NewRsaDecrypter(file string) (RsaDecrypter, error) {
+// NewRsaDecryptor 返回指定文件的 RSA 解密器。
+func NewRsaDecryptor(file string) (RsaDecryptor, error) {
 	content, err := ioutil.ReadFile(file)
 	if err != nil {
 		return nil, err
@@ -84,8 +87,9 @@ func (r *rsaDecrypter) DecryptBase64(input string) ([]byte, error) {
 	return r.Decrypt(base64Decoded)
 }
 
-func NewRsaEncrypter(key []byte) (RsaEncrypter, error) {
-	block, _ := pem.Decode(key)
+// NewRsaEncryptor 返回指定公钥的 RSA 加密器。
+func NewRsaEncryptor(publicKey []byte) (RsaEncryptor, error) {
+	block, _ := pem.Decode(publicKey)
 	if block == nil {
 		return nil, ErrPublicKey
 	}
@@ -97,7 +101,7 @@ func NewRsaEncrypter(key []byte) (RsaEncrypter, error) {
 
 	switch pubKey := pub.(type) {
 	case *rsa.PublicKey:
-		return &rsaEncrypter{
+		return &rsaEncryptor{
 			rsaBase: rsaBase{
 				// https://www.ietf.org/rfc/rfc2313.txt
 				// The length of the data D shall not be more than k-11 octets, which is
@@ -111,7 +115,7 @@ func NewRsaEncrypter(key []byte) (RsaEncrypter, error) {
 	}
 }
 
-func (r *rsaEncrypter) Encrypt(input []byte) ([]byte, error) {
+func (r *rsaEncryptor) Encrypt(input []byte) ([]byte, error) {
 	return r.crypt(input, func(block []byte) ([]byte, error) {
 		return rsaEncryptBlock(r.publicKey, block)
 	})

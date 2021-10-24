@@ -162,11 +162,11 @@ func (e *engine) signatureVerifier(signature signatureSetting) (func(chain alice
 		}
 	}
 
-	decrypters := make(map[string]codec.RsaDecrypter)
+	decrypters := make(map[string]codec.RsaDecryptor)
 	for _, key := range signature.PrivateKeys {
 		fingerprint := key.Fingerprint
 		file := key.KeyFile
-		decrypter, err := codec.NewRsaDecrypter(file)
+		decrypter, err := codec.NewRsaDecryptor(file)
 		if err != nil {
 			return nil, err
 		}

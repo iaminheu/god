@@ -1,9 +1,10 @@
 package cache
 
 import (
-	"git.zc0901.com/go/god/lib/logx"
 	"sync/atomic"
 	"time"
+
+	"git.zc0901.com/go/god/lib/logx"
 )
 
 const statInterval = time.Minute // 缓存统计周期
@@ -11,10 +12,10 @@ const statInterval = time.Minute // 缓存统计周期
 // Stat 缓存统计
 type Stat struct {
 	name    string
-	Total   uint64 // 请求数
-	Hit     uint64 // 命中数
-	Miss    uint64 // 错过数
-	DbFails uint64 // 查库失败次数
+	Total   uint64 // 一分钟请求数
+	Hit     uint64 // 一分钟命中数
+	Miss    uint64 // 一分钟未命中数
+	DbFails uint64 // 一分钟查库失败数
 }
 
 func NewCacheStat(name string) *Stat {
@@ -39,7 +40,7 @@ func (s *Stat) Loop() {
 			percent := 100 * float32(hit) / float32(total)
 			miss := atomic.SwapUint64(&s.Miss, 0)
 			dbf := atomic.SwapUint64(&s.DbFails, 0)
-			logx.Statf("dbcache(%s) - qpm: %d, hit_ratio: %.1f%%, hit: %d, miss: %d, db_fails: %d",
+			logx.Statf("数据库缓存(%s) - 一分钟请求数: %d, 命中率: %.1f%%, 命中: %d, 未命中: %d, 查库失败: %d",
 				s.name, total, percent, hit, miss, dbf)
 		}
 	}

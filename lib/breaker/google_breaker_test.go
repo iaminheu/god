@@ -3,13 +3,14 @@ package breaker
 import (
 	"errors"
 	"fmt"
-	"git.zc0901.com/go/god/lib/collection"
-	"git.zc0901.com/go/god/lib/mathx"
-	"github.com/stretchr/testify/assert"
 	"math"
 	"math/rand"
 	"testing"
 	"time"
+
+	"git.zc0901.com/go/god/lib/collection"
+	"git.zc0901.com/go/god/lib/mathx"
+	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -25,9 +26,6 @@ func TestGoogleBreakerClose(t *testing.T) {
 
 	markSuccess(b, 120)
 	assert.Nil(t, b.accept())
-
-	win := b.stat.Win()
-	fmt.Println(win.Buckets())
 }
 
 func TestGoogleBreaker_Open(t *testing.T) {
@@ -36,8 +34,6 @@ func TestGoogleBreaker_Open(t *testing.T) {
 	assert.Nil(t, b.accept())
 	markFailed(b, 10000) // 模拟很多个失败请求，从而使用断路器保护
 	time.Sleep(2 * testInterval)
-	win := b.stat.Win()
-	fmt.Println(win.Buckets())
 
 	// 断路器
 	verify(t, func() bool {
@@ -85,12 +81,12 @@ func TestGoogleBreakerReject(t *testing.T) {
 
 func TestGoogleBreakerAcceptable(t *testing.T) {
 	b := getGoogleBreaker()
-	errAccetable := errors.New("某种特定的错误")
-	assert.Equal(t, errAccetable, b.doReq(func() error {
-		return errAccetable
+	errAcceptable := errors.New("某种特定的错误")
+	assert.Equal(t, errAcceptable, b.doReq(func() error {
+		return errAcceptable
 	}, nil, func(err error) bool {
 		// 模拟错误可以接受
-		return err == errAccetable
+		return err == errAcceptable
 	}))
 	win := b.stat.Win()
 	fmt.Println(win.Buckets())
@@ -103,12 +99,12 @@ func TestGoogleBreakerAcceptable(t *testing.T) {
 
 func TestGoogleBreakerNotAcceptable(t *testing.T) {
 	b := getGoogleBreaker()
-	errAccetable := errors.New("某种特定的错误")
-	assert.Equal(t, errAccetable, b.doReq(func() error {
-		return errAccetable
+	errAcceptable := errors.New("某种特定的错误")
+	assert.Equal(t, errAcceptable, b.doReq(func() error {
+		return errAcceptable
 	}, nil, func(err error) bool {
 		// 模拟错误不可以接受
-		return err != errAccetable
+		return err != errAcceptable
 	}))
 	win := b.stat.Win()
 	fmt.Println(win.Buckets())

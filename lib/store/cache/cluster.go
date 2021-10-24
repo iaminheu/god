@@ -2,11 +2,12 @@ package cache
 
 import (
 	"fmt"
+	"time"
+
 	"git.zc0901.com/go/god/lib/errorx"
 	"git.zc0901.com/go/god/lib/hash"
 	"git.zc0901.com/go/god/lib/logx"
 	"git.zc0901.com/go/god/lib/syncx"
-	"time"
 )
 
 type (
@@ -30,7 +31,7 @@ type (
 	}
 )
 
-func NewCacheCluster(clusterConf ClusterConf, barrier syncx.SharedCalls, stat *Stat, errNotFound error, opts ...Option) Cache {
+func NewCacheCluster(clusterConf ClusterConf, barrier syncx.SingleFlight, stat *Stat, errNotFound error, opts ...Option) Cache {
 	if len(clusterConf) == 0 || TotalWeights(clusterConf) <= 0 {
 		logx.Fatal("未配置缓存节点")
 	}
